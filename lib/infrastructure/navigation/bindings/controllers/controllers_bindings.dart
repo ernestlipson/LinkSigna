@@ -1,0 +1,1 @@
+export 'package:sign_language_app/infrastructure/navigation/bindings/controllers/home.controller.binding.dart'; 
