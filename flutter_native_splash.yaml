@@ -1,0 +1,21 @@
+
+flutter_native_splash:
+  # Background color (you can use a hex color)
+  color: "#FFFFFF"
+
+  # Or use an image as background
+  # background_image: "assets/background.png"
+
+  # Image displayed in the center of the splash screen
+  image: assets/splash-screen/splash.png
+
+  # Splash screen for Android 12+
+  android_12:
+    image: assets/splash-screen/splash.png
+    color: "#FFFFFF"
+
+  # iOS configuration
+  ios: true
+
+  # Control status bar visibility
+  fullscreen: true

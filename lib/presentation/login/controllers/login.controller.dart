@@ -1,9 +1,38 @@
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 class LoginController extends GetxController {
-  //TODO: Implement LoginController
+  // Controllers to read the text values
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final passwordController = TextEditingController();
 
-  final count = 0.obs;
+  // Reactive validation states
+  final isNameValid = true.obs;
+  final isPhoneValid = true.obs;
+  final isPasswordValid = true.obs;
+
+  // Validation logic
+  void validateName() {
+    isNameValid.value = nameController.text.trim().isNotEmpty;
+  }
+
+  void validatePhone() {
+    isPhoneValid.value = phoneController.text.trim().isNotEmpty;
+  }
+
+  void validatePassword() {
+    isPasswordValid.value = passwordController.text.trim().isNotEmpty;
+  }
+
+  // Validate all fields at once (e.g., on form submit)
+  bool validateAll() {
+    validateName();
+    validatePhone();
+    validatePassword();
+    return isNameValid.value && isPhoneValid.value && isPasswordValid.value;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -18,6 +47,4 @@ class LoginController extends GetxController {
   void onClose() {
     super.onClose();
   }
-
-  void increment() => count.value++;
 }
