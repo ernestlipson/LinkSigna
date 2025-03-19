@@ -32,19 +32,4 @@ class LoginController extends GetxController {
     validatePassword();
     return isNameValid.value && isPhoneValid.value && isPasswordValid.value;
   }
-
-  @override
-  void onInit() {
-    super.onInit();
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
 }
