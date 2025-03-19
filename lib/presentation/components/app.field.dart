@@ -22,10 +22,12 @@ class CustomTextFormField extends StatelessWidget {
   /// Keyboard type (text, phone, email, etc.).
   final TextInputType? keyboardType;
   final String? errorText; // New: to display validation errors
+  final String labelText; // New: label text for the field
 
   const CustomTextFormField(
       {super.key,
       required this.hintText,
+      required this.labelText, // New: label text for the field
       this.controller,
       this.isRequired = false,
       this.obscureText = false,
@@ -38,52 +40,71 @@ class CustomTextFormField extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 379,
-      height: 40,
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        // Basic validator to ensure field is filled if required.
-        validator: (value) {
-          if (isRequired && (value == null || value.trim().isEmpty)) {
-            return 'This field is required';
-          }
-          return null;
-        },
-        decoration: InputDecoration(
-          // The outer container’s background color.
-          filled: true,
-          fillColor: const Color(0xFFFFFFFF), // #FFFFFF
-          hintText: hintText,
-          // Horizontal padding set to "paddingInlineLG" equivalent.
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          prefixIcon: prefix,
-          suffixIcon: suffix,
-          errorText: errorText,
-          // The border color, width, and radius.
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8), // borderRadiusLG
-            borderSide: const BorderSide(
-              color: Color(0xFFD9D9D9), // #D9D9D9
-              width: 1, // lineWidth
+      height: 70,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RichText(
+            text: TextSpan(
+              text: labelText,
+              style: TextStyle(color: Colors.black),
+              children: [
+                if (isRequired)
+                  TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Colors.red),
+                  ),
+              ],
             ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-              color: Color(0xFFD9D9D9),
-              width: 1,
+          const SizedBox(height: 4),
+          TextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            // Basic validator to ensure field is filled if required.
+            validator: (value) {
+              if (isRequired && (value == null || value.trim().isEmpty)) {
+                return 'This field is required';
+              }
+              return null;
+            },
+            decoration: InputDecoration(
+              // The outer container’s background color.
+              filled: true,
+              fillColor: const Color(0xFFFFFFFF), // #FFFFFF
+              hintText: hintText,
+              // Horizontal padding set to "paddingInlineLG" equivalent.
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              prefixIcon: prefix,
+              suffixIcon: suffix,
+              errorText: errorText,
+              // The border color, width, and radius.
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8), // borderRadiusLG
+                borderSide: const BorderSide(
+                  color: Color(0xFFD9D9D9), // #D9D9D9
+                  width: 1, // lineWidth
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Color(0xFFD9D9D9),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Color(0xFFD9D9D9),
+                  width: 1,
+                ),
+              ),
             ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-              color: Color(0xFFD9D9D9),
-              width: 1,
-            ),
-          ),
-        ),
+        ],
       ),
     );
   }

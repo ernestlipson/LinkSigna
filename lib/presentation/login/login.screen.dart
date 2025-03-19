@@ -27,22 +27,21 @@ class LoginScreen extends GetView<LoginController> {
               Obx(() {
                 return CustomTextFormField(
                   hintText: 'Enter your name',
+                  labelText: 'Name', // New: label text
                   controller: controller.nameController,
+                  isRequired: true, // New: mark as required
                   errorText: controller.isNameValid.value
                       ? null
                       : 'This field is required',
-                  // Validate on change or on submit
-                  // For real-time, do it onChanged:
-                  // onChanged is not in CustomTextFormField,
-                  // but you can add a listener to the controller:
                 );
               }),
-              const SizedBox(height: 16),
+              const SizedBox(height: 30),
 
               // Phone Field (with optional prefix)
               Obx(() {
                 return CustomTextFormField(
                   hintText: 'Enter Phone Number',
+                  labelText: 'Phone Number', // New: label text
                   controller: controller.phoneController,
                   keyboardType: TextInputType.phone,
                   prefix: Padding(
@@ -52,6 +51,7 @@ class LoginScreen extends GetView<LoginController> {
                       style: TextStyle(fontSize: 24),
                     ),
                   ),
+                  isRequired: true, // New: mark as required
                   errorText: controller.isPhoneValid.value
                       ? null
                       : 'This field is required',
@@ -60,12 +60,13 @@ class LoginScreen extends GetView<LoginController> {
               const SizedBox(height: 16),
 
               // Password Field
-              // We'll add a suffix icon for toggling visibility in a separate approach
               Obx(() {
                 return CustomTextFormField(
                   hintText: 'Enter your password',
+                  labelText: 'Password', // New: label text
                   controller: controller.passwordController,
                   obscureText: true,
+                  isRequired: true, // New: mark as required
                   errorText: controller.isPasswordValid.value
                       ? null
                       : 'This field is required',
