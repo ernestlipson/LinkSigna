@@ -3,8 +3,10 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/utils/app.constants.dart';
 
+import '../../infrastructure/dal/services/google.signin.service.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
+import '../components/app.outline.button.dart';
 import 'controllers/login.controller.dart';
 
 class LoginScreen extends GetView<LoginController> {
@@ -112,7 +114,7 @@ class LoginScreen extends GetView<LoginController> {
                     ],
                   ),
                   CustomButton(
-                    text: "Login",
+                    text: "Sign up",
                     onPressed: () {
                       // Validate all fields at once
                       final isFormValid = controller.validateAll();
@@ -126,6 +128,28 @@ class LoginScreen extends GetView<LoginController> {
                             snackPosition: SnackPosition.BOTTOM);
                       }
                     },
+                  ),
+                  Center(child: Text("Or")), // Center the "Or" text
+                  GoogleSignInButton(
+                    // text: "Sign Up with Google",
+                    onPressed: () async {
+                      try {
+                        await GoogleSignInService.signInWithGoogle();
+                        Get.snackbar('Google Sign Up', 'Sign up successful',
+                            snackPosition: SnackPosition.BOTTOM);
+                      } catch (e) {
+                        Get.snackbar('Google Sign Up', 'Sign up failed: $e',
+                            snackPosition: SnackPosition.BOTTOM);
+                      }
+                    },
+                  ),
+                  Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        Get.toNamed('/login'); // Navigate to login page
+                      },
+                      child: Text("Already have an account? Login"),
+                    ),
                   ),
                 ],
               )
