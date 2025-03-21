@@ -7,6 +7,16 @@ class LoginController extends GetxController {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
+  final RxBool isTermsAccepted = false.obs;
+
+  // Add this to your LoginController class
+  final RxBool isPasswordVisible = false.obs;
+
+// Add this method to toggle password visibility
+  void togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
+  }
+
   // Reactive validation states
   final isNameValid = true.obs;
   final isPhoneValid = true.obs;
