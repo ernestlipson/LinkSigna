@@ -13,12 +13,16 @@ class CustomButton extends StatelessWidget {
   /// Optionally, you can pass a [TextStyle] to customize the text style.
   final TextStyle? textStyle;
 
+  /// Indicates whether the button is in a loading state.
+  final bool loading;
+
   const CustomButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.icon,
     this.textStyle,
+    this.loading = false,
   });
 
   @override
@@ -43,33 +47,38 @@ class CustomButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: onPressed,
+          onTap: loading ? null : onPressed,
           child: Center(
-            child: icon != null
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      icon!,
-                      const SizedBox(width: 12), // Gap between icon and text
-                      Text(
+            child: loading
+                ? const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  )
+                : icon != null
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          icon!,
+                          const SizedBox(
+                              width: 12), // Gap between icon and text
+                          Text(
+                            text,
+                            style: textStyle ??
+                                const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      )
+                    : Text(
                         text,
                         style: textStyle ??
                             const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
                             ),
                       ),
-                    ],
-                  )
-                : Text(
-                    text,
-                    style: textStyle ??
-                        const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                  ),
           ),
         ),
       ),

@@ -6,20 +6,18 @@ import 'infrastructure/navigation/routes.dart';
 import 'infrastructure/theme/app_theme.dart';
 
 void main() async {
-  await WidgetsFlutterBinding.ensureInitialized();
-  var initialRoute = await Routes.initialRoute;
-  runApp(Main(initialRoute));
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(Main());
 }
 
 class Main extends StatelessWidget {
-  final String initialRoute;
-  const Main(this.initialRoute, {super.key});
+  const Main({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      theme: appTheme, // Update to use the new theme
-      initialRoute: initialRoute,
+      theme: appTheme,
+      initialRoute: Routes.initialRoute,
       getPages: Nav.routes,
     );
   }
