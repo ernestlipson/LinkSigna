@@ -10,7 +10,7 @@ class GoogleSignInButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity, // Make it take full width
-      height: 50, // Adjust height as needed
+      height: 44, // Adjust height as needed
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           shape: RoundedRectangleBorder(
@@ -37,7 +37,7 @@ class GoogleSignInButton extends StatelessWidget {
               'Sign in with Google',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
             ),

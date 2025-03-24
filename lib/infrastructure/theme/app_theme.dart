@@ -9,7 +9,9 @@ final ThemeData appTheme = ThemeData(
   primaryColor: primaryColor,
   hintColor: secondaryColor,
   scaffoldBackgroundColor: secondaryColor,
-  textTheme: TextTheme(),
+  textTheme: TextTheme().apply(
+    fontFamily: 'WorkSans',
+  ),
   appBarTheme: AppBarTheme(
     color: secondaryColor,
     iconTheme: IconThemeData(color: primaryColor),

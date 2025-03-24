@@ -25,6 +25,7 @@ class SignupScreen extends GetView<SignupController> {
         padding: const EdgeInsets.all(16),
         child: SafeArea(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
@@ -33,7 +34,6 @@ class SignupScreen extends GetView<SignupController> {
                 ),
               ),
               Column(
-                spacing: 30,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -44,7 +44,7 @@ class SignupScreen extends GetView<SignupController> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  // Name Field
+                  SizedBox(height: 30),
                   Obx(() {
                     return CustomTextFormField(
                       hintText: ScreenStrings.nameHint,
@@ -56,7 +56,7 @@ class SignupScreen extends GetView<SignupController> {
                           : ScreenStrings.requiredFieldError,
                     );
                   }),
-                  // Phone Field (with optional prefix)
+                  SizedBox(height: 10),
                   Obx(() {
                     return CustomTextFormField(
                       hintText: ScreenStrings.phoneHint,
@@ -76,6 +76,7 @@ class SignupScreen extends GetView<SignupController> {
                           : ScreenStrings.requiredFieldError,
                     );
                   }),
+                  SizedBox(height: 10),
                   // Password Field
                   Obx(() {
                     return CustomTextFormField(
@@ -98,10 +99,12 @@ class SignupScreen extends GetView<SignupController> {
                               : Icons
                                   .visibility, // Show this when password is hidden
                           color: Colors.black.withAlpha(64),
+                          size: 20,
                         ),
                       ),
                     );
                   }),
+                  SizedBox(height: 10),
                   Row(
                     children: [
                       Obx(() => Checkbox(
@@ -116,32 +119,23 @@ class SignupScreen extends GetView<SignupController> {
                             },
                           )),
                       Expanded(
-                        child: Text(ScreenStrings.termsAndPrivacy,
-                            style: TextStyle(
-                              fontFamily: "WorkSans",
-                            )),
-                      ),
+                          child: Text(
+                        ScreenStrings.termsAndPrivacy,
+                      )),
                     ],
                   ),
+                  SizedBox(height: 20),
                   CustomButton(
                     text: ScreenStrings.signUpButton,
                     onPressed: () {
-                      // Validate all fields at once
-                      final isFormValid = controller.validateAll();
-                      if (isFormValid) {
-                        // All fields are valid
-                        Get.snackbar('Success', ScreenStrings.allFieldsValid,
-                            snackPosition: SnackPosition.BOTTOM);
-                      } else {
-                        // Some fields are invalid
-                        Get.snackbar('Error', ScreenStrings.fillRequiredFields,
-                            snackPosition: SnackPosition.BOTTOM);
-                      }
+                      controller.signUp();
                     },
                   ),
+                  SizedBox(height: 20),
                   Center(
                       child:
                           Text(ScreenStrings.orText)), // Center the "Or" text
+                  SizedBox(height: 20),
                   GoogleSignInButton(
                     onPressed: () async {
                       try {
@@ -156,6 +150,7 @@ class SignupScreen extends GetView<SignupController> {
                       }
                     },
                   ),
+                  SizedBox(height: 20),
                   Center(
                     child: RichText(
                       text: TextSpan(
@@ -166,7 +161,8 @@ class SignupScreen extends GetView<SignupController> {
                           TextSpan(
                             text: ScreenStrings.loginText,
                             style: TextStyle(
-                                color: Color(0xFF9E1068)), // Colored text
+                                color: Color(0xFF9E1068),
+                                fontFamily: "WorkSans"), // Colored text
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
                                 Get.offAndToNamed(
