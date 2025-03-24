@@ -15,7 +15,7 @@ class GoogleSignInService {
       // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-      log("GoogleSignInService: ${googleAuth}");
+      log("GoogleSignInService: $googleAuth");
 
       // Use the googleAuth object to authenticate with your backend
       // For example, you can send the idToken and accessToken to your server
