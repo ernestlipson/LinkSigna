@@ -16,7 +16,11 @@ class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      theme: appTheme,
+      theme: appTheme.copyWith(
+        textTheme: appTheme.textTheme.apply(
+          fontFamily: 'WorkSans',
+        ),
+      ),
       initialRoute: Routes.initialRoute,
       getPages: Nav.routes,
     );

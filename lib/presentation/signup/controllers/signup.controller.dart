@@ -41,4 +41,11 @@ class SignupController extends GetxController {
     validatePassword();
     return isNameValid.value && isPhoneValid.value && isPasswordValid.value;
   }
+
+  void signUp() {
+    final isFormValid = validateAll();
+    if (!isFormValid) return;
+    Get.snackbar('Success', 'All fields are valid!',
+        snackPosition: SnackPosition.BOTTOM);
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 
 class CustomTextFormField extends StatelessWidget {
   /// Hint text to display when the field is empty.
@@ -40,19 +41,23 @@ class CustomTextFormField extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 379,
-      height: 70,
+      height: 90,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           RichText(
             text: TextSpan(
               text: labelText,
-              style: TextStyle(color: Colors.black),
+              style: TextStyle(
+                color: Colors.black,
+                fontFamily: "WorkSans",
+                fontWeight: FontWeight.w500,
+              ),
               children: [
                 if (isRequired)
                   TextSpan(
                     text: ' *',
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: primaryColor),
                   ),
               ],
             ),
@@ -69,18 +74,20 @@ class CustomTextFormField extends StatelessWidget {
               }
               return null;
             },
+            style: TextStyle(fontFamily: 'WorkSans'),
             decoration: InputDecoration(
-              // The outer container’s background color.
               filled: true,
               fillColor: const Color(0xFFFFFFFF), // #FFFFFF
               hintText: hintText,
-              // Horizontal padding set to "paddingInlineLG" equivalent.
+              hintStyle: TextStyle(
+                fontFamily: "WorkSans",
+                color: alternateColor,
+              ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               prefixIcon: prefix,
               suffixIcon: suffix,
               errorText: errorText,
-              // The border color, width, and radius.
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8), // borderRadiusLG
                 borderSide: const BorderSide(
