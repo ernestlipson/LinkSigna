@@ -1,7 +1,7 @@
 class ScreenStrings {
   static const String signUpTitle = "Sign Up";
   static const String nameHint = "Enter your name";
-  static const String nameLabel = "Name";
+  static const String nameLabel = "Full Name";
   static const String phoneHint = "Enter Phone Number";
   static const String phoneLabel = "Phone Number";
   static const String ghanaFlagEmoji = '🇬🇭';

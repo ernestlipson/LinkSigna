@@ -25,7 +25,6 @@ class SignupScreen extends GetView<SignupController> {
         padding: const EdgeInsets.all(16),
         child: SafeArea(
           child: Column(
-            // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
@@ -40,8 +39,9 @@ class SignupScreen extends GetView<SignupController> {
                   Text(
                     ScreenStrings.signUpTitle,
                     style: TextStyle(
+                      fontFamily: 'WorkSans',
                       fontSize: 20,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   // Name Field
@@ -97,6 +97,7 @@ class SignupScreen extends GetView<SignupController> {
                                   .visibility_off // Show this when password is visible
                               : Icons
                                   .visibility, // Show this when password is hidden
+                          color: Colors.black.withAlpha(64),
                         ),
                       ),
                     );
@@ -104,6 +105,10 @@ class SignupScreen extends GetView<SignupController> {
                   Row(
                     children: [
                       Obx(() => Checkbox(
+                            side: BorderSide(),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4.0),
+                            ),
                             value: controller.isTermsAccepted.value,
                             onChanged: (bool? newValue) {
                               controller.isTermsAccepted.value =
@@ -111,7 +116,10 @@ class SignupScreen extends GetView<SignupController> {
                             },
                           )),
                       Expanded(
-                        child: Text(ScreenStrings.termsAndPrivacy),
+                        child: Text(ScreenStrings.termsAndPrivacy,
+                            style: TextStyle(
+                              fontFamily: "WorkSans",
+                            )),
                       ),
                     ],
                   ),
@@ -135,7 +143,6 @@ class SignupScreen extends GetView<SignupController> {
                       child:
                           Text(ScreenStrings.orText)), // Center the "Or" text
                   GoogleSignInButton(
-                    // text: "Sign Up with Google",
                     onPressed: () async {
                       try {
                         await GoogleSignInService.signInWithGoogle();
