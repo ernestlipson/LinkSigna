@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../../../../domain/repositories/country.repo.dart';
 import '../../../../presentation/signup/controllers/signup.controller.dart';
 
 class SignupControllerBinding extends Bindings {
@@ -7,6 +8,9 @@ class SignupControllerBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<SignupController>(
       () => SignupController(),
+    );
+    Get.lazyPut<CountryRepository>(
+      () => CountryRepository(),
     );
   }
 }

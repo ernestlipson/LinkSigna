@@ -1,0 +1,39 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # Enable explicit toJson methods
+          explicit_to_json: true
+          # Don't include null values in JSON
+          include_if_null: false
+          # Use field names from JSON
+          create_field_map: true
+          # Allow for more readable generated code
+          create_to_json: true
+          # Efficient generation
+          checked: false
+          # For clean serialization
+          field_rename: snake
+          # Convert enums to/from strings
+          any_map: false
+          # Disable implicit dynamic
+          disallow_unrecognized_keys: false
+
+      # Configuration for source_gen
+      source_gen:combined_output_file:
+        options:
+          # Compact the generated output
+          compact: true
+          # Format output with dartfmt
+          format: true
+
+# Build extensions configuration
+builders:
+  json_serializable:
+    import: "package:json_serializable/builder.dart"
+    builder_factories: ["jsonSerializable"]
+    build_extensions: {".dart": [".g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    applies_builders: ["source_gen|combining_builder"]
