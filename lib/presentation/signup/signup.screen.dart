@@ -64,11 +64,21 @@ class SignupScreen extends GetView<SignupController> {
                       controller: controller.phoneController,
                       keyboardType: TextInputType.phone,
                       prefix: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          ScreenStrings.ghanaFlagEmoji, // Ghana flag emoji
-                          style: TextStyle(fontSize: 24),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                        ).copyWith(
+                          left: 8,
                         ),
+                        child: Obx(() {
+                          final flag = controller.countryFlag.value;
+                          final flagLoading = controller.countryLoading.value;
+                          return flagLoading
+                              ? SizedBox.shrink()
+                              : flag != null
+                                  ? Image.network(flag.png,
+                                      width: 20, height: 20)
+                                  : SizedBox.shrink();
+                        }),
                       ),
                       isRequired: true, // New: mark as required
                       errorText: controller.isPhoneValid.value
@@ -119,8 +129,12 @@ class SignupScreen extends GetView<SignupController> {
                             },
                           )),
                       Expanded(
-                          child: Text(
-                        ScreenStrings.termsAndPrivacy,
+                          child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 9.0)
+                            .copyWith(right: 12),
+                        child: Text(
+                          ScreenStrings.termsAndPrivacy,
+                        ),
                       )),
                     ],
                   ),
@@ -131,11 +145,13 @@ class SignupScreen extends GetView<SignupController> {
                       controller.signUp();
                     },
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 18),
                   Center(
-                      child:
-                          Text(ScreenStrings.orText)), // Center the "Or" text
-                  SizedBox(height: 20),
+                      child: Text(ScreenStrings.orText,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                          ))), // Center the "Or" text
+                  SizedBox(height: 18),
                   GoogleSignInButton(
                     onPressed: () async {
                       try {
@@ -150,13 +166,14 @@ class SignupScreen extends GetView<SignupController> {
                       }
                     },
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 30),
                   Center(
                     child: RichText(
                       text: TextSpan(
                         text: ScreenStrings.alreadyHaveAccount,
                         style: TextStyle(
-                            color: Colors.black), // Default text style
+                            color: Colors.black,
+                            fontWeight: FontWeight.w400), // Default text style
                         children: [
                           TextSpan(
                             text: ScreenStrings.loginText,

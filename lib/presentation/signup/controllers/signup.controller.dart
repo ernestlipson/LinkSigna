@@ -1,27 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../domain/entities/flag.entity.dart';
+import '../../../domain/repositories/country.repo.dart';
+
 class SignupController extends GetxController {
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
 
   final RxBool isTermsAccepted = false.obs;
-
-  // Add this to your LoginController class
   final RxBool isPasswordVisible = false.obs;
 
-// Add this method to toggle password visibility
+  final countryLoading = false.obs;
+
+  final CountryRepository countryRepository = CountryRepository.instance;
+
+  final Rx<Flag?> countryFlag = Rx<Flag?>(null);
+
+  @override
+  void onInit() {
+    fetchCountryFlag();
+    super.onInit();
+  }
+
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
 
-  // Reactive validation states
   final isNameValid = true.obs;
   final isPhoneValid = true.obs;
   final isPasswordValid = true.obs;
 
-  // Validation logic
   void validateName() {
     isNameValid.value = nameController.text.trim().isNotEmpty;
   }
@@ -34,12 +44,11 @@ class SignupController extends GetxController {
     isPasswordValid.value = passwordController.text.trim().isNotEmpty;
   }
 
-  // Validate all fields at once (e.g., on form submit)
   bool validateAll() {
     validateName();
     validatePhone();
     validatePassword();
-    return isNameValid.value && isPhoneValid.value && isPasswordValid.value;
+    return isNameValid.value && isPhoneValid.value && isPhoneValid.value;
   }
 
   void signUp() {
@@ -47,5 +56,17 @@ class SignupController extends GetxController {
     if (!isFormValid) return;
     Get.snackbar('Success', 'All fields are valid!',
         snackPosition: SnackPosition.BOTTOM);
+  }
+
+  void fetchCountryFlag() async {
+    try {
+      countryLoading.value = true;
+      final flag = await countryRepository.getCountryFlag();
+      countryFlag.value = flag;
+      countryLoading.value = false;
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to fetch country flag',
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 }
