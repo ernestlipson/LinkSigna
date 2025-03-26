@@ -3,17 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/dal/services/google.signin.service.dart';
 import '../../infrastructure/navigation/routes.dart';
 import '../../infrastructure/utils/app.constants.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
 import '../components/app.outline.button.dart';
+import '../login/controllers/login.controller.dart';
 import '../utils/screens.strings.dart'; // Import the strings file
 import 'controllers/signup.controller.dart';
 
 class SignupScreen extends GetView<SignupController> {
-  const SignupScreen({super.key});
+  SignupScreen({super.key});
+
+  final loginController = Get.put(LoginController());
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -154,16 +156,7 @@ class SignupScreen extends GetView<SignupController> {
                   SizedBox(height: 18),
                   GoogleSignInButton(
                     onPressed: () async {
-                      try {
-                        await GoogleSignInService.signInWithGoogle();
-                        Get.snackbar(
-                            'Google Sign Up', ScreenStrings.signUpSuccess,
-                            snackPosition: SnackPosition.BOTTOM);
-                      } catch (e) {
-                        Get.snackbar('Google Sign Up',
-                            '${ScreenStrings.signUpFailed}: $e',
-                            snackPosition: SnackPosition.BOTTOM);
-                      }
+                      await loginController.signInWithGoogle();
                     },
                   ),
                   SizedBox(height: 30),

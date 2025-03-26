@@ -131,16 +131,8 @@ class LoginScreen extends GetView<LoginController> {
                   ),
                   Center(child: Text("Or")), // Center the "Or" text
                   GoogleSignInButton(
-                    // text: "Sign Up with Google",
                     onPressed: () async {
-                      try {
-                        await GoogleSignInService.signInWithGoogle();
-                        Get.snackbar('Google Sign Up', 'Sign up successful',
-                            snackPosition: SnackPosition.BOTTOM);
-                      } catch (e) {
-                        Get.snackbar('Google Sign Up', 'Sign up failed: $e',
-                            snackPosition: SnackPosition.BOTTOM);
-                      }
+                      await controller.signInWithGoogle();
                     },
                   ),
                   Center(

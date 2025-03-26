@@ -38,7 +38,7 @@ class Nav {
     ),
     GetPage(
       name: Routes.SIGNUP,
-      page: () => const SignupScreen(),
+      page: () => SignupScreen(),
       binding: SignupControllerBinding(),
     ),
     GetPage(
