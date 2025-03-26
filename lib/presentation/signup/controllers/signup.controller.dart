@@ -64,7 +64,8 @@ class SignupController extends GetxController {
       final flag = await countryRepository.getCountryFlag();
       countryFlag.value = flag;
       countryLoading.value = false;
-    } catch (e) {
+    } catch (e, s) {
+      Get.log("Fetch Flag: $e $s");
       Get.snackbar('Error', 'Failed to fetch country flag',
           snackPosition: SnackPosition.BOTTOM);
     }

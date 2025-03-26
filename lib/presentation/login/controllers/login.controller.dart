@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import '../../../infrastructure/dal/services/google.signin.service.dart';
 
 class LoginController extends GetxController {
   // Controllers to read the text values
@@ -41,5 +42,18 @@ class LoginController extends GetxController {
     validatePhone();
     validatePassword();
     return isNameValid.value && isPhoneValid.value && isPasswordValid.value;
+  }
+
+  Future<void> signInWithGoogle() async {
+    try {
+      final user = await GoogleSignInService.instance.signInWithGoogle();
+      if (user != null) {
+        Get.snackbar('Google Sign-In', 'Sign-in successful!',
+            snackPosition: SnackPosition.BOTTOM);
+      }
+    } catch (e) {
+      Get.snackbar('Google Sign-In', 'Sign-in failed: $e',
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 }

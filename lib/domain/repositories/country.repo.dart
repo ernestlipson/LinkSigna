@@ -8,7 +8,7 @@ class CountryRepository {
   final CountryService _dataSource = CountryService.into;
 
   Future<Flag> getCountryFlag({String? countryCode}) async {
-    final flags = await _dataSource.getCountry(countryCode: countryCode);
+    final flags = await _dataSource.getCountryFlag();
     return Flag(
       png: flags.png,
       svg: flags.svg,

@@ -1,57 +1,135 @@
-// network_mixin.dart
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' as g;
 
 mixin NetworkMixin {
   final Dio _dio = Dio();
+  String _baseUrl = 'https://restcountries.com/v3.1';
 
-  // Base URL should be configurable
-  String get baseUrl => 'https://restcountries.com/v3.1';
-
-  // Timeouts should be configurable
-  Duration get connectTimeout => const Duration(seconds: 30);
-  Duration get receiveTimeout => const Duration(seconds: 30);
+  String get baseUrl => _baseUrl;
+  set baseUrl(String value) {
+    _baseUrl = value;
+    if (_dio.options.baseUrl != value) _dio.options.baseUrl = value;
+  }
 
   Dio get dio => _dio;
 
-  // Initialize Dio with interceptors
   void initializeNetwork() {
+    _setupDioOptions();
+    _addInterceptors();
+    _addLoggingInDebugMode();
+  }
+
+  Future<Response<T>> getRequest<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) =>
+      _executeRequest(() => _dio.get<T>(
+            path,
+            queryParameters: queryParameters,
+            options: options,
+            cancelToken: cancelToken,
+          ));
+
+  Future<Response<T>> postRequest<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) =>
+      _executeRequest(() => _dio.post<T>(
+            path,
+            data: data,
+            queryParameters: queryParameters,
+            options: options,
+            cancelToken: cancelToken,
+          ));
+
+  Future<Response<T>> putRequest<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) =>
+      _executeRequest(() => _dio.put<T>(
+            path,
+            data: data,
+            queryParameters: queryParameters,
+            options: options,
+            cancelToken: cancelToken,
+          ));
+
+  Future<Response<T>> deleteRequest<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) =>
+      _executeRequest(() => _dio.delete<T>(
+            path,
+            data: data,
+            queryParameters: queryParameters,
+            options: options,
+            cancelToken: cancelToken,
+          ));
+
+  Future<Response<T>> patchRequest<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+  }) =>
+      _executeRequest(() => _dio.patch<T>(
+            path,
+            data: data,
+            queryParameters: queryParameters,
+            options: options,
+            cancelToken: cancelToken,
+          ));
+
+  CancelToken createCancelToken() => CancelToken();
+
+  Future<Response<T>> _executeRequest<T>(
+      Future<Response<T>> Function() request) async {
+    try {
+      return await request();
+    } on DioException catch (e) {
+      _handleError(e);
+      rethrow;
+    }
+  }
+
+  void _setupDioOptions() {
     _dio.options = BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: connectTimeout,
-      receiveTimeout: receiveTimeout,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
       contentType: 'application/json',
       responseType: ResponseType.json,
     );
+  }
 
+  void _addInterceptors() {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        // Add authorization header if needed
         options.headers['Accept'] = 'application/json';
-
-        // Uncomment when authentication is implemented
-        // final token = Get.find<AuthService>().token;
-        // if (token != null) {
-        //   options.headers['Authorization'] = 'Bearer $token';
-        // }
-
         return handler.next(options);
       },
-      onResponse: (response, handler) {
-        // Process successful responses
-        return handler.next(response);
-      },
       onError: (DioException error, handler) async {
-        // Handle global errors here
         if (error.response?.statusCode == 401) {
           // Handle unauthorized error
-          // g.Get.offAllNamed('/login');
         }
         return handler.next(error);
       },
     ));
+  }
 
-    // Add logging interceptor in debug mode
+  void _addLoggingInDebugMode() {
     assert(() {
       _dio.interceptors.add(LogInterceptor(
         request: true,
@@ -65,146 +143,8 @@ mixin NetworkMixin {
     }());
   }
 
-  Future<Response<T>> getRequest<T>(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-  }) async {
-    try {
-      final response = await _dio.get<T>(
-        path,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-      return response;
-    } on DioException catch (e) {
-      _handleError(e);
-      rethrow;
-    }
-  }
-
-  Future<Response<T>> postRequest<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-  }) async {
-    try {
-      final response = await _dio.post<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-      return response;
-    } on DioException catch (e) {
-      _handleError(e);
-      rethrow;
-    }
-  }
-
-  Future<Response<T>> putRequest<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-  }) async {
-    try {
-      final response = await _dio.put<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-      return response;
-    } on DioException catch (e) {
-      _handleError(e);
-      rethrow;
-    }
-  }
-
-  Future<Response<T>> deleteRequest<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-  }) async {
-    try {
-      final response = await _dio.delete<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-      return response;
-    } on DioException catch (e) {
-      _handleError(e);
-      rethrow;
-    }
-  }
-
-  Future<Response<T>> patchRequest<T>(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-    CancelToken? cancelToken,
-  }) async {
-    try {
-      final response = await _dio.patch<T>(
-        path,
-        data: data,
-        queryParameters: queryParameters,
-        options: options,
-        cancelToken: cancelToken,
-      );
-      return response;
-    } on DioException catch (e) {
-      _handleError(e);
-      rethrow;
-    }
-  }
-
-  CancelToken createCancelToken() {
-    return CancelToken();
-  }
-
   void _handleError(DioException error) {
-    String message;
-
-    switch (error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        message = 'Connection timeout. Please check your internet connection.';
-        break;
-      case DioExceptionType.badCertificate:
-        message = 'Bad server certificate.';
-        break;
-      case DioExceptionType.badResponse:
-        message = _parseErrorResponse(error.response);
-        break;
-      case DioExceptionType.cancel:
-        message = 'Request was cancelled';
-        break;
-      case DioExceptionType.connectionError:
-        message = 'Connection error. Please check your internet connection.';
-        break;
-      case DioExceptionType.unknown:
-      default:
-        message = error.message ?? 'An unknown error occurred';
-        break;
-    }
-
-    // Use GetX to show error dialog or snackbar
+    final message = _getErrorMessage(error);
     g.Get.snackbar(
       'Error',
       message,
@@ -213,37 +153,41 @@ mixin NetworkMixin {
     );
   }
 
+  String _getErrorMessage(DioException error) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Connection timeout. Please check your internet connection.';
+      case DioExceptionType.badCertificate:
+        return 'Bad server certificate.';
+      case DioExceptionType.badResponse:
+        return _parseErrorResponse(error.response);
+      case DioExceptionType.cancel:
+        return 'Request was cancelled';
+      case DioExceptionType.connectionError:
+        return 'Connection error. Please check your internet connection.';
+      case DioExceptionType.unknown:
+        return error.message ?? 'An unknown error occurred';
+    }
+  }
+
   String _parseErrorResponse(Response? response) {
     if (response == null) return 'Server error occurred';
 
-    try {
-      // Try to extract error message from response data
-      if (response.data is Map) {
-        final data = response.data as Map;
-        if (data.containsKey('message')) {
-          return data['message'].toString();
-        } else if (data.containsKey('error')) {
-          return data['error'].toString();
-        }
-      }
-
-      // Default message based on status code
-      switch (response.statusCode) {
-        case 400:
-          return 'Bad request';
-        case 401:
-          return 'Unauthorized';
-        case 403:
-          return 'Forbidden';
-        case 404:
-          return 'Not found';
-        case 500:
-          return 'Internal server error';
-        default:
-          return 'Server error ${response.statusCode}';
-      }
-    } catch (e) {
-      return 'Error processing server response';
+    if (response.data is Map) {
+      final data = response.data as Map;
+      if (data.containsKey('message')) return data['message'].toString();
+      if (data.containsKey('error')) return data['error'].toString();
     }
+
+    return switch (response.statusCode) {
+      400 => 'Bad request',
+      401 => 'Unauthorized',
+      403 => 'Forbidden',
+      404 => 'Not found',
+      500 => 'Internal server error',
+      _ => 'Server error ${response.statusCode}'
+    };
   }
 }
