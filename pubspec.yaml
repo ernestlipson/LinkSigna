@@ -45,6 +45,7 @@ dependencies:
   shimmer_animation: ^2.2.2
   geolocator: ^13.0.3
   geocoding: ^3.0.0
+  calendar_date_picker2: ^2.0.0
 
 dev_dependencies:
   flutter_test:
