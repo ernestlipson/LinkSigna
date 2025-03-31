@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:sign_language_app/presentation/components/date_picker_example.dart';
 
-import 'infrastructure/navigation/navigation.dart';
-import 'infrastructure/navigation/routes.dart';
 import 'infrastructure/theme/app_theme.dart';
 
 void main() async {
@@ -15,14 +13,15 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
+    return MaterialApp(
       theme: appTheme.copyWith(
         textTheme: appTheme.textTheme.apply(
           fontFamily: 'WorkSans',
         ),
       ),
-      initialRoute: Routes.initialRoute,
-      getPages: Nav.routes,
+      // initialRoute: Routes.initialRoute,
+      // getPages: Nav.routes,
+      home: MyHomePage(title: "Bottom Sheet"),
     );
   }
 }

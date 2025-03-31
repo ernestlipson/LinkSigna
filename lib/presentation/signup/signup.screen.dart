@@ -1,3 +1,4 @@
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -18,6 +19,10 @@ class SignupScreen extends GetView<SignupController> {
   final loginController = Get.put(LoginController());
   @override
   Widget build(BuildContext context) {
+    final List<DateTime> _dates = [
+      DateTime(2023, 1, 1),
+      // DateTime(2023, 1, 2),
+    ];
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: AppConstants.toolbarHeightXS,
@@ -144,7 +149,17 @@ class SignupScreen extends GetView<SignupController> {
                   CustomButton(
                     text: ScreenStrings.signUpButton,
                     onPressed: () {
-                      controller.signUp();
+                      showCalendarDatePicker2Dialog(
+                        context: context,
+                        config: CalendarDatePicker2WithActionButtonsConfig(
+                          calendarType: CalendarDatePicker2Type.range,
+                        ),
+                        dialogSize: const Size(325, 400),
+                        value: _dates,
+                        borderRadius: BorderRadius.circular(15),
+                        // builder: (context, child) => DatePickerCalendar2(),
+                      );
+                      // controller.signUp();
                     },
                   ),
                   SizedBox(height: 18),
