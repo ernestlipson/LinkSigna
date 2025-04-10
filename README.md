@@ -40,7 +40,7 @@ Replace the placeholders below with actual screenshots of your app.
 | Feature                           | Screenshot                                    |
 |-----------------------------------|----------------------------------------------|
 | **Home Screen**                   | ![Home Screen](assets/dummy/interpreter_home.png) |
-| **Interpreter Profile**           | ![Interpreter Booking](assets/dummy/book_interpreter.png) |
+| **Interpreter Profile**           | <img src="assets/dummy/book_interpreter.png" width="100"/> |
 | **Booking Screen**                | ![Booking Screen](./dummy_images/booking_screen.png) |
 
 > Note: Add your actual images under a `dummy_images` directory in your project.
