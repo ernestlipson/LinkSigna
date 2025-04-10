@@ -65,6 +65,105 @@ LinkSigna
     ├── Constants
     ├── Dependency Injection
 ```
+### State Management (GetX)
+
+```markdown
+## State Management with GetX
+
+This project uses **GetX** for state management, route management, and dependency injection, making the app structure simpler and more efficient.
+
+### Why GetX?
+- **Simple to use:** No context required for state updates.
+- **Efficient:** High performance with minimal boilerplate.
+- **Versatile:** Combines state management, dependency injection, and routing.
+
+### Basic Example of GetX Usage
+
+#### State Management:
+To manage the state, create a controller class that extends `GetxController`:
+```dart
+import 'package:get/get.dart';
+
+class CounterController extends GetxController {
+  var count = 0.obs;
+
+  void increment() {
+    count++;
+  }
+}
+```
+
+In your UI, use `GetBuilder` or `Obx` to update the UI reactively:
+```dart
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'counter_controller.dart';
+
+class CounterPage extends StatelessWidget {
+  final CounterController controller = Get.put(CounterController());
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('GetX Counter')),
+      body: Center(
+        child: Obx(() => Text('Count: ${controller.count}', style: TextStyle(fontSize: 24))),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: controller.increment,
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+```
+
+#### Routing:
+Define your routes in `GetMaterialApp`:
+```dart
+GetMaterialApp(
+  initialRoute: '/',
+  getPages: [
+    GetPage(name: '/', page: () => HomePage()),
+    GetPage(name: '/details', page: () => DetailsPage()),
+  ],
+);
+```
+
+Navigate between pages:
+```dart
+Get.toNamed('/details');
+```
+
+### Get CLI
+
+To simplify project setup and management, use **Get CLI**.
+
+#### Installation:
+Install Get CLI globally:
+```bash
+dart pub global activate get_cli
+```
+
+#### Common Commands:
+- Create a new project:
+  ```bash
+  get create project
+  ```
+- Generate a new page:
+  ```bash
+  get create page:pageName
+  ```
+- Generate a controller:
+  ```bash
+  get create controller:name
+  ```
+
+For more details, visit the [GetX documentation](https://pub.dev/packages/get) and [Get CLI documentation](https://pub.dev/packages/get_cli).
+
+---
+
+Let me know if you'd like me to directly update this in your repository or assist further!
 
 ### Project Architecture Diagram
 
