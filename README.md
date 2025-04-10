@@ -1,6 +1,3 @@
-Here is an updated and professional README file for your project. I have structured it to include the project description, features, dummy images placeholders, and a project architecture section. You can replace the dummy images with actual images and diagrams as required.
-
----
 
 # LinkSigna - Sign Language App
 
@@ -9,25 +6,30 @@ LinkSigna is a Flutter-based mobile application designed to bridge the gap for t
 ## Features
 
 ### User Authentication
+
 - Sign up and login with OTP verification.
 - Social login options (Google, Facebook, etc.).
 
 ### Interpreter Booking
+
 - Search and book sign language interpreters.
 - View interpreter profiles, reviews, and availability.
 - Schedule and manage appointments.
 
 ### User Dashboard
+
 - Personalized dashboard for managing bookings.
 - Notifications for upcoming appointments.
 - Payment integration for booking interpreters.
 
 ### Interpreter Management
+
 - Sign language interpreters can register and create profiles.
 - Manage availability and schedules.
 - View booking requests and reviews.
 
 ### Accessibility Features
+
 - User-friendly interface designed for accessibility.
 - Real-time notifications and reminders.
 
