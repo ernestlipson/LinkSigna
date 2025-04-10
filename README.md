@@ -39,7 +39,7 @@ Replace the placeholders below with actual screenshots of your app.
 
 | Feature                           | Screenshot                                    |
 |-----------------------------------|----------------------------------------------|
-| **Home Screen**                   | ![Home Screen](./dummy_images/home_screen.png) |
+| **Home Screen**                   | ![Home Screen](/dummy/book_interpreter.png) |
 | **Interpreter Profile**           | ![Interpreter Profile](./dummy_images/profile_screen.png) |
 | **Booking Screen**                | ![Booking Screen](./dummy_images/booking_screen.png) |
 
