@@ -4,6 +4,7 @@ import 'package:sign_language_app/presentation/components/custom_app_bar.compone
 import 'package:sign_language_app/presentation/home/home.dashboard.dart';
 
 import '../../infrastructure/utils/app_icons.dart';
+import '../components/coming_soon_placeholder.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,10 +18,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const List<Widget> _pages = <Widget>[
     HomeDashboard(),
-    Center(child: Text('Interpreter', style: TextStyle(fontSize: 20))),
-    Center(child: Text('Sessions', style: TextStyle(fontSize: 20))),
-    Center(child: Text('History', style: TextStyle(fontSize: 20))),
-    Center(child: Text('Setting', style: TextStyle(fontSize: 20))),
+    ComingSoonPlaceholder(),
+    ComingSoonPlaceholder(),
+    ComingSoonPlaceholder(),
+    ComingSoonPlaceholder(),
   ];
 
   void _onItemTapped(int index) {
@@ -47,14 +48,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNotificationTap() {
-    // Handle notification tap
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Notifications clicked')),
     );
   }
 
   void _onProfileTap() {
-    // Handle profile tap
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile clicked')),
     );
@@ -65,48 +64,58 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
+        profileImageUrl:
+            "https://image.lexica.art/full_webp/9c76b727-5409-4d42-be53-9b3e41e5f2db",
         hasNotification: true, // Set to true to show the red notification dot
         onHelpTap: _onHelpTap,
         onNotificationTap: _onNotificationTap,
         onProfileTap: _onProfileTap,
-        // You can provide a profile image URL here
-        // profileImageUrl: 'https://example.com/profile.jpg',
       ),
       body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: Colors.grey[700],
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-        items: [
-          BottomNavigationBarItem(
-            icon: AppIcons.home(size: 24, color: Colors.grey[700]),
-            activeIcon: AppIcons.home(size: 24, color: primaryColor),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 3,
+            blurRadius: 1,
+            offset: const Offset(0, 3),
           ),
-          BottomNavigationBarItem(
-            icon: AppIcons.calendar(size: 24),
-            activeIcon: AppIcons.calendar(size: 24, color: primaryColor),
-            label: 'Interpreter',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.access_time),
-            label: 'Sessions',
-          ),
-          BottomNavigationBarItem(
-            icon: AppIcons.diagram(size: 24),
-            activeIcon: AppIcons.diagram(size: 24, color: primaryColor),
-            label: 'History',
-          ),
-          BottomNavigationBarItem(
-            icon: AppIcons.setting(size: 24),
-            activeIcon: AppIcons.setting(size: 24, color: primaryColor),
-            label: 'Setting',
-          ),
-        ],
+        ]),
+        child: BottomNavigationBar(
+          backgroundColor: Colors.white,
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: primaryColor,
+          unselectedItemColor: Colors.grey[700],
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          items: [
+            BottomNavigationBarItem(
+              icon: AppIcons.home(size: 24, color: Colors.grey[700]),
+              activeIcon: AppIcons.home(size: 24, color: primaryColor),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: AppIcons.calendar(size: 24),
+              activeIcon: AppIcons.calendar(size: 24, color: primaryColor),
+              label: 'Interpreter',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.access_time),
+              label: 'Sessions',
+            ),
+            BottomNavigationBarItem(
+              icon: AppIcons.diagram(size: 24),
+              activeIcon: AppIcons.diagram(size: 24, color: primaryColor),
+              label: 'History',
+            ),
+            BottomNavigationBarItem(
+              icon: AppIcons.setting(size: 24),
+              activeIcon: AppIcons.setting(size: 24, color: primaryColor),
+              label: 'Setting',
+            ),
+          ],
+        ),
       ),
     );
   }

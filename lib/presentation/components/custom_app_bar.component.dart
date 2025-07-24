@@ -50,13 +50,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               GestureDetector(
                 onTap: onProfileTap,
                 child: Container(
-                  height: 32,
-                  width: 32,
+                  height: 33,
+                  width: 33,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFF00C853),
-                      width: 3,
+                      color: const Color(0xFFE4E4E4),
+                      width: 2,
                     ),
                   ),
                   child: ClipOval(
