@@ -18,4 +18,7 @@ class ScreenStrings {
   static const String alreadyHaveAccount = "Already have an account? ";
   static const String loginText = "Login";
   static const String requiredFieldError = "This field is required";
+  static const String phoneValidationError = "Phone number must be exactly 10 digits";
+  static const String rememberMe = "Remember me";
+  static const String forgotPassword = "Forgot Password?";
 }

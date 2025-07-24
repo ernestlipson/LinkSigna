@@ -1,25 +1,82 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sqflite/sqflite.dart';
+
+import '../../shared/controllers/country.controller.dart';
+import '../../utils/screens.strings.dart';
 
 class ForgotPasswordController extends GetxController {
-  Future<void> appDatabase() async {
-    try {
-      // Simulate a database operation
-      final database = await openDatabase('my_database.db', version: 1,
-          onCreate: (db, version) {
-        // Create tables
-        return db.execute(
-          'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT)',
-        );
-      });
-      await Future.delayed(Duration(seconds: 2));
-      print("Database opened successfully");
-    } catch (e) {
-      print("Error opening database: $e");
-    }
+  final phoneController = TextEditingController();
+  final isPhoneValid = true.obs;
+  final phoneErrorMessage = ''.obs;
+  final isLoading = false.obs;
+
+  // Get the shared country controller
+  CountryController get countryController => Get.find<CountryController>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Listen to phone input changes and validate in real-time
+    phoneController.addListener(_onPhoneChanged);
   }
 
-  final count = 0.obs;
+  @override
+  void onClose() {
+    phoneController.removeListener(_onPhoneChanged);
+    phoneController.dispose();
+    super.onClose();
+  }
 
-  void increment() => count.value++;
+  void _onPhoneChanged() {
+    validatePhone();
+  }
+
+  void validatePhone() {
+    final phone = phoneController.text.trim();
+    
+    if (phone.isEmpty) {
+      isPhoneValid.value = false;
+      phoneErrorMessage.value = ScreenStrings.requiredFieldError;
+      return;
+    }
+
+    // Check if phone contains only digits
+    if (!RegExp(r'^[0-9]+$').hasMatch(phone)) {
+      isPhoneValid.value = false;
+      phoneErrorMessage.value = "Phone number must contain only digits";
+      return;
+    }
+
+    // Check if phone number is exactly 10 digits
+    if (phone.length != 10) {
+      isPhoneValid.value = false;
+      phoneErrorMessage.value = ScreenStrings.phoneValidationError;
+      return;
+    }
+
+    isPhoneValid.value = true;
+    phoneErrorMessage.value = '';
+  }
+
+  Future<void> sendVerificationCode() async {
+    validatePhone();
+    if (!isPhoneValid.value) return;
+
+    isLoading.value = true;
+    try {
+      // Simulate API call to send verification code
+      await Future.delayed(const Duration(seconds: 2));
+      Get.snackbar(
+          'Success', 'A 6-digit code has been sent to ${phoneController.text}',
+          snackPosition: SnackPosition.BOTTOM);
+
+      // Navigate to verification code screen (You'll need to create this later)
+      // Get.toNamed(Routes.VERIFICATION_CODE);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to send verification code',
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }

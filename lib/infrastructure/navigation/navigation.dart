@@ -45,7 +45,6 @@ class Nav {
       name: Routes.FORGOT_PASSWORD,
       page: () => const ForgotPasswordScreen(),
       binding: ForgotPasswordControllerBinding(),
-      middlewares: [AuthMiddleware()],
     ),
   ];
 }
