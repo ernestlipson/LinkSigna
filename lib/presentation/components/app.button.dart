@@ -13,8 +13,11 @@ class CustomButton extends StatelessWidget {
   /// Optionally, you can pass a [TextStyle] to customize the text style.
   final TextStyle? textStyle;
 
+  /// The color of the button.
+  final Color? color;
+
   /// Indicates whether the button is in a loading state.
-  final bool loading;
+  final bool isLoading;
 
   const CustomButton({
     super.key,
@@ -22,7 +25,8 @@ class CustomButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.textStyle,
-    this.loading = false,
+    this.color,
+    this.isLoading = false,
   });
 
   @override
@@ -32,7 +36,8 @@ class CustomButton extends StatelessWidget {
       height: 44,
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF9E1068), // Background color #9E1068
+        color:
+            color ?? const Color(0xFF9E1068), // Use provided color or default
         borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(
@@ -47,9 +52,9 @@ class CustomButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: loading ? null : onPressed,
+          onTap: isLoading ? null : onPressed,
           child: Center(
-            child: loading
+            child: isLoading
                 ? const CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   )

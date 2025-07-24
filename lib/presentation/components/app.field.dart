@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 
 class CustomTextFormField extends StatelessWidget {
@@ -24,6 +25,8 @@ class CustomTextFormField extends StatelessWidget {
   final TextInputType? keyboardType;
   final String? errorText; // New: to display validation errors
   final String labelText; // New: label text for the field
+  final int? maxLength; // New: maximum character length
+  final List<TextInputFormatter>? inputFormatters; // New: input formatters
 
   const CustomTextFormField(
       {super.key,
@@ -35,7 +38,9 @@ class CustomTextFormField extends StatelessWidget {
       this.prefix,
       this.suffix,
       this.keyboardType,
-      this.errorText});
+      this.errorText,
+      this.maxLength,
+      this.inputFormatters});
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +72,8 @@ class CustomTextFormField extends StatelessWidget {
             controller: controller,
             obscureText: obscureText,
             keyboardType: keyboardType,
+            maxLength: maxLength,
+            inputFormatters: inputFormatters,
             // Basic validator to ensure field is filled if required.
             validator: (value) {
               if (isRequired && (value == null || value.trim().isEmpty)) {
@@ -88,6 +95,7 @@ class CustomTextFormField extends StatelessWidget {
               prefixIcon: prefix,
               suffixIcon: suffix,
               errorText: errorText,
+              counterText: "", // Hide the default counter text
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8), // borderRadiusLG
                 borderSide: const BorderSide(

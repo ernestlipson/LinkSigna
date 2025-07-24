@@ -72,8 +72,10 @@ class SignupScreen extends GetView<SignupController> {
                           left: 8,
                         ),
                         child: Obx(() {
-                          final flag = controller.countryFlag.value;
-                          final flagLoading = controller.countryLoading.value;
+                          final flag =
+                              controller.countryController.countryFlag.value;
+                          final flagLoading =
+                              controller.countryController.countryLoading.value;
                           return flagLoading
                               ? SizedBox.shrink()
                               : flag != null
@@ -120,7 +122,7 @@ class SignupScreen extends GetView<SignupController> {
                   Row(
                     children: [
                       Obx(() => Checkbox(
-                            side: BorderSide(),
+                            side: BorderSide(color: Color(0xFFFFD6E7)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4.0),
                             ),
@@ -132,8 +134,7 @@ class SignupScreen extends GetView<SignupController> {
                           )),
                       Expanded(
                           child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 9.0)
-                            .copyWith(right: 12),
+                        padding: const EdgeInsets.only(right: 18.0),
                         child: Text(
                           ScreenStrings.termsAndPrivacy,
                         ),
@@ -143,9 +144,7 @@ class SignupScreen extends GetView<SignupController> {
                   SizedBox(height: 20),
                   CustomButton(
                     text: ScreenStrings.signUpButton,
-                    onPressed: () {
-                      controller.signUp();
-                    },
+                    onPressed: () => controller.signUp(),
                   ),
                   SizedBox(height: 18),
                   Center(

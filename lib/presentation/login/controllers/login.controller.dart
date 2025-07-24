@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+
 import '../../../infrastructure/dal/services/google.signin.service.dart';
+import '../../shared/controllers/country.controller.dart';
 
 class LoginController extends GetxController {
+  GoogleSignInService googleSignInService = GoogleSignInService.initialize;
   // Controllers to read the text values
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -12,6 +15,12 @@ class LoginController extends GetxController {
 
   // Add this to your LoginController class
   final RxBool isPasswordVisible = false.obs;
+
+  // Remember me state
+  final RxBool isRememberMe = false.obs;
+
+  // Get the shared country controller
+  CountryController get countryController => Get.find<CountryController>();
 
 // Add this method to toggle password visibility
   void togglePasswordVisibility() {

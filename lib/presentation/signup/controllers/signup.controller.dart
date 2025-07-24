@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../domain/entities/flag.entity.dart';
-import '../../../domain/repositories/country.repo.dart';
+import '../../shared/controllers/country.controller.dart';
 
 class SignupController extends GetxController {
   final nameController = TextEditingController();
@@ -11,18 +10,7 @@ class SignupController extends GetxController {
 
   final RxBool isTermsAccepted = false.obs;
   final RxBool isPasswordVisible = false.obs;
-
-  final countryLoading = false.obs;
-
-  final CountryRepository countryRepository = CountryRepository.instance;
-
-  final Rx<Flag?> countryFlag = Rx<Flag?>(null);
-
-  @override
-  void onInit() {
-    fetchCountryFlag();
-    super.onInit();
-  }
+  CountryController get countryController => Get.find<CountryController>();
 
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
@@ -56,18 +44,5 @@ class SignupController extends GetxController {
     if (!isFormValid) return;
     Get.snackbar('Success', 'All fields are valid!',
         snackPosition: SnackPosition.BOTTOM);
-  }
-
-  void fetchCountryFlag() async {
-    try {
-      countryLoading.value = true;
-      final flag = await countryRepository.getCountryFlag();
-      countryFlag.value = flag;
-      countryLoading.value = false;
-    } catch (e, s) {
-      Get.log("Fetch Flag: $e $s");
-      Get.snackbar('Error', 'Failed to fetch country flag',
-          snackPosition: SnackPosition.BOTTOM);
-    }
   }
 }

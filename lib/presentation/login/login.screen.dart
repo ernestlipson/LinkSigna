@@ -3,9 +3,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/utils/app.constants.dart';
 
+import '../../infrastructure/navigation/routes.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
 import '../components/app.outline.button.dart';
+import '../utils/screens.strings.dart';
 import 'controllers/login.controller.dart';
 
 class LoginScreen extends GetView<LoginController> {
@@ -30,60 +32,61 @@ class LoginScreen extends GetView<LoginController> {
                 ),
               ),
               Column(
-                spacing: 30,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Sign Up",
+                    "Log In",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                   // Name Field
+                  SizedBox(height: 30),
                   Obx(() {
                     return CustomTextFormField(
-                      hintText: 'Enter your name',
-                      labelText: 'Name', // New: label text
-                      controller: controller.nameController,
-                      isRequired: true, // New: mark as required
-                      errorText: controller.isNameValid.value
-                          ? null
-                          : 'This field is required',
-                    );
-                  }),
-                  // Phone Field (with optional prefix)
-                  Obx(() {
-                    return CustomTextFormField(
-                      hintText: 'Enter Phone Number',
-                      labelText: 'Phone Number', // New: label text
+                      hintText: ScreenStrings.phoneHint,
+                      labelText: ScreenStrings.phoneLabel, // New: label text
                       controller: controller.phoneController,
                       keyboardType: TextInputType.phone,
                       prefix: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(
-                          '🇬🇭', // Ghana flag emoji
-                          style: TextStyle(fontSize: 24),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                        ).copyWith(
+                          left: 8,
                         ),
+                        child: Obx(() {
+                          final flag =
+                              controller.countryController.countryFlag.value;
+                          final flagLoading =
+                              controller.countryController.countryLoading.value;
+                          return flagLoading
+                              ? SizedBox.shrink()
+                              : flag != null
+                                  ? Image.network(flag.png,
+                                      width: 20, height: 20)
+                                  : SizedBox.shrink();
+                        }),
                       ),
                       isRequired: true, // New: mark as required
                       errorText: controller.isPhoneValid.value
                           ? null
-                          : 'This field is required',
+                          : ScreenStrings.requiredFieldError,
                     );
                   }),
+                  SizedBox(height: 10),
                   // Password Field
                   Obx(() {
                     return CustomTextFormField(
-                      hintText: 'Enter your password',
-                      labelText: 'Password',
+                      hintText: ScreenStrings.passwordHint,
+                      labelText: ScreenStrings.passwordLabel,
                       controller: controller.passwordController,
                       obscureText: !controller.isPasswordVisible
                           .value, // Toggle based on visibility state
                       isRequired: true,
                       errorText: controller.isPasswordValid.value
                           ? null
-                          : 'This field is required',
+                          : ScreenStrings.requiredFieldError,
                       suffix: IconButton(
                         onPressed: controller
                             .togglePasswordVisibility, // Use the controller method
@@ -93,27 +96,61 @@ class LoginScreen extends GetView<LoginController> {
                                   .visibility_off // Show this when password is visible
                               : Icons
                                   .visibility, // Show this when password is hidden
+                          color: Colors.black.withAlpha(64),
+                          size: 20,
                         ),
                       ),
                     );
                   }),
+                  SizedBox(height: 10),
+                  //Add a Row containing a Remember me toggle and Forgot Password
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Obx(() => Checkbox(
-                            value: controller.isTermsAccepted.value,
-                            onChanged: (bool? newValue) {
-                              controller.isTermsAccepted.value =
-                                  newValue ?? false;
-                            },
-                          )),
-                      Expanded(
+                      // Remember Me Toggle
+                      Row(
+                        children: [
+                          Obx(() => Checkbox(
+                                side: BorderSide(color: Color(0xFFFFD6E7)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4.0),
+                                ),
+                                value: controller.isRememberMe.value,
+                                onChanged: (bool? newValue) {
+                                  controller.isRememberMe.value =
+                                      newValue ?? false;
+                                },
+                              )),
+                          Text(
+                            ScreenStrings.rememberMe,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Forgot Password Link
+                      GestureDetector(
+                        onTap: () {
+                          print("Navigating to forgot password screen");
+                          Get.toNamed(Routes.FORGOT_PASSWORD);
+                        },
                         child: Text(
-                            'By signing up, you agree to LinkSigna Terms of Service and Privacy policy'),
+                          ScreenStrings.forgotPassword,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF9E1068),
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
                       ),
                     ],
                   ),
+                  SizedBox(height: 20),
                   CustomButton(
-                    text: "Sign up",
+                    text: "Log In",
                     onPressed: () {
                       // Validate all fields at once
                       final isFormValid = controller.validateAll();
