@@ -3,7 +3,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/utils/app.constants.dart';
 
-import '../../infrastructure/navigation/routes.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
 import '../components/app.outline.button.dart';
@@ -76,79 +75,79 @@ class LoginScreen extends GetView<LoginController> {
                   }),
                   SizedBox(height: 10),
                   // Password Field
-                  Obx(() {
-                    return CustomTextFormField(
-                      hintText: ScreenStrings.passwordHint,
-                      labelText: ScreenStrings.passwordLabel,
-                      controller: controller.passwordController,
-                      obscureText: !controller.isPasswordVisible
-                          .value, // Toggle based on visibility state
-                      isRequired: true,
-                      errorText: controller.isPasswordValid.value
-                          ? null
-                          : ScreenStrings.requiredFieldError,
-                      suffix: IconButton(
-                        onPressed: controller
-                            .togglePasswordVisibility, // Use the controller method
-                        icon: Icon(
-                          controller.isPasswordVisible.value
-                              ? Icons
-                                  .visibility_off // Show this when password is visible
-                              : Icons
-                                  .visibility, // Show this when password is hidden
-                          color: Colors.black.withAlpha(64),
-                          size: 20,
-                        ),
-                      ),
-                    );
-                  }),
-                  SizedBox(height: 10),
-                  //Add a Row containing a Remember me toggle and Forgot Password
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Remember Me Toggle
-                      Row(
-                        children: [
-                          Obx(() => Checkbox(
-                                side: BorderSide(color: Color(0xFFFFD6E7)),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4.0),
-                                ),
-                                value: controller.isRememberMe.value,
-                                onChanged: (bool? newValue) {
-                                  controller.isRememberMe.value =
-                                      newValue ?? false;
-                                },
-                              )),
-                          Text(
-                            ScreenStrings.rememberMe,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Forgot Password Link
-                      GestureDetector(
-                        onTap: () {
-                          print("Navigating to forgot password screen");
-                          Get.toNamed(Routes.FORGOT_PASSWORD);
-                        },
-                        child: Text(
-                          ScreenStrings.forgotPassword,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF9E1068),
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
+                  // Obx(() {
+                  //   return CustomTextFormField(
+                  //     hintText: ScreenStrings.passwordHint,
+                  //     labelText: ScreenStrings.passwordLabel,
+                  //     controller: controller.passwordController,
+                  //     obscureText: !controller.isPasswordVisible
+                  //         .value, // Toggle based on visibility state
+                  //     isRequired: true,
+                  //     errorText: controller.isPasswordValid.value
+                  //         ? null
+                  //         : ScreenStrings.requiredFieldError,
+                  //     suffix: IconButton(
+                  //       onPressed: controller
+                  //           .togglePasswordVisibility, // Use the controller method
+                  //       icon: Icon(
+                  //         controller.isPasswordVisible.value
+                  //             ? Icons
+                  //                 .visibility_off // Show this when password is visible
+                  //             : Icons
+                  //                 .visibility, // Show this when password is hidden
+                  //         color: Colors.black.withAlpha(64),
+                  //         size: 20,
+                  //       ),
+                  //     ),
+                  //   );
+                  // }),
+                  // SizedBox(height: 10),
+                  // //Add a Row containing a Remember me toggle and Forgot Password
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //   children: [
+                  //     // Remember Me Toggle
+                  //     Row(
+                  //       children: [
+                  //         Obx(() => Checkbox(
+                  //               side: BorderSide(color: Color(0xFFFFD6E7)),
+                  //               shape: RoundedRectangleBorder(
+                  //                 borderRadius: BorderRadius.circular(4.0),
+                  //               ),
+                  //               value: controller.isRememberMe.value,
+                  //               onChanged: (bool? newValue) {
+                  //                 controller.isRememberMe.value =
+                  //                     newValue ?? false;
+                  //               },
+                  //             )),
+                  //         Text(
+                  //           ScreenStrings.rememberMe,
+                  //           style: TextStyle(
+                  //             fontSize: 14,
+                  //             fontWeight: FontWeight.w400,
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //     // Forgot Password Link
+                  //     GestureDetector(
+                  //       onTap: () {
+                  //         print("Navigating to forgot password screen");
+                  //         Get.toNamed(Routes.FORGOT_PASSWORD);
+                  //       },
+                  //       child: Text(
+                  //         ScreenStrings.forgotPassword,
+                  //         style: TextStyle(
+                  //           fontSize: 14,
+                  //           fontWeight: FontWeight.w500,
+                  //           color: Color(0xFF9E1068),
+                  //           decoration: TextDecoration.underline,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                  // SizedBox(height: 20),
                   CustomButton(
                     text: "Log In",
                     onPressed: () {
@@ -165,12 +164,17 @@ class LoginScreen extends GetView<LoginController> {
                       }
                     },
                   ),
+                  SizedBox(height: 16),
                   Center(child: Text("Or")), // Center the "Or" text
-                  GoogleSignInButton(
-                    onPressed: () async {
-                      await controller.signInWithGoogle();
-                    },
-                  ),
+                  SizedBox(height: 16),
+
+                  // Google Sign In Button
+                  Obx(() => GoogleSignInButton(
+                        onPressed: controller.isGoogleSignInLoading.value
+                            ? null
+                            : controller.signInWithGoogle,
+                        isLoading: controller.isGoogleSignInLoading.value,
+                      )),
                   Center(
                     child: GestureDetector(
                       onTap: () {

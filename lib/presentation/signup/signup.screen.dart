@@ -2,20 +2,18 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 
 import '../../infrastructure/navigation/routes.dart';
 import '../../infrastructure/utils/app.constants.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
-import '../components/app.outline.button.dart';
-import '../login/controllers/login.controller.dart';
-import '../utils/screens.strings.dart'; // Import the strings file
+import '../utils/screens.strings.dart';
 import 'controllers/signup.controller.dart';
 
 class SignupScreen extends GetView<SignupController> {
   SignupScreen({super.key});
 
-  final loginController = Get.put(LoginController());
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,34 +89,6 @@ class SignupScreen extends GetView<SignupController> {
                     );
                   }),
                   SizedBox(height: 10),
-                  // Password Field
-                  Obx(() {
-                    return CustomTextFormField(
-                      hintText: ScreenStrings.passwordHint,
-                      labelText: ScreenStrings.passwordLabel,
-                      controller: controller.passwordController,
-                      obscureText: !controller.isPasswordVisible
-                          .value, // Toggle based on visibility state
-                      isRequired: true,
-                      errorText: controller.isPasswordValid.value
-                          ? null
-                          : ScreenStrings.requiredFieldError,
-                      suffix: IconButton(
-                        onPressed: controller
-                            .togglePasswordVisibility, // Use the controller method
-                        icon: Icon(
-                          controller.isPasswordVisible.value
-                              ? Icons
-                                  .visibility_off // Show this when password is visible
-                              : Icons
-                                  .visibility, // Show this when password is hidden
-                          color: Colors.black.withAlpha(64),
-                          size: 20,
-                        ),
-                      ),
-                    );
-                  }),
-                  SizedBox(height: 10),
                   Row(
                     children: [
                       Obx(() => Checkbox(
@@ -146,18 +116,19 @@ class SignupScreen extends GetView<SignupController> {
                     text: ScreenStrings.signUpButton,
                     onPressed: () => controller.signUp(),
                   ),
-                  SizedBox(height: 18),
-                  Center(
-                      child: Text(ScreenStrings.orText,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                          ))), // Center the "Or" text
-                  SizedBox(height: 18),
-                  GoogleSignInButton(
-                    onPressed: () async {
-                      await loginController.signInWithGoogle();
-                    },
-                  ),
+                  // SizedBox(height: 18),
+                  // Center(
+                  //     child: Text(ScreenStrings.orText,
+                  //         style: TextStyle(
+                  //           fontWeight: FontWeight.w500,
+                  //         ))), // Center the "Or" text
+                  // SizedBox(height: 18),
+                  // GoogleSignInButton(
+                  //   onPressed: controller.isGoogleSignInLoading.value
+                  //       ? null
+                  //       : controller.signInWithGoogle,
+                  //   isLoading: controller.isGoogleSignInLoading.value,
+                  // ),
                   SizedBox(height: 30),
                   Center(
                     child: RichText(
@@ -170,8 +141,9 @@ class SignupScreen extends GetView<SignupController> {
                           TextSpan(
                             text: ScreenStrings.loginText,
                             style: TextStyle(
-                                color: Color(0xFF9E1068),
-                                fontFamily: "WorkSans"), // Colored text
+                              color: primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ), // Colored text
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
                                 Get.offAndToNamed(

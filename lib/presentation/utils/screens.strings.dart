@@ -15,10 +15,12 @@ class ScreenStrings {
   static const String orText = "Or";
   static const String signUpSuccess = "Sign up successful";
   static const String signUpFailed = "Sign up failed";
-  static const String alreadyHaveAccount = "Already have an account? ";
+  static const String alreadyHaveAccount = "Already have an account?  ";
+  static const String dontHaveAccount = "Don't have an account?  ";
   static const String loginText = "Login";
   static const String requiredFieldError = "This field is required";
-  static const String phoneValidationError = "Phone number must be exactly 10 digits";
+  static const String phoneValidationError =
+      "Phone number must be exactly 10 digits";
   static const String rememberMe = "Remember me";
   static const String forgotPassword = "Forgot Password?";
 }

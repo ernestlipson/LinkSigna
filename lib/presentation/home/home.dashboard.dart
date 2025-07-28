@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../shared/controllers/user.controller.dart';
 
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final userController = Get.find<UserController>();
     final sessions = [
       {
         'name': 'Arlene McCoy',
@@ -36,12 +40,6 @@ class HomeDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 10),
-            const Text(
-              'Welcome Ama',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,

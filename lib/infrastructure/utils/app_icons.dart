@@ -58,4 +58,9 @@ class AppIcons {
         height: height,
         color: color,
       );
+  static Widget amico({double? width, double? height}) => SvgPicture.asset(
+        'assets/icons/amico.svg',
+        width: width,
+        height: height,
+      );
 }

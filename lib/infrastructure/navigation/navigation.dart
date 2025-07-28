@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 
 import '../../config.dart';
@@ -45,6 +46,16 @@ class Nav {
       name: Routes.FORGOT_PASSWORD,
       page: () => const ForgotPasswordScreen(),
       binding: ForgotPasswordControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.OTP,
+      page: () => const OtpScreen(),
+      binding: OtpControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.SESSIONS,
+      page: () => const SessionsScreen(),
+      binding: SessionsControllerBinding(),
     ),
   ];
 }
