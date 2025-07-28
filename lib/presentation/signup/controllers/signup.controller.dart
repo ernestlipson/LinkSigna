@@ -56,15 +56,17 @@ class SignupController extends GetxController {
 
     isPhoneOtpLoading.value = true;
     try {
-      final userId = await authRepo.sendOtp(phoneController.text.trim());
-      otpUserId.value = userId;
+      // final userId = await authRepo.sendOtp(phoneController.text.trim());
+      // otpUserId.value = userId;
 
       Get.snackbar('Success', 'OTP sent to your phone',
           snackPosition: SnackPosition.BOTTOM);
 
       // Navigate to OTP screen with userId
-      Get.toNamed(Routes.OTP,
-          arguments: {'userId': userId, 'phone': phoneController.text.trim()});
+      Get.toNamed(Routes.OTP, arguments: {
+        'userId': "userId",
+        'phone': phoneController.text.trim()
+      });
     } catch (e) {
       Get.snackbar('Error', 'Failed to send OTP:  ${e.toString()}',
           snackPosition: SnackPosition.BOTTOM);

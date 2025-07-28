@@ -6,7 +6,7 @@ import 'controllers/otp.controller.dart';
 
 class OtpScreen extends GetView<OtpController> {
   const OtpScreen({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,43 +56,53 @@ class OtpScreen extends GetView<OtpController> {
               ),
               const SizedBox(height: 16),
               Obx(() => Text(
-                'Enter the 6-digit code sent to ${controller.phoneNumber}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF232323),
-                ),
-              )),
+                    'Enter the 6-digit code sent to ${controller.phoneNumber}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF232323),
+                    ),
+                  )),
               const SizedBox(height: 32),
-              // OTP Input Field (single field)
-              Container(
-                width: 200,
-                child: TextField(
-                  controller: controller.otpController,
-                  textAlign: TextAlign.center,
-                  maxLength: 6,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  decoration: InputDecoration(
-                    hintText: '000000',
-                    counterText: '',
-                    border: OutlineInputBorder(
+              // OTP Input Fields (6 separate boxes)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(6, (index) {
+                  return Container(
+                    width: 48,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: controller.focusedIndex.value == index
+                            ? const Color(0xFF9C0057)
+                            : Colors.black54,
+                        width: 1.5,
+                      ),
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.black54, width: 1.2),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Color(0xFF9C0057), width: 1.2),
+                    child: TextField(
+                      controller: controller.otpControllers[index],
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      maxLength: 1,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: const InputDecoration(
+                        counterText: '',
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onChanged: (value) =>
+                          controller.onOtpChanged(index, value),
+                      focusNode: controller.focusNodes[index],
                     ),
-                  ),
-                  style: const TextStyle(
-                    fontSize: 24,
-                    letterSpacing: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                  );
+                }),
               ),
               const SizedBox(height: 24),
               Row(
@@ -104,12 +114,18 @@ class OtpScreen extends GetView<OtpController> {
                   ),
                   Obx(() => controller.canResend.value
                       ? GestureDetector(
-                          onTap: controller.isResendingOtp.value ? null : controller.resendOTP,
+                          onTap: controller.isResendingOtp.value
+                              ? null
+                              : controller.resendOTP,
                           child: Text(
-                            controller.isResendingOtp.value ? 'Resending...' : 'Resend OTP',
+                            controller.isResendingOtp.value
+                                ? 'Resending...'
+                                : 'Resend OTP',
                             style: TextStyle(
                               fontSize: 15,
-                              color: controller.isResendingOtp.value ? Colors.grey : Colors.blue,
+                              color: controller.isResendingOtp.value
+                                  ? Colors.grey
+                                  : Colors.blue,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -128,19 +144,24 @@ class OtpScreen extends GetView<OtpController> {
               SizedBox(
                 width: double.infinity,
                 child: Obx(() => ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9C0057),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: controller.isVerifyingOtp.value ? null : controller.verifyOTP,
-                  child: Text(
-                    controller.isVerifyingOtp.value ? 'Verifying...' : 'Verify Code',
-                    style: const TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                )),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF9C0057),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: controller.isVerifyingOtp.value
+                          ? null
+                          : controller.verifyOTP,
+                      child: Text(
+                        controller.isVerifyingOtp.value
+                            ? 'Verifying...'
+                            : 'Verify Code',
+                        style:
+                            const TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                    )),
               ),
               const SizedBox(height: 16),
               GestureDetector(
