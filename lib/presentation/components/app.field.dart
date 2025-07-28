@@ -27,6 +27,7 @@ class CustomTextFormField extends StatelessWidget {
   final String labelText; // New: label text for the field
   final int? maxLength; // New: maximum character length
   final List<TextInputFormatter>? inputFormatters; // New: input formatters
+  final ValueChanged<String>? onChanged; // Add onChanged callback
 
   const CustomTextFormField(
       {super.key,
@@ -40,7 +41,8 @@ class CustomTextFormField extends StatelessWidget {
       this.keyboardType,
       this.errorText,
       this.maxLength,
-      this.inputFormatters});
+      this.inputFormatters,
+      this.onChanged}); // Add onChanged to constructor
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +120,7 @@ class CustomTextFormField extends StatelessWidget {
                 ),
               ),
             ),
+            onChanged: onChanged, // Wire up onChanged
           ),
         ],
       ),

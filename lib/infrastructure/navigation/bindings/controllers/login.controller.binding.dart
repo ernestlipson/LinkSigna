@@ -1,15 +1,11 @@
 import 'package:get/get.dart';
 
 import '../../../../presentation/login/controllers/login.controller.dart';
-import 'country.controller.binding.dart';
 
 class LoginControllerBinding extends Bindings {
   @override
   void dependencies() {
-    CountryControllerBinding().dependencies();
-
-    Get.lazyPut<LoginController>(
-      () => LoginController(),
-    );
+    // Register login controller (auth dependencies are available globally)
+    Get.lazyPut<LoginController>(() => LoginController());
   }
 }

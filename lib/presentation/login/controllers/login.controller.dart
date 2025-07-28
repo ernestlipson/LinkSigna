@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
-import '../../../infrastructure/dal/services/google.signin.service.dart';
+import '../../../domain/repositories/auth.repo.dart';
+import '../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/country.controller.dart';
 
 class LoginController extends GetxController {
-  GoogleSignInService googleSignInService = GoogleSignInService.initialize;
+  final IAuthRepo authRepo = Get.find<IAuthRepo>();
+
   // Controllers to read the text values
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -19,10 +21,17 @@ class LoginController extends GetxController {
   // Remember me state
   final RxBool isRememberMe = false.obs;
 
+  // Loading states
+  final RxBool isPhoneOtpLoading = false.obs;
+  final RxBool isGoogleSignInLoading = false.obs;
+
+  // OTP related
+  final RxString otpUserId = ''.obs;
+
   // Get the shared country controller
   CountryController get countryController => Get.find<CountryController>();
 
-// Add this method to toggle password visibility
+  // Add this method to toggle password visibility
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
@@ -53,16 +62,75 @@ class LoginController extends GetxController {
     return isNameValid.value && isPhoneValid.value && isPasswordValid.value;
   }
 
-  Future<void> signInWithGoogle() async {
+  // Phone OTP Authentication
+  Future<void> sendPhoneOTP() async {
+    if (!isPhoneValid.value || phoneController.text.trim().isEmpty) {
+      Get.snackbar('Error', 'Please enter a valid phone number',
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    isPhoneOtpLoading.value = true;
     try {
-      final user = await GoogleSignInService.instance.signInWithGoogle();
-      if (user != null) {
-        Get.snackbar('Google Sign-In', 'Sign-in successful!',
-            snackPosition: SnackPosition.BOTTOM);
+      final userId = await authRepo.sendOtp(phoneController.text.trim());
+      otpUserId.value = userId;
+
+      Get.snackbar('Success', 'OTP sent to your phone',
+          snackPosition: SnackPosition.BOTTOM);
+
+      // Navigate to OTP screen with userId
+      Get.toNamed(Routes.OTP,
+          arguments: {'userId': userId, 'phone': phoneController.text.trim()});
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to send OTP: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isPhoneOtpLoading.value = false;
+    }
+  }
+
+  // Google Authentication
+  Future<void> signInWithGoogle() async {
+    isGoogleSignInLoading.value = true;
+    try {
+      final user = await authRepo.googleSignIn();
+
+      Get.snackbar('Success', 'Welcome ${user.name ?? 'User'}!',
+          snackPosition: SnackPosition.BOTTOM);
+
+      // Navigate to home screen
+      Get.offAllNamed(Routes.HOME);
+    } catch (e) {
+      Get.snackbar('Error', 'Google Sign-in failed: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isGoogleSignInLoading.value = false;
+    }
+  }
+
+  // Check if user is already logged in
+  Future<void> checkAuthStatus() async {
+    try {
+      final isLoggedIn = await authRepo.isLoggedIn();
+      if (isLoggedIn) {
+        Get.offAllNamed(Routes.HOME);
       }
     } catch (e) {
-      Get.snackbar('Google Sign-In', 'Sign-in failed: $e',
-          snackPosition: SnackPosition.BOTTOM);
+      print('Error checking auth status: $e');
     }
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    checkAuthStatus();
+  }
+
+  @override
+  void onClose() {
+    nameController.dispose();
+    phoneController.dispose();
+    passwordController.dispose();
+    super.onClose();
   }
 }

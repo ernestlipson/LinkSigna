@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/utils/app_icons.dart';
+
+import '../shared/controllers/user.controller.dart';
 
 class ComingSoonPlaceholder extends StatelessWidget {
   final String title;
@@ -17,6 +20,7 @@ class ComingSoonPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(UserController());
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

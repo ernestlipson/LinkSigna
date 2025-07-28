@@ -5,7 +5,7 @@ import 'package:sign_language_app/presentation/login/controllers/login.controlle
 class AuthMiddleware extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) {
-    return Get.find<LoginController>().passwordController.text.isEmpty
+    return Get.find<LoginController>().phoneController.text.isEmpty
         ? RouteSettings(name: '/login')
         : null;
   }

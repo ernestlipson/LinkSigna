@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'package:sign_language_app/presentation/components/custom_app_bar.component.dart';
 import 'package:sign_language_app/presentation/home/home.dashboard.dart';
 
 import '../../infrastructure/utils/app_icons.dart';
-import '../components/coming_soon_placeholder.dart';
+import '../components/coming.soon.placeholder.dart';
+import '../sessions/sessions.screen.dart';
+import '../sessions/controllers/sessions.controller.dart';
+import '../shared/controllers/user.controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,13 +20,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _pages = <Widget>[
-    HomeDashboard(),
-    ComingSoonPlaceholder(),
-    ComingSoonPlaceholder(),
-    ComingSoonPlaceholder(),
-    ComingSoonPlaceholder(),
-  ];
+  List<Widget> get _pages => <Widget>[
+        const HomeDashboard(),
+        const ComingSoonPlaceholder(),
+        const SessionsScreen(),
+        const ComingSoonPlaceholder(),
+        const ComingSoonPlaceholder(),
+      ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -61,17 +65,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userController = Get.find<UserController>();
+
+    // Ensure SessionsController is available
+    if (!Get.isRegistered<SessionsController>()) {
+      Get.lazyPut<SessionsController>(() => SessionsController());
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
-        profileImageUrl:
-            "https://image.lexica.art/full_webp/9c76b727-5409-4d42-be53-9b3e41e5f2db",
+        profileImageUrl: userController.photoUrl.value.isNotEmpty
+            ? userController.photoUrl.value
+            : "https://image.lexica.art/full_webp/9c76b727-5409-4d42-be53-9b3e41e5f2db",
         hasNotification: true, // Set to true to show the red notification dot
         onHelpTap: _onHelpTap,
         onNotificationTap: _onNotificationTap,
         onProfileTap: _onProfileTap,
       ),
-      body: _pages[_selectedIndex],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              'Welcome ${userController.displayName.value.isNotEmpty ? userController.displayName.value : "User"}',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ),
+          Expanded(child: _pages[_selectedIndex]),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(boxShadow: [
           BoxShadow(
@@ -101,7 +126,8 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Interpreter',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.access_time),
+              icon: Icon(Icons.access_time, color: Colors.grey[700]),
+              activeIcon: Icon(Icons.access_time, color: primaryColor),
               label: 'Sessions',
             ),
             BottomNavigationBarItem(

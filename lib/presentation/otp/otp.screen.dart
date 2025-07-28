@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'controllers/otp.controller.dart';
 
 class OtpScreen extends GetView<OtpController> {
   const OtpScreen({super.key});
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,41 +55,44 @@ class OtpScreen extends GetView<OtpController> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Enter the 6-digit code sent to 0242567903',
+              Obx(() => Text(
+                'Enter the 6-digit code sent to ${controller.phoneNumber}',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   color: Color(0xFF232323),
                 ),
-              ),
+              )),
               const SizedBox(height: 32),
-              // OTP Boxes
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(6, (index) {
-                  return Container(
-                    width: 48,
-                    height: 56,
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black54, width: 1.2),
+              // OTP Input Field (single field)
+              Container(
+                width: 200,
+                child: TextField(
+                  controller: controller.otpController,
+                  textAlign: TextAlign.center,
+                  maxLength: 6,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  decoration: InputDecoration(
+                    hintText: '000000',
+                    counterText: '',
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.black54, width: 1.2),
                     ),
-                    child: Center(
-                      child: TextField(
-                        textAlign: TextAlign.center,
-                        maxLength: 1,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          counterText: '',
-                        ),
-                        style: const TextStyle(fontSize: 24),
-                      ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Color(0xFF9C0057), width: 1.2),
                     ),
-                  );
-                }),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    letterSpacing: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
               Row(
@@ -97,23 +102,32 @@ class OtpScreen extends GetView<OtpController> {
                     "Didn't Receive the OTP? ",
                     style: TextStyle(fontSize: 15, color: Colors.black54),
                   ),
-                  GestureDetector(
-                    onTap: () {}, // TODO: Add resend logic
-                    child: const Text(
-                      'Resend OTP',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
+                  Obx(() => controller.canResend.value
+                      ? GestureDetector(
+                          onTap: controller.isResendingOtp.value ? null : controller.resendOTP,
+                          child: Text(
+                            controller.isResendingOtp.value ? 'Resending...' : 'Resend OTP',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: controller.isResendingOtp.value ? Colors.grey : Colors.blue,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          'Resend in ${controller.resendTimer.value}s',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )),
                 ],
               ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: Obx(() => ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF9C0057),
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -121,16 +135,16 @@ class OtpScreen extends GetView<OtpController> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {}, // TODO: Add verify logic
-                  child: const Text(
-                    'Verify Code',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  onPressed: controller.isVerifyingOtp.value ? null : controller.verifyOTP,
+                  child: Text(
+                    controller.isVerifyingOtp.value ? 'Verifying...' : 'Verify Code',
+                    style: const TextStyle(fontSize: 18, color: Colors.white),
                   ),
-                ),
+                )),
               ),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: () {}, // TODO: Add change phone logic
+                onTap: () => Get.back(),
                 child: const Text(
                   'Change Phone Number',
                   style: TextStyle(fontSize: 16, color: Colors.black54),
