@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/infrastructure/dal/services/firebase.auth.service.dart';
 
-import '../../../domain/repositories/auth.repo.dart';
 import '../../../infrastructure/dal/services/google.signin.service.dart';
 import '../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/country.controller.dart';
 import '../../shared/controllers/user.controller.dart';
 
 class SignupController extends GetxController {
-  final IAuthRepo authRepo = Get.find<IAuthRepo>();
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
-  final passwordController = TextEditingController();
+
+  // Inject FirebaseAuthService
+  late final FirebaseAuthService firebaseAuthService;
 
   // Loading states
   final RxBool isPhoneOtpLoading = false.obs;
@@ -21,16 +22,10 @@ class SignupController extends GetxController {
   final RxString otpUserId = ''.obs;
 
   final RxBool isTermsAccepted = false.obs;
-  final RxBool isPasswordVisible = false.obs;
   CountryController get countryController => Get.find<CountryController>();
-
-  void togglePasswordVisibility() {
-    isPasswordVisible.value = !isPasswordVisible.value;
-  }
 
   final isNameValid = true.obs;
   final isPhoneValid = true.obs;
-  final isPasswordValid = true.obs;
 
   void validateName() {
     isNameValid.value = nameController.text.trim().isNotEmpty;
@@ -38,10 +33,6 @@ class SignupController extends GetxController {
 
   void validatePhone() {
     isPhoneValid.value = phoneController.text.trim().isNotEmpty;
-  }
-
-  void validatePassword() {
-    isPasswordValid.value = passwordController.text.trim().isNotEmpty;
   }
 
   bool validateAll() {
@@ -56,19 +47,20 @@ class SignupController extends GetxController {
 
     isPhoneOtpLoading.value = true;
     try {
-      // final userId = await authRepo.sendOtp(phoneController.text.trim());
-      // otpUserId.value = userId;
+      // The phone number from InternationalPhoneNumberInput is already in E.164 format
+      String phoneNumber = phoneController.text.trim();
+
+      // Request OTP using FirebaseAuthService
+      await firebaseAuthService.requestPhoneOTP(phoneNumber);
 
       Get.snackbar('Success', 'OTP sent to your phone',
           snackPosition: SnackPosition.BOTTOM);
 
-      // Navigate to OTP screen with userId
-      Get.toNamed(Routes.OTP, arguments: {
-        'userId': "userId",
-        'phone': phoneController.text.trim()
-      });
+      // Navigate to OTP screen with phone number
+      Get.toNamed(Routes.OTP,
+          arguments: {'phone': phoneController.text.trim()});
     } catch (e) {
-      Get.snackbar('Error', 'Failed to send OTP:  ${e.toString()}',
+      Get.snackbar('Error', 'Failed to send OTP: ${e.toString()}',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isPhoneOtpLoading.value = false;
@@ -101,6 +93,10 @@ class SignupController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // Initialize FirebaseAuthService
+    firebaseAuthService = Get.find<FirebaseAuthService>();
+
     if (!Get.isRegistered<GoogleSignInService>()) {
       Get.put(GoogleSignInService());
     }

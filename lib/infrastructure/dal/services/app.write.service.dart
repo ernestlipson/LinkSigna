@@ -8,17 +8,21 @@ import '../../../domain/core/interfaces/auth.interface.dart';
 
 class AppWriteService implements IAuthDataSource {
   final account = Get.find<AppWriteClient>().account;
+  AppWriteService get put => Get.put(AppWriteService());
 
   @override
-  Future<models.Token> requestPhoneOTP(String phone) async {
+  Future<void> requestPhoneOTP(String phone) async {
     try {
+      print('Requesting OTP for phone: $phone');
+
       final token = await account.createPhoneToken(
         userId: ID.unique(),
         phone: phone,
       );
-      return token;
+      print('Phone OTP token: $token');
     } catch (e) {
       print('Error requesting phone OTP: $e');
+      print('Error type: ${e.runtimeType}');
       rethrow;
     }
   }
@@ -82,6 +86,20 @@ class AppWriteService implements IAuthDataSource {
       await account.get();
       return true;
     } catch (e) {
+      return false;
+    }
+  }
+
+  // Test network connectivity to AppWrite
+  Future<bool> testConnection() async {
+    try {
+      print('Testing connection to AppWrite...');
+      // Try to get account info to test connection
+      await account.get();
+      print('Connection successful');
+      return true;
+    } catch (e) {
+      print('Connection failed: $e');
       return false;
     }
   }

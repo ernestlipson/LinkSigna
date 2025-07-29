@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
-import '../../../domain/repositories/auth.repo.dart';
+import '../../../infrastructure/dal/services/firebase.auth.service.dart';
+import '../../../infrastructure/dal/services/google.signin.service.dart';
 import '../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/country.controller.dart';
 
 class LoginController extends GetxController {
-  final IAuthRepo authRepo = Get.find<IAuthRepo>();
+  late final FirebaseAuthService firebaseAuthService;
 
   // Controllers to read the text values
   final nameController = TextEditingController();
@@ -72,15 +73,14 @@ class LoginController extends GetxController {
 
     isPhoneOtpLoading.value = true;
     try {
-      final userId = await authRepo.sendOtp(phoneController.text.trim());
-      otpUserId.value = userId;
+      await firebaseAuthService.requestPhoneOTP(phoneController.text.trim());
 
       Get.snackbar('Success', 'OTP sent to your phone',
           snackPosition: SnackPosition.BOTTOM);
 
-      // Navigate to OTP screen with userId
+      // Navigate to OTP screen with phone number
       Get.toNamed(Routes.OTP,
-          arguments: {'userId': userId, 'phone': phoneController.text.trim()});
+          arguments: {'phone': phoneController.text.trim()});
     } catch (e) {
       Get.snackbar('Error', 'Failed to send OTP: ${e.toString()}',
           snackPosition: SnackPosition.BOTTOM);
@@ -93,13 +93,15 @@ class LoginController extends GetxController {
   Future<void> signInWithGoogle() async {
     isGoogleSignInLoading.value = true;
     try {
-      final user = await authRepo.googleSignIn();
-
-      Get.snackbar('Success', 'Welcome ${user.name ?? 'User'}!',
-          snackPosition: SnackPosition.BOTTOM);
-
-      // Navigate to home screen
-      Get.offAllNamed(Routes.HOME);
+      // For now, we'll keep the Google Sign-in service separate
+      // You can integrate Firebase Google Auth later if needed
+      final user = await GoogleSignInService.instance.signInWithGoogle();
+      if (user != null) {
+        Get.snackbar('Success', 'Welcome! Google sign-in successful',
+            snackPosition: SnackPosition.BOTTOM);
+        // Navigate to home screen
+        Get.offAllNamed(Routes.HOME);
+      }
     } catch (e) {
       Get.snackbar('Error', 'Google Sign-in failed: ${e.toString()}',
           snackPosition: SnackPosition.BOTTOM);
@@ -111,7 +113,7 @@ class LoginController extends GetxController {
   // Check if user is already logged in
   Future<void> checkAuthStatus() async {
     try {
-      final isLoggedIn = await authRepo.isLoggedIn();
+      final isLoggedIn = firebaseAuthService.isLoggedIn();
       if (isLoggedIn) {
         Get.offAllNamed(Routes.HOME);
       }
@@ -123,6 +125,8 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    firebaseAuthService = Get.find<FirebaseAuthService>();
+
     checkAuthStatus();
   }
 

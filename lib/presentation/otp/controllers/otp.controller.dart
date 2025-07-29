@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../domain/repositories/auth.repo.dart';
+import '../../../infrastructure/dal/services/firebase.auth.service.dart';
 import '../../../infrastructure/navigation/routes.dart';
 
 class OtpController extends GetxController {
-  final IAuthRepo authRepo = Get.find<IAuthRepo>();
+  late final FirebaseAuthService firebaseAuthService;
 
   // OTP Controllers for 6 separate boxes
   late List<TextEditingController> otpControllers;
@@ -28,6 +28,9 @@ class OtpController extends GetxController {
   void onInit() {
     super.onInit();
 
+    // Initialize FirebaseAuthService
+    firebaseAuthService = Get.find<FirebaseAuthService>();
+
     // Initialize OTP controllers and focus nodes
     otpControllers = List.generate(6, (index) => TextEditingController());
     focusNodes = List.generate(6, (index) => FocusNode());
@@ -35,7 +38,6 @@ class OtpController extends GetxController {
     // Get arguments from previous screen
     final args = Get.arguments as Map<String, dynamic>?;
     if (args != null) {
-      userId = args['userId'] ?? '';
       phoneNumber.value = args['phone'] ?? '';
     }
 
@@ -96,9 +98,9 @@ class OtpController extends GetxController {
 
     isVerifyingOtp.value = true;
     try {
-      final user = await authRepo.verifyOtp(userId, otpCode);
+      final user = await firebaseAuthService.verifyOTP(otpCode);
 
-      Get.snackbar('Success', 'Welcome ${user.name ?? 'User'}!',
+      Get.snackbar('Success', 'OTP verified successfully!',
           snackPosition: SnackPosition.BOTTOM);
 
       // Navigate to home screen
@@ -116,8 +118,7 @@ class OtpController extends GetxController {
 
     isResendingOtp.value = true;
     try {
-      final newUserId = await authRepo.sendOtp(phoneNumber.value);
-      userId = newUserId; // Update userId for new OTP
+      await firebaseAuthService.resendOTP();
 
       Get.snackbar('Success', 'OTP sent again to your phone',
           snackPosition: SnackPosition.BOTTOM);

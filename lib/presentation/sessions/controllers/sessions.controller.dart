@@ -1,7 +1,5 @@
-import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import '../../../infrastructure/services/video_call.service.dart';
-import '../../video_call/video_call.screen.dart';
+import 'package:get/get.dart';
 
 class Session {
   final String name;
@@ -78,27 +76,13 @@ class SessionsController extends GetxController {
 
   void joinVideoCall(Session session) async {
     if (session.isActive && session.status != 'Cancelled') {
-      try {
-        // Generate a unique channel name for this session
-        final channelName =
-            'session_${session.name}_${session.date}_${session.time}'
-                .replaceAll(' ', '_')
-                .replaceAll(':', '_');
-
-        // Navigate to video call screen
-        Get.to(() => VideoCallScreen(
-              channelName: channelName,
-              sessionName: 'Session with ${session.name}',
-            ));
-      } catch (e) {
-        Get.snackbar(
-          'Error',
-          'Failed to join video call: $e',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
-      }
+      Get.snackbar(
+        'Video Call Feature',
+        'Video calling feature is coming soon!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+      );
     } else {
       Get.snackbar(
         'Session Not Available',

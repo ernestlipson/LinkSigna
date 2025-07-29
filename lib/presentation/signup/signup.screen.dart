@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 
 import '../../infrastructure/navigation/routes.dart';
@@ -56,37 +57,43 @@ class SignupScreen extends GetView<SignupController> {
                   );
                 }),
                 SizedBox(height: 10),
-                Obx(() {
-                  return CustomTextFormField(
-                    hintText: ScreenStrings.phoneHint,
-                    labelText: ScreenStrings.phoneLabel,
-                    controller: controller.phoneController,
-                    keyboardType: TextInputType.phone,
-                    prefix: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                      ).copyWith(
-                        left: 8,
-                      ),
-                      child: Obx(() {
-                        final flag =
-                            controller.countryController.countryFlag.value;
-                        final flagLoading =
-                            controller.countryController.countryLoading.value;
-                        return flagLoading
-                            ? SizedBox.shrink()
-                            : flag != null
-                                ? Image.network(flag.png, width: 20, height: 20)
-                                : SizedBox.shrink();
-                      }),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: controller.isPhoneValid.value
+                          ? Colors.grey.shade300
+                          : Colors.red,
+                      width: 1.5,
                     ),
-                    isRequired: true,
-                    errorText: controller.isPhoneValid.value
-                        ? null
-                        : ScreenStrings.requiredFieldError,
-                    onChanged: (value) => controller.validatePhone(),
-                  );
-                }),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: InternationalPhoneNumberInput(
+                    onInputChanged: (PhoneNumber number) {
+                      controller.phoneController.text =
+                          number.phoneNumber ?? '';
+                      controller.validatePhone();
+                    },
+                    onInputValidated: (bool value) {
+                      controller.isPhoneValid.value = value;
+                    },
+                    selectorConfig: SelectorConfig(
+                      selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
+                    ),
+                    ignoreBlank: false,
+                    autoValidateMode: AutovalidateMode.disabled,
+                    selectorTextStyle: TextStyle(color: Colors.black),
+                    initialValue: PhoneNumber(isoCode: 'GH'),
+                    formatInput: true,
+                    keyboardType: TextInputType.phone,
+                    inputDecoration: InputDecoration(
+                      labelText: ScreenStrings.phoneLabel,
+                      hintText: ScreenStrings.phoneHint,
+                      border: InputBorder.none,
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 10),
                 Row(
                   children: [

@@ -1,11 +1,12 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:sign_language_app/infrastructure/utils/app.constants.dart';
 
+import '../../infrastructure/navigation/routes.dart';
 import '../components/app.button.dart';
-import '../components/app.field.dart';
-import '../components/app.outline.button.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/login.controller.dart';
 
@@ -42,37 +43,43 @@ class LoginScreen extends GetView<LoginController> {
                   ),
                   // Name Field
                   SizedBox(height: 30),
-                  Obx(() {
-                    return CustomTextFormField(
-                      hintText: ScreenStrings.phoneHint,
-                      labelText: ScreenStrings.phoneLabel, // New: label text
-                      controller: controller.phoneController,
-                      keyboardType: TextInputType.phone,
-                      prefix: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                        ).copyWith(
-                          left: 8,
-                        ),
-                        child: Obx(() {
-                          final flag =
-                              controller.countryController.countryFlag.value;
-                          final flagLoading =
-                              controller.countryController.countryLoading.value;
-                          return flagLoading
-                              ? SizedBox.shrink()
-                              : flag != null
-                                  ? Image.network(flag.png,
-                                      width: 20, height: 20)
-                                  : SizedBox.shrink();
-                        }),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: controller.isPhoneValid.value
+                            ? Colors.grey.shade300
+                            : Colors.red,
+                        width: 1.5,
                       ),
-                      isRequired: true, // New: mark as required
-                      errorText: controller.isPhoneValid.value
-                          ? null
-                          : ScreenStrings.requiredFieldError,
-                    );
-                  }),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: InternationalPhoneNumberInput(
+                      onInputChanged: (PhoneNumber number) {
+                        controller.phoneController.text =
+                            number.phoneNumber ?? '';
+                        controller.validatePhone();
+                      },
+                      onInputValidated: (bool value) {
+                        controller.isPhoneValid.value = value;
+                      },
+                      selectorConfig: SelectorConfig(
+                        selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
+                      ),
+                      ignoreBlank: false,
+                      autoValidateMode: AutovalidateMode.disabled,
+                      selectorTextStyle: TextStyle(color: Colors.black),
+                      initialValue: PhoneNumber(isoCode: 'GH'),
+                      formatInput: true,
+                      keyboardType: TextInputType.phone,
+                      inputDecoration: InputDecoration(
+                        labelText: ScreenStrings.phoneLabel,
+                        hintText: ScreenStrings.phoneHint,
+                        border: InputBorder.none,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
                   SizedBox(height: 10),
                   // Password Field
                   // Obx(() {
@@ -147,40 +154,51 @@ class LoginScreen extends GetView<LoginController> {
                   //     ),
                   //   ],
                   // ),
-                  // SizedBox(height: 20),
-                  CustomButton(
-                    text: "Log In",
-                    onPressed: () {
-                      // Validate all fields at once
-                      final isFormValid = controller.validateAll();
-                      if (isFormValid) {
-                        // All fields are valid
-                        Get.snackbar('Success', 'All fields are valid!',
-                            snackPosition: SnackPosition.BOTTOM);
-                      } else {
-                        // Some fields are invalid
-                        Get.snackbar('Error', 'Please fill required fields',
-                            snackPosition: SnackPosition.BOTTOM);
-                      }
-                    },
-                  ),
-                  SizedBox(height: 16),
-                  Center(child: Text("Or")), // Center the "Or" text
-                  SizedBox(height: 16),
+                  SizedBox(height: 20),
+                  Obx(() => CustomButton(
+                        text: controller.isPhoneOtpLoading.value
+                            ? "Sending OTP..."
+                            : "Log In",
+                        onPressed: controller.isPhoneOtpLoading.value
+                            ? () {} // Disabled when loading
+                            : () => controller.sendPhoneOTP(),
+                      )),
+                  SizedBox(height: 24),
+                  // Center(child: Text("Or")), // Center the "Or" text
+                  // SizedBox(height: 16),
 
                   // Google Sign In Button
-                  Obx(() => GoogleSignInButton(
-                        onPressed: controller.isGoogleSignInLoading.value
-                            ? null
-                            : controller.signInWithGoogle,
-                        isLoading: controller.isGoogleSignInLoading.value,
-                      )),
+                  // Obx(() => GoogleSignInButton(
+                  //       onPressed: controller.isGoogleSignInLoading.value
+                  //           ? null
+                  //           : controller.signInWithGoogle,
+                  //       isLoading: controller.isGoogleSignInLoading.value,
+                  //     )),
                   Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        Get.toNamed('/login'); // Navigate to login page
-                      },
-                      child: Text("Already have an account? Login"),
+                    child: RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: "Don't have an account? ",
+                          ),
+                          TextSpan(
+                            text: "SignUp",
+                            style: TextStyle(
+                              color: Color(0xFF9E1068),
+                              // decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Get.toNamed(Routes.SIGNUP);
+                              },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

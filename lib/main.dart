@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'domain/core/app.write.client.dart';
+import 'firebase_options.dart';
 import 'infrastructure/navigation/bindings/global.binding.dart';
 import 'infrastructure/navigation/navigation.dart';
 import 'infrastructure/navigation/routes.dart';
@@ -9,11 +11,16 @@ import 'infrastructure/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize and register AppWrite client globally
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Initialize AppWrite (keeping for backward compatibility)
   final appWriteClient = AppWriteClient();
   Get.put<AppWriteClient>(appWriteClient);
-  
+
   runApp(Main());
 }
 
