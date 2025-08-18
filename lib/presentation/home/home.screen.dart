@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'package:sign_language_app/presentation/components/custom_app_bar.component.dart';
+import 'package:sign_language_app/presentation/deaf-history/deaf_history.screen.dart';
 import 'package:sign_language_app/presentation/home/home.dashboard.dart';
 
 import '../../infrastructure/utils/app_icons.dart';
-import '../components/coming.soon.placeholder.dart';
-import '../sessions/sessions.screen.dart';
+import '../deaf-history/controllers/deaf_history.controller.dart';
+import '../interpreter/controllers/interpreter.controller.dart';
+import '../interpreter/interpreter.screen.dart';
 import '../sessions/controllers/sessions.controller.dart';
+import '../sessions/sessions.screen.dart';
+import '../settings/controllers/settings.controller.dart';
+import '../settings/settings.screen.dart';
 import '../shared/controllers/user.controller.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,10 +27,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> get _pages => <Widget>[
         const HomeDashboard(),
-        const ComingSoonPlaceholder(),
+        const InterpreterScreen(),
         const SessionsScreen(),
-        const ComingSoonPlaceholder(),
-        const ComingSoonPlaceholder(),
+        const DeafHistoryScreen(),
+        const SettingsScreen(),
       ];
 
   void _onItemTapped(int index) {
@@ -70,6 +75,21 @@ class _HomeScreenState extends State<HomeScreen> {
     // Ensure SessionsController is available
     if (!Get.isRegistered<SessionsController>()) {
       Get.lazyPut<SessionsController>(() => SessionsController());
+    }
+
+    // Ensure InterpreterController is available
+    if (!Get.isRegistered<InterpreterController>()) {
+      Get.lazyPut<InterpreterController>(() => InterpreterController());
+    }
+
+    // Ensure DeafHistoryController is available
+    if (!Get.isRegistered<DeafHistoryController>()) {
+      Get.lazyPut<DeafHistoryController>(() => DeafHistoryController());
+    }
+
+    // Ensure SettingsController is available
+    if (!Get.isRegistered<SettingsController>()) {
+      Get.lazyPut<SettingsController>(() => SettingsController());
     }
 
     return Scaffold(
