@@ -4,12 +4,16 @@ import 'package:sign_language_app/infrastructure/dal/services/firebase.auth.serv
 
 import '../../../infrastructure/dal/services/google.signin.service.dart';
 import '../../../infrastructure/navigation/routes.dart';
+import '../../components/coming.soon.placeholder.dart';
 import '../../shared/controllers/country.controller.dart';
 import '../../shared/controllers/user.controller.dart';
 
 class SignupController extends GetxController {
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
+
+  // User type selection
+  final RxString selectedUserType = 'student'.obs;
 
   // Inject FirebaseAuthService
   late final FirebaseAuthService firebaseAuthService;
@@ -44,6 +48,13 @@ class SignupController extends GetxController {
   Future<void> signUp() async {
     final isFormValid = validateAll();
     if (!isFormValid) return;
+
+    // Check if user type is interpreter
+    if (selectedUserType.value == 'interpreter') {
+      // Show placeholder screen for interpreter
+      Get.to(() => const ComingSoonPlaceholder());
+      return;
+    }
 
     isPhoneOtpLoading.value = true;
     try {

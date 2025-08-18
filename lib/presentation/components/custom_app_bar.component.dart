@@ -42,8 +42,25 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               IconButton(
                   onPressed: onNotificationTap,
-                  icon: AppIcons.notification(
-                    size: 24,
+                  icon: Stack(
+                    children: [
+                      AppIcons.notification(
+                        size: 24,
+                      ),
+                      if (hasNotification)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
                   )),
               const SizedBox(width: 8),
               // Profile image

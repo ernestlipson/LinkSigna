@@ -35,6 +35,50 @@ class SignupScreen extends GetView<SignupController> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Radio buttons for user type selection
+                Obx(() => Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Radio<String>(
+                          value: 'student',
+                          groupValue: controller.selectedUserType.value,
+                          onChanged: (String? value) {
+                            controller.selectedUserType.value = value!;
+                          },
+                          activeColor: primaryColor,
+                        ),
+                        Text(
+                          'Student',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight:
+                                controller.selectedUserType.value == 'student'
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                          ),
+                        ),
+                        SizedBox(width: 30),
+                        Radio<String>(
+                          value: 'interpreter',
+                          groupValue: controller.selectedUserType.value,
+                          onChanged: (String? value) {
+                            controller.selectedUserType.value = value!;
+                          },
+                          activeColor: primaryColor,
+                        ),
+                        Text(
+                          'Interpreter',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: controller.selectedUserType.value ==
+                                    'interpreter'
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    )),
+                SizedBox(height: 20),
                 Text(
                   ScreenStrings.signUpTitle,
                   style: TextStyle(
@@ -58,6 +102,7 @@ class SignupScreen extends GetView<SignupController> {
                 }),
                 SizedBox(height: 10),
                 Container(
+                  // height: 50,
                   decoration: BoxDecoration(
                     border: Border.all(
                       color: controller.isPhoneValid.value
@@ -126,19 +171,6 @@ class SignupScreen extends GetView<SignupController> {
                           ? () {}
                           : () => controller.signUp(),
                     )),
-                // SizedBox(height: 18),
-                // Center(
-                //     child: Text(ScreenStrings.orText,
-                //         style: TextStyle(
-                //           fontWeight: FontWeight.w500,
-                //         ))), // Center the "Or" text
-                // SizedBox(height: 18),
-                // GoogleSignInButton(
-                //   onPressed: controller.isGoogleSignInLoading.value
-                //       ? null
-                //       : controller.signInWithGoogle,
-                //   isLoading: controller.isGoogleSignInLoading.value,
-                // ),
                 SizedBox(height: 30),
                 Center(
                   child: RichText(

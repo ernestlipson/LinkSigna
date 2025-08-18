@@ -57,5 +57,20 @@ class Nav {
       page: () => const SessionsScreen(),
       binding: SessionsControllerBinding(),
     ),
+    GetPage(
+      name: Routes.INTERPRETER,
+      page: () => const InterpreterScreen(),
+      binding: InterpreterControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.DEAF_HISTORY,
+      page: () => const DeafHistoryScreen(),
+      binding: DeafHistoryControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.SETTINGS,
+      page: () => const SettingsScreen(),
+      binding: SettingsControllerBinding(),
+    ),
   ];
 }
