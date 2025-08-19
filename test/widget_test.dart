@@ -12,7 +12,7 @@ import 'package:sign_language_app/main.dart';
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(Main(initialRoute: "",));
+    await tester.pumpWidget(Main(initialRoute: "/",));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
