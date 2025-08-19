@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sign_language_app/infrastructure/dal/services/firebase.auth.service.dart';
+import 'package:email_otp/email_otp.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../infrastructure/dal/services/google.signin.service.dart';
 import '../../../infrastructure/navigation/routes.dart';
@@ -10,16 +11,13 @@ import '../../shared/controllers/user.controller.dart';
 
 class SignupController extends GetxController {
   final nameController = TextEditingController();
-  final phoneController = TextEditingController();
+  final emailController = TextEditingController();
 
   // User type selection
   final RxString selectedUserType = 'student'.obs;
 
-  // Inject FirebaseAuthService
-  late final FirebaseAuthService firebaseAuthService;
-
   // Loading states
-  final RxBool isPhoneOtpLoading = false.obs;
+  final RxBool isEmailOtpLoading = false.obs;
   final RxBool isGoogleSignInLoading = false.obs;
 
   // OTP related
@@ -29,20 +27,23 @@ class SignupController extends GetxController {
   CountryController get countryController => Get.find<CountryController>();
 
   final isNameValid = true.obs;
-  final isPhoneValid = true.obs;
+  final isEmailValid = true.obs;
 
   void validateName() {
     isNameValid.value = nameController.text.trim().isNotEmpty;
   }
 
-  void validatePhone() {
-    isPhoneValid.value = phoneController.text.trim().isNotEmpty;
+  void validateEmail() {
+    final value = emailController.text.trim();
+    // Simple email regex validation
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    isEmailValid.value = emailRegex.hasMatch(value);
   }
 
   bool validateAll() {
     validateName();
-    validatePhone();
-    return isNameValid.value && isPhoneValid.value;
+    validateEmail();
+    return isNameValid.value && isEmailValid.value && isTermsAccepted.value;
   }
 
   Future<void> signUp() async {
@@ -56,25 +57,26 @@ class SignupController extends GetxController {
       return;
     }
 
-    isPhoneOtpLoading.value = true;
+    isEmailOtpLoading.value = true;
     try {
-      // The phone number from InternationalPhoneNumberInput is already in E.164 format
-      String phoneNumber = phoneController.text.trim();
+      final email = emailController.text.trim();
+      final sent = await EmailOTP.sendOTP(email: email);
+      if (!sent) {
+        throw Exception('Failed to send OTP');
+      }
 
-      // Request OTP using FirebaseAuthService
-      await firebaseAuthService.requestPhoneOTP(phoneNumber);
+      // Save user name to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userName', nameController.text.trim());
 
-      Get.snackbar('Success', 'OTP sent to your phone',
+      Get.snackbar('Success', 'OTP sent to your email',
           snackPosition: SnackPosition.BOTTOM);
-
-      // Navigate to OTP screen with phone number
-      Get.toNamed(Routes.OTP,
-          arguments: {'phone': phoneController.text.trim()});
+      Get.toNamed(Routes.OTP, arguments: {'email': email});
     } catch (e) {
       Get.snackbar('Error', 'Failed to send OTP: ${e.toString()}',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
-      isPhoneOtpLoading.value = false;
+      isEmailOtpLoading.value = false;
     }
   }
 
@@ -104,9 +106,6 @@ class SignupController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
-    // Initialize FirebaseAuthService
-    firebaseAuthService = Get.find<FirebaseAuthService>();
 
     if (!Get.isRegistered<GoogleSignInService>()) {
       Get.put(GoogleSignInService());

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:email_otp/email_otp.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../infrastructure/dal/services/firebase.auth.service.dart';
 import '../../../infrastructure/navigation/routes.dart';
+import '../../shared/controllers/user.controller.dart';
 
 class OtpController extends GetxController {
-  late final FirebaseAuthService firebaseAuthService;
-
   // OTP Controllers for 6 separate boxes
   late List<TextEditingController> otpControllers;
   late List<FocusNode> focusNodes;
@@ -14,7 +14,8 @@ class OtpController extends GetxController {
 
   // Arguments from previous screen
   late String userId;
-  final phoneNumber = ''.obs;
+  final destination = ''.obs; // email or phone
+  final isEmailFlow = false.obs;
 
   // Loading state
   final RxBool isVerifyingOtp = false.obs;
@@ -28,9 +29,6 @@ class OtpController extends GetxController {
   void onInit() {
     super.onInit();
 
-    // Initialize FirebaseAuthService
-    firebaseAuthService = Get.find<FirebaseAuthService>();
-
     // Initialize OTP controllers and focus nodes
     otpControllers = List.generate(6, (index) => TextEditingController());
     focusNodes = List.generate(6, (index) => FocusNode());
@@ -38,7 +36,13 @@ class OtpController extends GetxController {
     // Get arguments from previous screen
     final args = Get.arguments as Map<String, dynamic>?;
     if (args != null) {
-      phoneNumber.value = args['phone'] ?? '';
+      if ((args['email'] ?? '').toString().isNotEmpty) {
+        destination.value = args['email'];
+        isEmailFlow.value = true;
+      } else if ((args['phone'] ?? '').toString().isNotEmpty) {
+        destination.value = args['phone'];
+        isEmailFlow.value = false;
+      }
     }
 
     startResendTimer();
@@ -98,12 +102,25 @@ class OtpController extends GetxController {
 
     isVerifyingOtp.value = true;
     try {
-      final user = await firebaseAuthService.verifyOTP(otpCode);
+      final isValid = await EmailOTP.verifyOTP(otp: otpCode);
+      if (!isValid) {
+        throw Exception('Invalid OTP');
+      }
+
+      // Mark that user has logged in before
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('has_logged_in_before', true);
+
+      // Load user name and set it in UserController
+      final userName = prefs.getString('userName') ?? 'User';
+      if (!Get.isRegistered<UserController>()) {
+        Get.put(UserController());
+      }
+      final userController = Get.find<UserController>();
+      userController.setUser(name: userName);
 
       Get.snackbar('Success', 'OTP verified successfully!',
           snackPosition: SnackPosition.BOTTOM);
-
-      // Navigate to home screen
       Get.offAllNamed(Routes.HOME);
     } catch (e) {
       Get.snackbar('Error', 'Invalid OTP. Please try again.',
@@ -118,9 +135,8 @@ class OtpController extends GetxController {
 
     isResendingOtp.value = true;
     try {
-      await firebaseAuthService.resendOTP();
-
-      Get.snackbar('Success', 'OTP sent again to your phone',
+      await EmailOTP.sendOTP(email: destination.value);
+      Get.snackbar('Success', 'OTP sent again to your email',
           snackPosition: SnackPosition.BOTTOM);
 
       // Clear OTP fields for new code

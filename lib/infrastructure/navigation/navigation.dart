@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 
 import '../../config.dart';
-import '../../presentation/login/middleware/auth.middleware.dart';
 import '../../presentation/screens.dart';
 import 'bindings/controllers/controllers_bindings.dart';
 import 'routes.dart';
@@ -71,6 +69,11 @@ class Nav {
       name: Routes.SETTINGS,
       page: () => const SettingsScreen(),
       binding: SettingsControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.INTEERPRETER,
+      page: () => const InteerpreterScreen(),
+      binding: InteerpreterControllerBinding(),
     ),
   ];
 }

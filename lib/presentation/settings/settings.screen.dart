@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:io';
 
 import '../../infrastructure/theme/app_theme.dart';
 import 'controllers/settings.controller.dart';
@@ -79,45 +80,39 @@ class SettingsScreen extends GetView<SettingsController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Profile Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Profile',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => controller.editProfile(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: primaryColor,
-                  side: BorderSide(color: primaryColor),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-                child: Text(
-                  'Edit Profile',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
           SizedBox(height: 20),
-
           // Profile Picture
           Center(
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.pink[100],
-              backgroundImage: NetworkImage(
-                'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face',
+            child: GestureDetector(
+              onTap: () => controller.pickProfileImage(),
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Obx(() => CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.pink[100],
+                        backgroundImage: controller.profileImage.value != null
+                            ? FileImage(controller.profileImage.value!)
+                                as ImageProvider
+                            : NetworkImage(
+                                'https://imgresizer.eurosport.com/unsafe/1200x0/filters:format(jpeg):focal(1461x562:1463x560)/origin-imgresizer.eurosport.com/2014/05/26/1244633-26883491-2560-1440.jpg',
+                              ),
+                      )),
+                  // Camera icon overlay
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Colors.white,
+                    child: CircleAvatar(
+                      radius: 15,
+                      backgroundColor: primaryColor,
+                      child: Icon(
+                        Icons.camera_alt,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -147,11 +142,7 @@ class SettingsScreen extends GetView<SettingsController> {
           SizedBox(height: 16),
 
           // University & Level
-          _buildFormField(
-            'University & Level',
-            controller.universityController,
-            'TTU- Level 300',
-          ),
+          _buildUniversityLevelField(),
           SizedBox(height: 16),
 
           // Languages
@@ -185,6 +176,7 @@ class SettingsScreen extends GetView<SettingsController> {
             child: ElevatedButton(
               onPressed: () => controller.saveChanges(),
               style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity, 0),
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -196,33 +188,6 @@ class SettingsScreen extends GetView<SettingsController> {
                 'Save Changes',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-            ),
-          ),
-          SizedBox(height: 32),
-
-          // Password Section
-          Text(
-            'Password',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => controller.changePassword(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text(
-              'Change Password',
-              style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
           SizedBox(height: 32),
@@ -245,10 +210,11 @@ class SettingsScreen extends GetView<SettingsController> {
               height: 1.4,
             ),
           ),
-          SizedBox(height: 16),
+          SizedBox(height: 20),
           OutlinedButton(
             onPressed: () => controller.deleteAccount(),
             style: OutlinedButton.styleFrom(
+              minimumSize: Size(double.infinity, 0),
               foregroundColor: Colors.red,
               side: BorderSide(color: Colors.red),
               shape: RoundedRectangleBorder(
@@ -360,6 +326,48 @@ class SettingsScreen extends GetView<SettingsController> {
               borderSide: BorderSide(color: primaryColor),
             ),
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUniversityLevelField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'University & Level',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
+        SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => controller.selectUniversityLevel(),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Obx(() => Text(
+                        controller.universityLevel.value,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      )),
+                ),
+                Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
+              ],
+            ),
           ),
         ),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../call/video_call.screen.dart';
 
 class Session {
   final String name;
@@ -76,13 +77,8 @@ class SessionsController extends GetxController {
 
   void joinVideoCall(Session session) async {
     if (session.isActive && session.status != 'Cancelled') {
-      Get.snackbar(
-        'Video Call Feature',
-        'Video calling feature is coming soon!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blue,
-        colorText: Colors.white,
-      );
+      // Navigate to Agora call screen
+      Get.to(() => VideoCallScreen(channelId: _buildChannelId(session)));
     } else {
       Get.snackbar(
         'Session Not Available',
@@ -145,5 +141,12 @@ class SessionsController extends GetxController {
 
   bool isSessionActive(Session session) {
     return session.isActive && session.status != 'Cancelled';
+  }
+
+  String _buildChannelId(Session session) {
+    // Derive a deterministic channel id from session data
+    return '${session.name}_${session.date}_${session.time}'
+        .replaceAll(' ', '')
+        .replaceAll(':', '');
   }
 }

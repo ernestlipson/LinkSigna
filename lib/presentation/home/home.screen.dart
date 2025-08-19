@@ -107,13 +107,6 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'Welcome ${userController.displayName.value.isNotEmpty ? userController.displayName.value : "User"}',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ),
           Expanded(child: _pages[_selectedIndex]),
         ],
       ),

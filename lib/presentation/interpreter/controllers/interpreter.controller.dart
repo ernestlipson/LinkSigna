@@ -8,12 +8,18 @@ class InterpreterController extends GetxController {
 
   // Filter form controllers
   final searchController = TextEditingController();
+  final subjectController = TextEditingController();
 
   // Filter state
   final RxBool isFilterModalOpen = false.obs;
   final RxString selectedExperience = ''.obs;
   final RxString selectedPrice = ''.obs;
   final RxString selectedAvailability = ''.obs;
+
+  // New filter options
+  final RxString selectedSubject = ''.obs;
+  final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
+  final Rx<TimeOfDay?> selectedTime = Rx<TimeOfDay?>(null);
 
   @override
   void onInit() {
@@ -107,11 +113,39 @@ class InterpreterController extends GetxController {
     closeFilterModal();
   }
 
+  // Date picker method
+  Future<void> selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate.value ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(Duration(days: 365)),
+    );
+    if (picked != null) {
+      selectedDate.value = picked;
+    }
+  }
+
+  // Time picker method
+  Future<void> selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: selectedTime.value ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      selectedTime.value = picked;
+    }
+  }
+
   void clearFilters() {
     selectedExperience.value = '';
     selectedPrice.value = '';
     selectedAvailability.value = '';
+    selectedSubject.value = '';
+    selectedDate.value = null;
+    selectedTime.value = null;
     searchController.clear();
+    subjectController.clear();
   }
 
   void bookInterpreter(InterpreterData interpreter) {
@@ -135,6 +169,7 @@ class InterpreterController extends GetxController {
   @override
   void onClose() {
     searchController.dispose();
+    subjectController.dispose();
     super.onClose();
   }
 }

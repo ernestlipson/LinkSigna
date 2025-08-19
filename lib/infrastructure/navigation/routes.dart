@@ -1,6 +1,6 @@
 class Routes {
   //TODO: Initial Route Should Go SignUp
-  static get initialRoute => HOME;
+  static get initialRoute => SIGNUP;
 
   static const DEAF_HISTORY = '/deaf-history';
   static const FORGOT_PASSWORD = '/forgot-password';
@@ -9,6 +9,7 @@ class Routes {
   static const LOGIN = '/login';
   static const OTP = '/otp';
   static const SESSIONS = '/sessions';
-  static const SIGNUP = '/signup';
   static const SETTINGS = '/settings';
+  static const SIGNUP = '/signup';
+  static const INTEERPRETER = '/inteerpreter';
 }

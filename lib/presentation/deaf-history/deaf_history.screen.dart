@@ -11,38 +11,28 @@ class DeafHistoryScreen extends GetView<DeafHistoryController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              shape: BoxShape.circle,
+      body: Column(
+        children: [
+          Text(
+            'History Session',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
             ),
-            child: Icon(Icons.arrow_back, color: Colors.grey[700]),
           ),
-          onPressed: () => Get.back(),
-        ),
-        title: Text(
-          'History Session',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: ListView.builder(
+                itemCount: controller.sessions.length,
+                itemBuilder: (context, index) {
+                  final session = controller.sessions[index];
+                  return _buildSessionCard(session);
+                },
+              ),
+            ),
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: ListView.builder(
-          itemCount: controller.sessions.length,
-          itemBuilder: (context, index) {
-            final session = controller.sessions[index];
-            return _buildSessionCard(session);
-          },
-        ),
+        ],
       ),
     );
   }

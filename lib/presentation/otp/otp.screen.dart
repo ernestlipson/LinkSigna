@@ -55,7 +55,7 @@ class OtpScreen extends GetView<OtpController> {
               ),
               const SizedBox(height: 16),
               Obx(() => Text(
-                    'Enter the 6-digit code sent to ${controller.phoneNumber}',
+                    'Enter the 6-digit code sent to ${controller.destination}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 16,
@@ -150,9 +150,7 @@ class OtpScreen extends GetView<OtpController> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onPressed: () {
-                        Get.toNamed('/home');
-                      },
+                      onPressed: controller.verifyOTP,
                       child: Text(
                         controller.isVerifyingOtp.value
                             ? 'Verifying...'

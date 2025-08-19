@@ -284,9 +284,9 @@ class InterpreterScreen extends GetView<InterpreterController> {
             ),
             SizedBox(height: 20),
 
-            // Search Input
+            // Subject Filter
             Text(
-              'Search',
+              'Subject',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -295,10 +295,9 @@ class InterpreterScreen extends GetView<InterpreterController> {
             ),
             SizedBox(height: 8),
             TextField(
-              controller: controller.searchController,
+              controller: controller.subjectController,
               decoration: InputDecoration(
-                hintText: 'Search interpreters...',
-                prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                hintText: 'Enter subject',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -314,7 +313,90 @@ class InterpreterScreen extends GetView<InterpreterController> {
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
+              onChanged: (value) {
+                controller.selectedSubject.value = value;
+              },
             ),
+            SizedBox(height: 16),
+
+            // Date Filter
+            Text(
+              'Select Date',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+            SizedBox(height: 8),
+            Obx(() => GestureDetector(
+                  onTap: () => controller.selectDate(context),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            controller.selectedDate.value != null
+                                ? '${controller.selectedDate.value!.day}/${controller.selectedDate.value!.month}/${controller.selectedDate.value!.year}'
+                                : 'Select date',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: controller.selectedDate.value != null
+                                  ? Colors.black
+                                  : Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.calendar_today, color: Colors.grey[600]),
+                      ],
+                    ),
+                  ),
+                )),
+            SizedBox(height: 16),
+
+            // Time Filter
+            Text(
+              'Select Time',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+            SizedBox(height: 8),
+            Obx(() => GestureDetector(
+                  onTap: () => controller.selectTime(context),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            controller.selectedTime.value != null
+                                ? controller.selectedTime.value!.format(context)
+                                : 'Select time',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: controller.selectedTime.value != null
+                                  ? Colors.black
+                                  : Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.access_time, color: Colors.grey[600]),
+                      ],
+                    ),
+                  ),
+                )),
             SizedBox(height: 16),
 
             // Experience Filter
@@ -402,51 +484,6 @@ class InterpreterScreen extends GetView<InterpreterController> {
                   },
                 )),
             SizedBox(height: 16),
-
-            // Availability Filter
-            Text(
-              'Availability',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
-            ),
-            SizedBox(height: 8),
-            Obx(() => DropdownButtonFormField<String>(
-                  value: controller.selectedAvailability.value.isEmpty
-                      ? null
-                      : controller.selectedAvailability.value,
-                  decoration: InputDecoration(
-                    hintText: 'Select availability',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: primaryColor),
-                    ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  items: [
-                    DropdownMenuItem(
-                        value: 'available', child: Text('Available Now')),
-                    DropdownMenuItem(
-                        value: 'today', child: Text('Available Today')),
-                    DropdownMenuItem(
-                        value: 'week', child: Text('Available This Week')),
-                  ],
-                  onChanged: (value) {
-                    controller.selectedAvailability.value = value ?? '';
-                  },
-                )),
-            SizedBox(height: 24),
 
             // Action Buttons
             Row(

@@ -1,6 +1,7 @@
 export 'package:sign_language_app/infrastructure/navigation/bindings/controllers/deaf_history.controller.binding.dart'; 
 export 'package:sign_language_app/infrastructure/navigation/bindings/controllers/forgot_password.controller.binding.dart'; 
 export 'package:sign_language_app/infrastructure/navigation/bindings/controllers/home.controller.binding.dart'; 
+export 'package:sign_language_app/infrastructure/navigation/bindings/controllers/inteerpreter.controller.binding.dart'; 
 export 'package:sign_language_app/infrastructure/navigation/bindings/controllers/interpreter.controller.binding.dart'; 
 export 'package:sign_language_app/infrastructure/navigation/bindings/controllers/login.controller.binding.dart'; 
 export 'package:sign_language_app/infrastructure/navigation/bindings/controllers/otp.controller.binding.dart'; 
