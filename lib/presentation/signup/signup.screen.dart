@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 
 import '../../infrastructure/navigation/routes.dart';
@@ -63,6 +62,8 @@ class SignupScreen extends GetView<SignupController> {
                           groupValue: controller.selectedUserType.value,
                           onChanged: (String? value) {
                             controller.selectedUserType.value = value!;
+                            // Immediately navigate to interpreter sign-up flow
+                            Get.offNamed(Routes.INTEERPRETER);
                           },
                           activeColor: primaryColor,
                         ),
@@ -101,44 +102,17 @@ class SignupScreen extends GetView<SignupController> {
                   );
                 }),
                 SizedBox(height: 10),
-                Container(
-                  // height: 50,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: controller.isPhoneValid.value
-                          ? Colors.grey.shade300
-                          : Colors.red,
-                      width: 1.5,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: InternationalPhoneNumberInput(
-                    onInputChanged: (PhoneNumber number) {
-                      controller.phoneController.text =
-                          number.phoneNumber ?? '';
-                      controller.validatePhone();
-                    },
-                    onInputValidated: (bool value) {
-                      controller.isPhoneValid.value = value;
-                    },
-                    selectorConfig: SelectorConfig(
-                      selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
-                    ),
-                    ignoreBlank: false,
-                    autoValidateMode: AutovalidateMode.disabled,
-                    selectorTextStyle: TextStyle(color: Colors.black),
-                    initialValue: PhoneNumber(isoCode: 'GH'),
-                    formatInput: true,
-                    keyboardType: TextInputType.phone,
-                    inputDecoration: InputDecoration(
-                      labelText: ScreenStrings.phoneLabel,
-                      hintText: ScreenStrings.phoneHint,
-                      border: InputBorder.none,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                  ),
-                ),
+                Obx(() => CustomTextFormField(
+                      hintText: ScreenStrings.emailHint,
+                      labelText: ScreenStrings.emailLabel,
+                      controller: controller.emailController,
+                      isRequired: true,
+                      keyboardType: TextInputType.emailAddress,
+                      errorText: controller.isEmailValid.value
+                          ? null
+                          : ScreenStrings.requiredFieldError,
+                      onChanged: (_) => controller.validateEmail(),
+                    )),
                 SizedBox(height: 10),
                 Row(
                   children: [
@@ -164,10 +138,10 @@ class SignupScreen extends GetView<SignupController> {
                 ),
                 SizedBox(height: 20),
                 Obx(() => CustomButton(
-                      text: controller.isPhoneOtpLoading.value
+                      text: controller.isEmailOtpLoading.value
                           ? 'Sending OTP...'
                           : ScreenStrings.signUpButton,
-                      onPressed: controller.isPhoneOtpLoading.value
+                      onPressed: controller.isEmailOtpLoading.value
                           ? () {}
                           : () => controller.signUp(),
                     )),

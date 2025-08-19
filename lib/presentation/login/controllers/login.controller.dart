@@ -1,13 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-
-import '../../../infrastructure/dal/services/firebase.auth.service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../infrastructure/dal/services/google.signin.service.dart';
 import '../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/country.controller.dart';
 
 class LoginController extends GetxController {
-  late final FirebaseAuthService firebaseAuthService;
+  // Firebase removed
 
   // Controllers to read the text values
   final nameController = TextEditingController();
@@ -23,7 +22,7 @@ class LoginController extends GetxController {
   final RxBool isRememberMe = false.obs;
 
   // Loading states
-  final RxBool isPhoneOtpLoading = false.obs;
+  final RxBool isPhoneOtpLoading = false.obs; // deprecated
   final RxBool isGoogleSignInLoading = false.obs;
 
   // OTP related
@@ -64,30 +63,7 @@ class LoginController extends GetxController {
   }
 
   // Phone OTP Authentication
-  Future<void> sendPhoneOTP() async {
-    if (!isPhoneValid.value || phoneController.text.trim().isEmpty) {
-      Get.snackbar('Error', 'Please enter a valid phone number',
-          snackPosition: SnackPosition.BOTTOM);
-      return;
-    }
-
-    isPhoneOtpLoading.value = true;
-    try {
-      await firebaseAuthService.requestPhoneOTP(phoneController.text.trim());
-
-      Get.snackbar('Success', 'OTP sent to your phone',
-          snackPosition: SnackPosition.BOTTOM);
-
-      // Navigate to OTP screen with phone number
-      Get.toNamed(Routes.OTP,
-          arguments: {'phone': phoneController.text.trim()});
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to send OTP: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isPhoneOtpLoading.value = false;
-    }
-  }
+  Future<void> sendPhoneOTP() async {}
 
   // Google Authentication
   Future<void> signInWithGoogle() async {
@@ -113,8 +89,8 @@ class LoginController extends GetxController {
   // Check if user is already logged in
   Future<void> checkAuthStatus() async {
     try {
-      final isLoggedIn = firebaseAuthService.isLoggedIn();
-      if (isLoggedIn) {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('has_logged_in_before') ?? false) {
         Get.offAllNamed(Routes.HOME);
       }
     } catch (e) {
@@ -125,8 +101,6 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    firebaseAuthService = Get.find<FirebaseAuthService>();
-
     checkAuthStatus();
   }
 

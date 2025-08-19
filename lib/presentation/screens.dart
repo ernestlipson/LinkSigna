@@ -1,6 +1,7 @@
 export 'package:sign_language_app/presentation/deaf-history/deaf_history.screen.dart';
 export 'package:sign_language_app/presentation/forgot-password/forgot_password.screen.dart';
 export 'package:sign_language_app/presentation/home/home.screen.dart';
+export 'package:sign_language_app/presentation/interpreter-signup/inteerpreter.screen.dart';
 export 'package:sign_language_app/presentation/interpreter/interpreter.screen.dart';
 export 'package:sign_language_app/presentation/login/login.screen.dart';
 export 'package:sign_language_app/presentation/otp/otp.screen.dart';
