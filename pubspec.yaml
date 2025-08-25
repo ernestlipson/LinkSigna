@@ -56,6 +56,7 @@ dependencies:
   email_otp: ^3.0.2
   shared_preferences: ^2.3.2
   image_picker: ^1.0.4
+  paystack_flutter_sdk: ^0.0.1-alpha.2
 
 dev_dependencies:
   flutter_test:

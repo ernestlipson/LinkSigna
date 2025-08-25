@@ -42,9 +42,30 @@ class HomeDashboard extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Welcome ${userController.displayName.value.isNotEmpty ? userController.displayName.value : "User"}',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text:
+                          'Welcome ${userController.displayName.value.isNotEmpty ? userController.displayName.value : "User"}\n',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.black,
+                      ),
+                    ),
+                    TextSpan(
+                      text:
+                          "Here's what's happening with your interpreter sessions today.",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.normal,
+                        fontSize: 12,
+                        color: Colors.grey,
+                        height: 2.0,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 24),

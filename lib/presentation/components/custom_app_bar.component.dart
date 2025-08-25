@@ -35,11 +35,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Help/Question icon
-              IconButton(
-                onPressed: onHelpTap,
-                icon: AppIcons.messageQuestion(),
-              ),
               IconButton(
                   onPressed: onNotificationTap,
                   icon: Stack(

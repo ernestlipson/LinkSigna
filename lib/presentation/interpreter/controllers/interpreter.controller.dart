@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../interpreter.screen.dart';
 import '../interpreter_profile.screen.dart';
+import '../../components/payment_modal.component.dart';
 
 class InterpreterController extends GetxController {
   final RxList<InterpreterData> interpreters = <InterpreterData>[].obs;
@@ -149,16 +150,29 @@ class InterpreterController extends GetxController {
   }
 
   void bookInterpreter(InterpreterData interpreter) {
-    Get.to(() => InterpreterProfileScreen(interpreter: interpreter));
+    // Check if interpreter is free or paid
+    if (interpreter.isFree) {
+      // For free interpreters, directly book without payment
+      Get.snackbar(
+        'Success',
+        'Free interpreter session booked successfully with ${interpreter.name}!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green[100],
+        colorText: Colors.green[900],
+      );
+    } else {
+      // For paid interpreters, show payment modal
+      if (Get.context != null) {
+        PaymentModalComponent.showPaymentModal(
+          Get.context!,
+          interpreterName: interpreter.name,
+        );
+      }
+    }
   }
 
   void viewMore(InterpreterData interpreter) {
-    Get.snackbar(
-      'View More',
-      'Viewing details for: ${interpreter.name}',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-    // TODO: Navigate to interpreter details screen
+    Get.to(() => InterpreterProfileScreen(interpreter: interpreter));
   }
 
   @override
