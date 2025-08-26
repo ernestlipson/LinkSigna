@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:io';
 
 import '../../infrastructure/theme/app_theme.dart';
 import 'controllers/settings.controller.dart';
@@ -130,11 +129,13 @@ class SettingsScreen extends GetView<SettingsController> {
           SizedBox(height: 16),
 
           // Full Name
-          _buildFormField(
-            'Full name',
-            controller.fullNameController,
-            'Sarah Johnson',
-          ),
+          Obx(() => _buildFormField(
+                'Full name',
+                controller.fullNameController,
+                controller.displayName.value.isEmpty
+                    ? 'Enter your full name'
+                    : controller.displayName.value,
+              )),
           SizedBox(height: 16),
 
           // Phone Number
@@ -295,39 +296,42 @@ class SettingsScreen extends GetView<SettingsController> {
           ),
         ),
         SizedBox(height: 8),
-        TextField(
-          controller: controller.phoneController,
-          decoration: InputDecoration(
-            hintText: '023 4432 2224',
-            prefixIcon: Container(
-              margin: EdgeInsets.all(8),
-              width: 24,
-              height: 16,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                image: DecorationImage(
-                  image: NetworkImage(
-                    'https://flagcdn.com/w40/gh.png',
+        Obx(() => TextField(
+              controller: controller.phoneController,
+              decoration: InputDecoration(
+                hintText: controller.displayPhone.value.isEmpty
+                    ? 'Enter your phone number'
+                    : controller.displayPhone.value,
+                prefixIcon: Container(
+                  margin: EdgeInsets.all(8),
+                  width: 24,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        'https://flagcdn.com/w40/gh.png',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  fit: BoxFit.cover,
                 ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: primaryColor),
+                ),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: primaryColor),
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ),
+            )),
       ],
     );
   }

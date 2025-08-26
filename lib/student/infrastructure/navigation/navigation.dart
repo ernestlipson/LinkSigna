@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../config.dart';
 import '../../presentation/screens.dart';
 import 'bindings/controllers/controllers_bindings.dart';
+import 'bindings/controllers/interpreters.controller.binding.dart';
 import 'routes.dart';
 
 class EnvironmentsBadge extends StatelessWidget {
@@ -49,6 +50,11 @@ class Nav {
       name: Routes.OTP,
       page: () => const OtpScreen(),
       binding: OtpControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.INTERPRETERS,
+      page: () => const InterpretersScreen(),
+      binding: InterpretersControllerBinding(),
     ),
     GetPage(
       name: Routes.SESSIONS,

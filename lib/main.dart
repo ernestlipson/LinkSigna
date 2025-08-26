@@ -1,10 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'student/main.home.dart';
-import 'interpreter/int.home.dart';
+import 'firebase_options.dart';
 import 'student/infrastructure/navigation/routes.dart';
 import 'student/infrastructure/navigation/bindings/global.binding.dart';
 import 'student/infrastructure/navigation/navigation.dart';
@@ -23,19 +23,21 @@ void main() async {
     otpLength: 6,
   );
 
-  // Decide initial route based on login status or returning user flag
   final prefs = await SharedPreferences.getInstance();
   final seenOnboardingOrReturning =
       prefs.getBool('has_logged_in_before') ?? false;
   final initial = seenOnboardingOrReturning ? Routes.HOME : Routes.initialRoute;
 
-  // Load user name and set it in UserController if user has logged in before
   if (seenOnboardingOrReturning) {
     final userName = prefs.getString('userName') ?? 'User';
     Get.put(UserController());
     final userController = Get.find<UserController>();
     userController.setUser(name: userName);
   }
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(Main(initialRoute: initial));
 }
@@ -51,7 +53,7 @@ class Main extends StatelessWidget {
           textTheme: appTheme.textTheme.apply(
         fontFamily: 'WorkSans',
       )),
-      initialBinding: GlobalBinding(), // Add global binding
+      initialBinding: GlobalBinding(),
       initialRoute: initialRoute,
       getPages: Nav.routes,
     );

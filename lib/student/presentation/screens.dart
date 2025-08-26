@@ -1,6 +1,7 @@
 export 'deaf-history/deaf_history.screen.dart';
 export 'forgot-password/forgot_password.screen.dart';
 export 'home/home.screen.dart';
+export 'interpreters/interpreters.screen.dart';
 export 'login/login.screen.dart';
 export 'otp/otp.screen.dart';
 export 'sessions/sessions.screen.dart';

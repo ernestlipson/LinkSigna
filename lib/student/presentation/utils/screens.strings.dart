@@ -4,7 +4,7 @@ class ScreenStrings {
   static const String nameLabel = "Full Name";
   static const String emailHint = "Enter your email";
   static const String emailLabel = "Email";
-  static const String phoneHint = "Enter Phone Number";
+  static const String phoneHint = "Eg.+233244000000";
   static const String phoneLabel = "Phone Number";
   static const String ghanaFlagEmoji = '🇬🇭';
   static const String passwordHint = "Enter your password";
@@ -22,7 +22,7 @@ class ScreenStrings {
   static const String loginText = "Login";
   static const String requiredFieldError = "This field is required";
   static const String phoneValidationError =
-      "Phone number must be exactly 10 digits";
+      "Please enter a valid phone number (e.g., +233240067412)";
   static const String rememberMe = "Remember me";
   static const String forgotPassword = "Forgot Password?";
 }

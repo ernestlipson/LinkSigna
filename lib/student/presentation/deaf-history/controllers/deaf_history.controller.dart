@@ -60,11 +60,10 @@ class DeafHistoryController extends GetxController {
 
   void messageInterpreter(SessionData session) {
     Get.snackbar(
-      'Message',
-      'Opening chat with ${session.interpreterName}',
+      'Pending Feature',
+      'This Feature is Coming Soon',
       snackPosition: SnackPosition.BOTTOM,
     );
-    // TODO: Navigate to chat screen
   }
 
   @override

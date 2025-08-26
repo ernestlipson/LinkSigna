@@ -1,14 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:email_otp/email_otp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../infrastructure/dal/services/google.signin.service.dart';
-import '../../../infrastructure/dal/services/country.service.dart';
 import '../../../infrastructure/navigation/routes.dart';
-import '../../components/coming.soon.placeholder.dart';
 import '../../shared/controllers/country.controller.dart';
-import '../../shared/controllers/user.controller.dart';
 
 class SignupController extends GetxController {
   final nameController = TextEditingController();
@@ -40,8 +36,10 @@ class SignupController extends GetxController {
 
   void validatePhone() {
     final value = phoneController.text.trim();
-    // Simple phone validation - should be 10 digits
-    final phoneRegex = RegExp(r'^\d{10}$');
+    // Phone validation - should be between 10 and 15 digits, allowing + and country code
+    // This regex allows: +233240067412, 233240067412, 0240067412, 240067412
+    final phoneRegex =
+        RegExp(r'^(\+?233)?[0-9]{9}$|^(\+?233)?[0-9]{10}$|^[0-9]{10,15}$');
     isPhoneValid.value = phoneRegex.hasMatch(value);
   }
 
@@ -55,31 +53,14 @@ class SignupController extends GetxController {
     final isFormValid = validateAll();
     if (!isFormValid) return;
 
-    // Check if user type is interpreter
-    if (selectedUserType.value == 'interpreter') {
-      // Show placeholder screen for interpreter
-      Get.to(() => const ComingSoonPlaceholder());
-      return;
-    }
-
     isPhoneOtpLoading.value = true;
     try {
       final phone = phoneController.text.trim();
-      // For now, we'll use a mock email for OTP since EmailOTP requires email
-      // In a real app, you'd use SMS OTP or email the user
-      final mockEmail = 'user@linksigna.com';
-      final sent = await EmailOTP.sendOTP(email: mockEmail);
-      if (!sent) {
-        throw Exception('Failed to send OTP');
-      }
+      await verifyPhoneNumber(phone);
 
-      // Save user name to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('userName', nameController.text.trim());
-
-      Get.snackbar('Success', 'OTP sent to your phone',
-          snackPosition: SnackPosition.BOTTOM);
-      Get.toNamed(Routes.OTP, arguments: {'email': mockEmail});
+      await prefs.setString('userPhone', phone);
     } catch (e) {
       Get.snackbar('Error', 'Failed to send OTP: ${e.toString()}',
           snackPosition: SnackPosition.BOTTOM);
@@ -88,38 +69,44 @@ class SignupController extends GetxController {
     }
   }
 
-  Future<void> signInWithGoogle() async {
-    isGoogleSignInLoading.value = true;
+  Future<void> verifyPhoneNumber(String phoneNumber) async {
     try {
-      final user = await GoogleSignInService.instance.signInWithGoogle();
-      if (user != null) {
-        if (!Get.isRegistered<UserController>()) {
-          Get.put(UserController());
-        }
-        final userController = Get.find<UserController>();
-        userController.setUser(name: user.displayName, photo: user.photoUrl);
-        Get.snackbar('Success', 'Welcome ${user.displayName ?? 'User'}!',
-            snackPosition: SnackPosition.BOTTOM);
-        // Navigate to home or wherever appropriate
-        Get.offAllNamed(Routes.HOME);
-      }
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: phoneNumber.startsWith('+233')
+            ? phoneNumber
+            : '+233${phoneNumber.startsWith('0') ? phoneNumber.substring(1) : phoneNumber}',
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await FirebaseAuth.instance.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          Get.snackbar(
+              'Error', 'Failed to verify phone number: ${e.toString()}',
+              snackPosition: SnackPosition.BOTTOM);
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          otpUserId.value = verificationId;
+          Get.snackbar('Success', 'OTP sent to your phone',
+              snackPosition: SnackPosition.BOTTOM);
+
+          // Navigate to OTP screen with phone number as argument
+          Get.toNamed(Routes.OTP, arguments: {
+            'phone': phoneNumber,
+            'verificationId': verificationId,
+          });
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          Get.snackbar('Error', 'Verification timeout: $verificationId',
+              snackPosition: SnackPosition.BOTTOM);
+        },
+      );
     } catch (e) {
-      Get.snackbar('Error', 'Google Sign-in failed: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isGoogleSignInLoading.value = false;
+      Get.snackbar('Error', 'Failed to verify phone number: ${e.toString()}');
     }
   }
 
   @override
   void onInit() {
     super.onInit();
-
-    if (!Get.isRegistered<GoogleSignInService>()) {
-      Get.put(GoogleSignInService());
-    }
-
-    // Fetch country flag for phone field
     fetchCountryFlag();
   }
 

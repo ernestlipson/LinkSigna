@@ -5,7 +5,7 @@ class CustomButton extends StatelessWidget {
   final String text;
 
   /// The callback that is fired when the button is tapped.
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   /// An optional icon to display before the text.
   final Widget? icon;
@@ -22,7 +22,7 @@ class CustomButton extends StatelessWidget {
   const CustomButton({
     super.key,
     required this.text,
-    required this.onPressed,
+    this.onPressed,
     this.icon,
     this.textStyle,
     this.color,

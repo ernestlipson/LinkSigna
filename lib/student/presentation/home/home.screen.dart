@@ -7,6 +7,7 @@ import 'package:sign_language_app/student/presentation/home/home.dashboard.dart'
 
 import '../../infrastructure/utils/app_icons.dart';
 import '../deaf-history/controllers/deaf_history.controller.dart';
+import '../interpreters/interpreters.screen.dart';
 import '../sessions/controllers/sessions.controller.dart';
 import '../sessions/sessions.screen.dart';
 import '../settings/controllers/settings.controller.dart';
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> get _pages => <Widget>[
         const HomeDashboard(),
+        const InterpretersScreen(),
         const SessionsScreen(),
         const DeafHistoryScreen(),
         const SettingsScreen(),
@@ -124,6 +126,11 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: AppIcons.home(size: 24, color: Colors.grey[700]),
               activeIcon: AppIcons.home(size: 24, color: primaryColor),
               label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: AppIcons.calendar(size: 24, color: Colors.grey[700]),
+              activeIcon: AppIcons.calendar(size: 24, color: primaryColor),
+              label: 'Interpreter',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.access_time, color: Colors.grey[700]),

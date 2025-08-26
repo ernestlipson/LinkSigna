@@ -5,6 +5,7 @@ class Routes {
   static const DEAF_HISTORY = '/deaf-history';
   static const FORGOT_PASSWORD = '/forgot-password';
   static const HOME = '/home';
+  static const INTERPRETERS = '/interpreters';
   static const LOGIN = '/login';
   static const OTP = '/otp';
   static const SESSIONS = '/sessions';

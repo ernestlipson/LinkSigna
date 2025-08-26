@@ -1,7 +1,11 @@
-import 'package:get/get.dart';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../shared/controllers/user.controller.dart';
 
 class SettingsController extends GetxController {
   // Tab selection
@@ -16,30 +20,13 @@ class SettingsController extends GetxController {
   // Observable variables for reactive UI
   final RxString universityLevel = 'TTU - Level 300'.obs;
   final Rx<File?> profileImage = Rx<File?>(null);
+  final RxString displayName = ''.obs;
+  final RxString displayPhone = ''.obs;
   final ImagePicker _picker = ImagePicker();
 
   // Available languages list
   final List<String> availableLanguages = [
     'Ghanaian Sign Language',
-    // 'American Sign Language (ASL)',
-    // 'British Sign Language (BSL)',
-    // 'Australian Sign Language (Auslan)',
-    // 'French Sign Language (LSF)',
-    // 'German Sign Language (DGS)',
-    // 'Japanese Sign Language (JSL)',
-    // 'Chinese Sign Language (CSL)',
-    // 'Korean Sign Language (KSL)',
-    // 'Brazilian Sign Language (Libras)',
-    // 'Mexican Sign Language (LSM)',
-    // 'Spanish Sign Language (LSE)',
-    // 'Italian Sign Language (LIS)',
-    // 'Dutch Sign Language (NGT)',
-    // 'Swedish Sign Language (STS)',
-    // 'Norwegian Sign Language (NTS)',
-    // 'Danish Sign Language (DTS)',
-    // 'Finnish Sign Language (FinSL)',
-    // 'Russian Sign Language (RSL)',
-    // 'Polish Sign Language (PJM)',
   ];
 
   // Available university levels
@@ -51,13 +38,59 @@ class SettingsController extends GetxController {
     _loadUserData();
   }
 
-  void _loadUserData() {
-    // Load user data into form fields
-    fullNameController.text = 'Sarah Johnson';
-    phoneController.text = '023 4432 2224';
-    universityController.text = 'TTU- Level 300';
-    universityLevel.value = 'TTU - Level 300';
-    languagesController.text = 'Ghanaian Sign Language';
+  Future<void> _loadUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Load user name from SharedPreferences (saved during signup)
+      final userName = prefs.getString('userName') ?? '';
+      fullNameController.text = userName;
+      displayName.value = userName;
+
+      // Try to get user data from UserController if available
+      if (Get.isRegistered<UserController>()) {
+        final userController = Get.find<UserController>();
+        if (userController.user.value?.name?.isNotEmpty == true) {
+          fullNameController.text = userController.user.value!.name!;
+          displayName.value = userController.user.value!.name!;
+        }
+        if (userController.user.value?.phone?.isNotEmpty == true) {
+          phoneController.text = userController.user.value!.phone!;
+          displayPhone.value = userController.user.value!.phone!;
+        }
+      }
+
+      // Load phone number from SharedPreferences if available
+      final userPhone = prefs.getString('userPhone') ?? '';
+      if (userPhone.isNotEmpty && phoneController.text.isEmpty) {
+        phoneController.text = userPhone;
+        displayPhone.value = userPhone;
+      }
+
+      // Set default values if no user data is found
+      if (fullNameController.text.isEmpty) {
+        fullNameController.text = 'User';
+        displayName.value = 'User';
+      }
+      if (phoneController.text.isEmpty) {
+        phoneController.text = '';
+        displayPhone.value = '';
+      }
+
+      // Keep existing default values for other fields
+      universityController.text = 'TTU- Level 300';
+      universityLevel.value = 'TTU - Level 300';
+      languagesController.text = 'Ghanaian Sign Language';
+    } catch (e) {
+      // Fallback to default values on error
+      fullNameController.text = 'User';
+      displayName.value = 'User';
+      phoneController.text = '';
+      displayPhone.value = '';
+      universityController.text = 'TTU- Level 300';
+      universityLevel.value = 'TTU - Level 300';
+      languagesController.text = 'Ghanaian Sign Language';
+    }
   }
 
   Future<void> pickProfileImage() async {

@@ -113,7 +113,9 @@ class SignupScreen extends GetView<SignupController> {
                       keyboardType: TextInputType.phone,
                       errorText: controller.isPhoneValid.value
                           ? null
-                          : ScreenStrings.requiredFieldError,
+                          : controller.phoneController.text.trim().isEmpty
+                              ? ScreenStrings.requiredFieldError
+                              : ScreenStrings.phoneValidationError,
                       onChanged: (_) => controller.validatePhone(),
                       prefix: Obx(() => controller.isLoadingFlag.value
                           ? Container(
@@ -165,11 +167,10 @@ class SignupScreen extends GetView<SignupController> {
                 ),
                 SizedBox(height: 20),
                 Obx(() => CustomButton(
-                      text: controller.isPhoneOtpLoading.value
-                          ? 'Sending OTP...'
-                          : ScreenStrings.signUpButton,
+                      isLoading: controller.isPhoneOtpLoading.value,
+                      text: ScreenStrings.signUpButton,
                       onPressed: controller.isPhoneOtpLoading.value
-                          ? () {}
+                          ? null
                           : () => controller.signUp(),
                     )),
                 SizedBox(height: 30),
