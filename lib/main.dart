@@ -3,16 +3,17 @@ import 'package:get/get.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'infrastructure/navigation/bindings/global.binding.dart';
-import 'infrastructure/navigation/navigation.dart';
-import 'infrastructure/navigation/routes.dart';
-import 'infrastructure/theme/app_theme.dart';
-import 'presentation/shared/controllers/user.controller.dart';
+import 'student/main.home.dart';
+import 'interpreter/int.home.dart';
+import 'student/infrastructure/navigation/routes.dart';
+import 'student/infrastructure/navigation/bindings/global.binding.dart';
+import 'student/infrastructure/navigation/navigation.dart';
+import 'student/infrastructure/theme/app_theme.dart';
+import 'student/presentation/shared/controllers/user.controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configure Email OTP
   EmailOTP.config(
     appName: 'LinkSigna',
     otpType: OTPType.numeric,

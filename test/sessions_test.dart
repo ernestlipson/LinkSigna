@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:sign_language_app/infrastructure/navigation/bindings/global.binding.dart';
-import 'package:sign_language_app/presentation/sessions/controllers/sessions.controller.dart';
-import 'package:sign_language_app/presentation/sessions/sessions.screen.dart';
+import 'package:sign_language_app/student/infrastructure/navigation/bindings/global.binding.dart';
+import 'package:sign_language_app/student/presentation/sessions/controllers/sessions.controller.dart';
+import 'package:sign_language_app/student/presentation/sessions/sessions.screen.dart';
 
 void main() {
   group('SessionsScreen Tests', () {
