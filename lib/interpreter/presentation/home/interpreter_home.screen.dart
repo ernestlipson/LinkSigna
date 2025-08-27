@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../infrastructure/theme/app_theme.dart';
 import '../components/coming.soon.placeholder.dart';
+import '../messages/interpreter_messages.screen.dart';
 import 'controllers/interpreter_home.controller.dart';
 
 class InterpreterHomeScreen extends StatelessWidget {
@@ -23,10 +24,7 @@ class InterpreterHomeScreen extends StatelessWidget {
         title: 'Sessions',
         subtitle: 'Manage your interpretation sessions here.',
       ),
-      const ComingSoonPlaceholder(
-        title: 'Messages',
-        subtitle: 'Chat with your clients and colleagues.',
-      ),
+      const InterpreterMessagesScreen(),
       const ComingSoonPlaceholder(
         title: 'History',
         subtitle: 'View your session history and earnings.',
@@ -71,6 +69,26 @@ class InterpreterHomeScreen extends StatelessWidget {
               Get.snackbar('Notifications', 'No new notifications');
             },
             icon: const Icon(Icons.notifications_outlined, color: Colors.grey),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await controller.logout();
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Logout'),
+                  ],
+                ),
+              ),
+            ],
+            child: const Icon(Icons.more_vert, color: Colors.grey),
           ),
           const SizedBox(width: 8),
         ],

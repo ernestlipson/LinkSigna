@@ -24,12 +24,24 @@ void main() async {
   );
 
   final prefs = await SharedPreferences.getInstance();
-  final seenOnboardingOrReturning =
-      prefs.getBool('has_logged_in_before') ?? false;
-  final initial =
-      seenOnboardingOrReturning ? Routes.STUDENT_HOME : Routes.initialRoute;
 
-  if (seenOnboardingOrReturning) {
+  // Check for both student and interpreter login status
+  final hasStudentLoggedIn = prefs.getBool('student_logged_in') ?? false;
+  final hasInterpreterLoggedIn =
+      prefs.getBool('interpreter_logged_in') ?? false;
+
+  // Determine initial route based on login status
+  String initial;
+  if (hasInterpreterLoggedIn) {
+    initial = Routes.INTERPRETER_HOME;
+  } else if (hasStudentLoggedIn) {
+    initial = Routes.STUDENT_HOME;
+  } else {
+    initial = Routes.initialRoute;
+  }
+
+  // Set up user controller if any user is logged in
+  if (hasStudentLoggedIn || hasInterpreterLoggedIn) {
     final userName = prefs.getString('userName') ?? 'User';
     Get.put(UserController());
     final userController = Get.find<UserController>();

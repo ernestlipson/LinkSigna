@@ -90,7 +90,7 @@ class LoginController extends GetxController {
   Future<void> checkAuthStatus() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (prefs.getBool('has_logged_in_before') ?? false) {
+      if (prefs.getBool('student_logged_in') ?? false) {
         Get.offAllNamed(StudentRoutes.HOME);
       }
     } catch (e) {

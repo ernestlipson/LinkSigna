@@ -14,6 +14,7 @@ class Routes {
 
   // Interpreter Routes
   static const INTERPRETER = '/interpreter/main';
+  static const INTERPRETER_CHAT = '/interpreter/chat';
   static const INTERPRETER_HOME = '/interpreter/home';
   static const INTERPRETER_OTP = '/interpreter/otp';
   static const INTERPRETER_SIGNUP = '/interpreter/signup';

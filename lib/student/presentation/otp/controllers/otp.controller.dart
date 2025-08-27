@@ -127,9 +127,9 @@ class OtpController extends GetxController {
         await FirebaseAuth.instance.signInWithCredential(credential);
       }
 
-      // Mark that user has logged in before
+      // Mark that student has logged in before
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('has_logged_in_before', true);
+      await prefs.setBool('student_logged_in', true);
 
       // Load user data and set it in UserController
       final userName = prefs.getString('userName') ?? 'User';

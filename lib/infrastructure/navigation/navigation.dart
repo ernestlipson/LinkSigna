@@ -19,6 +19,7 @@ import '../../interpreter/infrastructure/navigation/bindings/controllers/inteerp
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter.controller.binding.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_otp.controller.binding.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_home.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_chat.controller.binding.dart';
 import 'routes.dart';
 
 class EnvironmentsBadge extends StatelessWidget {
@@ -102,6 +103,11 @@ class Nav {
       name: Routes.INTERPRETER_HOME,
       page: () => const InterpreterHomeScreen(),
       binding: InterpreterHomeControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.INTERPRETER_CHAT,
+      page: () => const InterpreterChatScreen(),
+      binding: InterpreterChatControllerBinding(),
     ),
     GetPage(
       name: Routes.INTERPRETER,

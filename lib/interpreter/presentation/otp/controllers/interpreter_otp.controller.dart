@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:email_otp/email_otp.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
 
@@ -98,6 +99,17 @@ class InterpreterOtpController extends GetxController {
       if (isValid != true) {
         throw Exception('Invalid OTP');
       }
+
+      // Mark that interpreter has logged in before
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('interpreter_logged_in', true);
+
+      // Store interpreter data
+      final args = Get.arguments as Map<String, dynamic>?;
+      if (args != null && args['name'] != null) {
+        await prefs.setString('userName', args['name']);
+      }
+      await prefs.setString('userEmail', email.value);
 
       Get.snackbar('Success', 'Email verified successfully!',
           snackPosition: SnackPosition.BOTTOM,
