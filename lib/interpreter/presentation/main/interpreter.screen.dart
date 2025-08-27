@@ -168,6 +168,13 @@ class InterpreterScreen extends GetView<InterpreterController> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
+                      Text(
+                        interpreter.email,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                       SizedBox(height: 4),
                       Text(
                         'Experience: ${interpreter.experience} years in Sign Language interpretation',
@@ -399,92 +406,6 @@ class InterpreterScreen extends GetView<InterpreterController> {
                 )),
             SizedBox(height: 16),
 
-            // // Experience Filter
-            // Text(
-            //   'Experience',
-            //   style: TextStyle(
-            //     fontSize: 14,
-            //     fontWeight: FontWeight.w500,
-            //     color: Colors.grey[700],
-            //   ),
-            // ),
-            // SizedBox(height: 8),
-            // Obx(() => DropdownButtonFormField<String>(
-            //       value: controller.selectedExperience.value.isEmpty
-            //           ? null
-            //           : controller.selectedExperience.value,
-            //       decoration: InputDecoration(
-            //         hintText: 'Select experience level',
-            //         border: OutlineInputBorder(
-            //           borderRadius: BorderRadius.circular(8),
-            //           borderSide: BorderSide(color: Colors.grey[300]!),
-            //         ),
-            //         enabledBorder: OutlineInputBorder(
-            //           borderRadius: BorderRadius.circular(8),
-            //           borderSide: BorderSide(color: Colors.grey[300]!),
-            //         ),
-            //         focusedBorder: OutlineInputBorder(
-            //           borderRadius: BorderRadius.circular(8),
-            //           borderSide: BorderSide(color: primaryColor),
-            //         ),
-            //         contentPadding:
-            //             EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            //       ),
-            //       items: [
-            //         DropdownMenuItem(value: '1-2', child: Text('1-2 years')),
-            //         DropdownMenuItem(value: '3-5', child: Text('3-5 years')),
-            //         DropdownMenuItem(value: '5+', child: Text('5+ years')),
-            //       ],
-            //       onChanged: (value) {
-            //         controller.selectedExperience.value = value ?? '';
-            //       },
-            //     )),
-            // SizedBox(height: 16),
-
-            // // Price Filter
-            // Text(
-            //   'Price',
-            //   style: TextStyle(
-            //     fontSize: 14,
-            //     fontWeight: FontWeight.w500,
-            //     color: Colors.grey[700],
-            //   ),
-            // ),
-            // SizedBox(height: 8),
-            // Obx(() => DropdownButtonFormField<String>(
-            //       value: controller.selectedPrice.value.isEmpty
-            //           ? null
-            //           : controller.selectedPrice.value,
-            //       decoration: InputDecoration(
-            //         hintText: 'Select price range',
-            //         border: OutlineInputBorder(
-            //           borderRadius: BorderRadius.circular(8),
-            //           borderSide: BorderSide(color: Colors.grey[300]!),
-            //         ),
-            //         enabledBorder: OutlineInputBorder(
-            //           borderRadius: BorderRadius.circular(8),
-            //           borderSide: BorderSide(color: Colors.grey[300]!),
-            //         ),
-            //         focusedBorder: OutlineInputBorder(
-            //           borderRadius: BorderRadius.circular(8),
-            //           borderSide: BorderSide(color: primaryColor),
-            //         ),
-            //         contentPadding:
-            //             EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            //       ),
-            //       items: [
-            //         DropdownMenuItem(value: 'free', child: Text('Free')),
-            //         DropdownMenuItem(value: 'paid', child: Text('Paid')),
-            //         DropdownMenuItem(value: '0-25', child: Text('GHS 0-25')),
-            //         DropdownMenuItem(value: '25-50', child: Text('GHS 25-50')),
-            //         DropdownMenuItem(value: '50+', child: Text('GHS 50+')),
-            //       ],
-            //       onChanged: (value) {
-            //         controller.selectedPrice.value = value ?? '';
-            //       },
-            //     )),
-            // SizedBox(height: 16),
-
             // Action Buttons
             Row(
               children: [
@@ -536,6 +457,7 @@ class InterpreterScreen extends GetView<InterpreterController> {
 // Data model for interpreter
 class InterpreterData {
   final String name;
+  final String email;
   final String profileImage;
   final int experience;
   final bool isFree;
@@ -543,6 +465,7 @@ class InterpreterData {
 
   InterpreterData({
     required this.name,
+    required this.email,
     required this.profileImage,
     required this.experience,
     required this.isFree,

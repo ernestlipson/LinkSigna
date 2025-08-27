@@ -169,7 +169,14 @@ class InterpretersScreen extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      Text(
+                        interpreter.email,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(height: 14),
                       Text(
                         'Experience: ${interpreter.experience} years in Sign Language interpretation',
                         style: TextStyle(

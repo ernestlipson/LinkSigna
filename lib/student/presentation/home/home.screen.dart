@@ -62,9 +62,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onProfileTap() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile clicked')),
-    );
+    // Navigate to the settings page (profile tab)
+    setState(() {
+      _selectedIndex = 4; // Settings is at index 4
+    });
+
+    // Also ensure the settings controller opens the profile tab (index 0)
+    if (Get.isRegistered<SettingsController>()) {
+      final settingsController = Get.find<SettingsController>();
+      settingsController.selectedTab.value = 0; // Profile tab
+    }
   }
 
   @override
@@ -88,14 +95,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(
-        profileImageUrl: userController.photoUrl.value.isNotEmpty
-            ? userController.photoUrl.value
-            : "https://image.lexica.art/full_webp/9c76b727-5409-4d42-be53-9b3e41e5f2db",
-        hasNotification: true, // Set to true to show the red notification dot
-        onHelpTap: _onHelpTap,
-        onNotificationTap: _onNotificationTap,
-        onProfileTap: _onProfileTap,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Obx(() => CustomAppBar(
+              profileImageUrl: userController.photoUrl.value.isNotEmpty
+                  ? userController.photoUrl.value
+                  : null, // Use null to show default avatar
+              hasNotification:
+                  true, // Set to true to show the red notification dot
+              onHelpTap: _onHelpTap,
+              onNotificationTap: _onNotificationTap,
+              onProfileTap: _onProfileTap,
+            )),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

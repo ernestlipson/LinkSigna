@@ -32,6 +32,7 @@ class InterpretersController extends GetxController {
     interpreters.value = [
       InterpreterData(
         name: 'Arlene McCoy',
+        email: 'arlene.mccoy@example.com',
         profileImage:
             'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
         experience: 4,
@@ -39,6 +40,7 @@ class InterpretersController extends GetxController {
       ),
       InterpreterData(
         name: 'Arlene McCoy',
+        email: 'arlene.mccoy@example.com',
         profileImage:
             'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
         experience: 4,
@@ -47,6 +49,7 @@ class InterpretersController extends GetxController {
       ),
       InterpreterData(
         name: 'Arlene McCoy',
+        email: 'arlene.mccoy@example.com',
         profileImage:
             'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
         experience: 4,
@@ -54,6 +57,7 @@ class InterpretersController extends GetxController {
       ),
       InterpreterData(
         name: 'Ama Buabeng',
+        email: 'ama.buabeng@example.com',
         profileImage:
             'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face',
         experience: 4,
@@ -61,6 +65,7 @@ class InterpretersController extends GetxController {
       ),
       InterpreterData(
         name: 'Arlene McCoy',
+        email: 'arlene.mccoy@example.com',
         profileImage:
             'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
         experience: 4,
@@ -68,6 +73,7 @@ class InterpretersController extends GetxController {
       ),
       InterpreterData(
         name: 'Arlene McCoy',
+        email: 'arlene.mccoy@example.com',
         profileImage:
             'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
         experience: 4,
@@ -76,6 +82,7 @@ class InterpretersController extends GetxController {
       ),
       InterpreterData(
         name: 'Arlene McCoy',
+        email: 'arlene.mccoy@example.com',
         profileImage:
             'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
         experience: 4,
@@ -84,6 +91,7 @@ class InterpretersController extends GetxController {
       ),
       InterpreterData(
         name: 'Millicent Boateng',
+        email: 'millicent.boateng@example.com',
         profileImage:
             'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face',
         experience: 4,
@@ -190,6 +198,7 @@ class InterpretersController extends GetxController {
 // Data model for interpreter
 class InterpreterData {
   final String name;
+  final String email;
   final String profileImage;
   final int experience;
   final bool isFree;
@@ -197,6 +206,7 @@ class InterpreterData {
 
   InterpreterData({
     required this.name,
+    required this.email,
     required this.profileImage,
     required this.experience,
     required this.isFree,

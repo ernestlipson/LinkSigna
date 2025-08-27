@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../infrastructure/utils/app_icons.dart';
 
@@ -72,13 +73,21 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ),
                   child: ClipOval(
-                    child: profileImageUrl != null
-                        ? Image.network(
-                            profileImageUrl!,
+                    child: profileImageUrl != null &&
+                            profileImageUrl!.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: profileImageUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildDefaultAvatar();
-                            },
+                            placeholder: (context, url) => Container(
+                              color: Colors.grey[300],
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.grey),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) =>
+                                _buildDefaultAvatar(),
                           )
                         : _buildDefaultAvatar(),
                   ),

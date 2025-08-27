@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../shared/controllers/user.controller.dart';
+import '../../../infrastructure/services/firebase_storage_service.dart';
 
 class SettingsController extends GetxController {
   // Tab selection
@@ -20,9 +22,14 @@ class SettingsController extends GetxController {
   // Observable variables for reactive UI
   final RxString universityLevel = 'TTU - Level 300'.obs;
   final Rx<File?> profileImage = Rx<File?>(null);
+  final RxString profileImageUrl = ''.obs;
   final RxString displayName = ''.obs;
   final RxString displayPhone = ''.obs;
+  final RxBool isUploadingImage = false.obs;
   final ImagePicker _picker = ImagePicker();
+
+  // Firebase Storage Service
+  late FirebaseStorageService _storageService;
 
   // Available languages list
   final List<String> availableLanguages = [
@@ -35,6 +42,7 @@ class SettingsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _storageService = Get.put(FirebaseStorageService());
     _loadUserData();
   }
 
@@ -81,6 +89,9 @@ class SettingsController extends GetxController {
       universityController.text = 'TTU- Level 300';
       universityLevel.value = 'TTU - Level 300';
       languagesController.text = 'Ghanaian Sign Language';
+
+      // Load profile image URL from Firebase Storage
+      await _loadProfileImageUrl();
     } catch (e) {
       // Fallback to default values on error
       fullNameController.text = 'User';
@@ -90,6 +101,30 @@ class SettingsController extends GetxController {
       universityController.text = 'TTU- Level 300';
       universityLevel.value = 'TTU - Level 300';
       languagesController.text = 'Ghanaian Sign Language';
+    }
+  }
+
+  /// Load profile image URL from Firebase Storage
+  Future<void> _loadProfileImageUrl() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userName = prefs.getString('userName') ?? 'User';
+
+      // Check if user has a profile image in Firebase Storage
+      final imageUrl = await _storageService.getProfileImageUrl(userName);
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        profileImageUrl.value = imageUrl;
+
+        // Update UserController with loaded profile image URL
+        if (Get.isRegistered<UserController>()) {
+          final userController = Get.find<UserController>();
+          userController.setUser(photo: imageUrl);
+        }
+
+        Get.log('Profile image URL loaded: $imageUrl');
+      }
+    } catch (e) {
+      Get.log('Error loading profile image URL: $e');
     }
   }
 
@@ -103,14 +138,20 @@ class SettingsController extends GetxController {
       );
 
       if (image != null) {
+        // Set the local file for immediate UI update
         profileImage.value = File(image.path);
+
+        // Show success message
         Get.snackbar(
-          'Success',
-          'Profile image updated successfully!',
+          'Image Selected',
+          'Profile image selected successfully! Uploading to cloud...',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900],
+          backgroundColor: Colors.blue[100],
+          colorText: Colors.blue[900],
         );
+
+        // Upload to Firebase Storage
+        await _uploadProfileImageToFirebase(File(image.path));
       }
     } catch (e) {
       Get.snackbar(
@@ -121,6 +162,115 @@ class SettingsController extends GetxController {
         colorText: Colors.red[900],
       );
     }
+  }
+
+  /// Upload profile image to Firebase Storage
+  Future<void> _uploadProfileImageToFirebase(File imageFile) async {
+    try {
+      isUploadingImage.value = true;
+
+      final prefs = await SharedPreferences.getInstance();
+      final userName = prefs.getString('userName') ?? 'User';
+
+      // Upload image to Firebase Storage (will auto-replace old image)
+      final downloadUrl =
+          await _storageService.uploadProfileImage(imageFile, userName);
+
+      if (downloadUrl != null) {
+        // Update the profile image URL
+        profileImageUrl.value = downloadUrl;
+
+        // Update UserController with new profile image URL
+        if (Get.isRegistered<UserController>()) {
+          final userController = Get.find<UserController>();
+          userController.setUser(photo: downloadUrl);
+        }
+
+        // Clear the local file since we now have a cloud URL
+        profileImage.value = null;
+
+        Get.snackbar(
+          'Success',
+          'Profile image updated successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green[100],
+          colorText: Colors.green[900],
+        );
+
+        Get.log('Profile image uploaded successfully: $downloadUrl');
+      } else {
+        // Keep the local file if upload failed
+        Get.snackbar(
+          'Upload Failed',
+          'Failed to upload image to cloud. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange[100],
+          colorText: Colors.orange[900],
+        );
+      }
+    } catch (e) {
+      Get.log('Error uploading profile image: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to upload profile image: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+
+      // Ensure loader stops even on error
+      profileImage.value = null;
+    } finally {
+      // Always stop the loader
+      isUploadingImage.value = false;
+    }
+  }
+
+  /// Get the current profile image widget
+  Widget getProfileImageWidget() {
+    if (profileImageUrl.value.isNotEmpty) {
+      // Show cached network image from Firebase Storage
+      return CachedNetworkImage(
+        imageUrl: profileImageUrl.value,
+        imageBuilder: (context, imageProvider) => CircleAvatar(
+          radius: 50,
+          backgroundColor: Colors.pink[100],
+          backgroundImage: imageProvider,
+        ),
+        placeholder: (context, url) => CircleAvatar(
+          radius: 50,
+          backgroundColor: Colors.pink[100],
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+        errorWidget: (context, url, error) => CircleAvatar(
+          radius: 50,
+          backgroundColor: Colors.pink[100],
+          child: Icon(Icons.person, size: 50, color: Colors.white),
+        ),
+      );
+    } else if (profileImage.value != null) {
+      // Show local file image
+      return CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.pink[100],
+        backgroundImage: FileImage(profileImage.value!),
+      );
+    } else {
+      // Show default avatar
+      return CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.pink[100],
+        child: Icon(Icons.person, size: 50, color: Colors.white),
+      );
+    }
+  }
+
+  /// Check if user has a profile image (either local or cloud)
+  bool get hasProfileImage {
+    return profileImageUrl.value.isNotEmpty || profileImage.value != null;
   }
 
   void editProfile() {

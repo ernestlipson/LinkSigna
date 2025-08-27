@@ -87,16 +87,9 @@ class SettingsScreen extends GetView<SettingsController> {
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
-                  Obx(() => CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.pink[100],
-                        backgroundImage: controller.profileImage.value != null
-                            ? FileImage(controller.profileImage.value!)
-                                as ImageProvider
-                            : NetworkImage(
-                                'https://imgresizer.eurosport.com/unsafe/1200x0/filters:format(jpeg):focal(1461x562:1463x560)/origin-imgresizer.eurosport.com/2014/05/26/1244633-26883491-2560-1440.jpg',
-                              ),
-                      )),
+                  // Profile Image with Firebase Storage support
+                  Obx(() => controller.getProfileImageWidget()),
+
                   // Camera icon overlay
                   CircleAvatar(
                     radius: 18,
@@ -111,6 +104,29 @@ class SettingsScreen extends GetView<SettingsController> {
                       ),
                     ),
                   ),
+
+                  // Upload progress indicator
+                  if (controller.isUploadingImage.value)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(primaryColor),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -237,7 +253,7 @@ class SettingsScreen extends GetView<SettingsController> {
   Widget _buildNotificationsTab() {
     return Center(
       child: Text(
-        'Notifications settings will be implemented here',
+        'No notifications yet',
         style: TextStyle(
           fontSize: 16,
           color: Colors.grey[600],
