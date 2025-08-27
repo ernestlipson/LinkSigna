@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../../infrastructure/navigation/routes.dart';
 import '../../infrastructure/theme/app_theme.dart';
 
-import '../../infrastructure/navigation/routes.dart';
 import '../../infrastructure/utils/app.constants.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
@@ -188,8 +188,8 @@ class SignupScreen extends GetView<SignupController> {
                           ), // Colored text
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              Get.offAndToNamed(StudentRoutes
-                                  .LOGIN); // Navigate to login page
+                              Get.offAndToNamed(Routes
+                                  .STUDENT_LOGIN); // Navigate to login page
                             },
                         ),
                       ],

@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 import '../../../infrastructure/dal/services/google.signin.service.dart';
-import '../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/country.controller.dart';
 
 class LoginController extends GetxController {
@@ -76,7 +76,7 @@ class LoginController extends GetxController {
         Get.snackbar('Success', 'Welcome! Google sign-in successful',
             snackPosition: SnackPosition.BOTTOM);
         // Navigate to home screen
-        Get.offAllNamed(StudentRoutes.HOME);
+        Get.offAllNamed(Routes.STUDENT_HOME);
       }
     } catch (e) {
       Get.snackbar('Error', 'Google Sign-in failed: ${e.toString()}',
@@ -91,7 +91,7 @@ class LoginController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (prefs.getBool('student_logged_in') ?? false) {
-        Get.offAllNamed(StudentRoutes.HOME);
+        Get.offAllNamed(Routes.STUDENT_HOME);
       }
     } catch (e) {
       print('Error checking auth status: $e');

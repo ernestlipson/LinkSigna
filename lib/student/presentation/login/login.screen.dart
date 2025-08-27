@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
+import '../../../infrastructure/navigation/routes.dart';
 import '../../infrastructure/utils/app.constants.dart';
 
-import '../../infrastructure/navigation/routes.dart';
 import '../components/app.button.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/login.controller.dart';
@@ -23,7 +23,6 @@ class LoginScreen extends GetView<LoginController> {
         padding: const EdgeInsets.all(16),
         child: SafeArea(
           child: Column(
-            // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
@@ -81,79 +80,7 @@ class LoginScreen extends GetView<LoginController> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  // Password Field
-                  // Obx(() {
-                  //   return CustomTextFormField(
-                  //     hintText: ScreenStrings.passwordHint,
-                  //     labelText: ScreenStrings.passwordLabel,
-                  //     controller: controller.passwordController,
-                  //     obscureText: !controller.isPasswordVisible
-                  //         .value, // Toggle based on visibility state
-                  //     isRequired: true,
-                  //     errorText: controller.isPasswordValid.value
-                  //         ? null
-                  //         : ScreenStrings.requiredFieldError,
-                  //     suffix: IconButton(
-                  //       onPressed: controller
-                  //           .togglePasswordVisibility, // Use the controller method
-                  //       icon: Icon(
-                  //         controller.isPasswordVisible.value
-                  //             ? Icons
-                  //                 .visibility_off // Show this when password is visible
-                  //             : Icons
-                  //                 .visibility, // Show this when password is hidden
-                  //         color: Colors.black.withAlpha(64),
-                  //         size: 20,
-                  //       ),
-                  //     ),
-                  //   );
-                  // }),
-                  // SizedBox(height: 10),
-                  // //Add a Row containing a Remember me toggle and Forgot Password
-                  // Row(
-                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //   children: [
-                  //     // Remember Me Toggle
-                  //     Row(
-                  //       children: [
-                  //         Obx(() => Checkbox(
-                  //               side: BorderSide(color: Color(0xFFFFD6E7)),
-                  //               shape: RoundedRectangleBorder(
-                  //                 borderRadius: BorderRadius.circular(4.0),
-                  //               ),
-                  //               value: controller.isRememberMe.value,
-                  //               onChanged: (bool? newValue) {
-                  //                 controller.isRememberMe.value =
-                  //                     newValue ?? false;
-                  //               },
-                  //             )),
-                  //         Text(
-                  //           ScreenStrings.rememberMe,
-                  //           style: TextStyle(
-                  //             fontSize: 14,
-                  //             fontWeight: FontWeight.w400,
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //     // Forgot Password Link
-                  //     GestureDetector(
-                  //       onTap: () {
-                  //         print("Navigating to forgot password screen");
-                  //         Get.toNamed(Routes.FORGOT_PASSWORD);
-                  //       },
-                  //       child: Text(
-                  //         ScreenStrings.forgotPassword,
-                  //         style: TextStyle(
-                  //           fontSize: 14,
-                  //           fontWeight: FontWeight.w500,
-                  //           color: Color(0xFF9E1068),
-                  //           decoration: TextDecoration.underline,
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
+
                   SizedBox(height: 20),
                   Obx(() => CustomButton(
                         text: controller.isPhoneOtpLoading.value
@@ -164,16 +91,7 @@ class LoginScreen extends GetView<LoginController> {
                             : () => controller.sendPhoneOTP(),
                       )),
                   SizedBox(height: 24),
-                  // Center(child: Text("Or")), // Center the "Or" text
-                  // SizedBox(height: 16),
 
-                  // Google Sign In Button
-                  // Obx(() => GoogleSignInButton(
-                  //       onPressed: controller.isGoogleSignInLoading.value
-                  //           ? null
-                  //           : controller.signInWithGoogle,
-                  //       isLoading: controller.isGoogleSignInLoading.value,
-                  //     )),
                   Center(
                     child: RichText(
                       text: TextSpan(
@@ -194,7 +112,7 @@ class LoginScreen extends GetView<LoginController> {
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
-                                Get.toNamed(StudentRoutes.SIGNUP);
+                                Get.toNamed(Routes.STUDENT_LOGIN);
                               },
                           ),
                         ],

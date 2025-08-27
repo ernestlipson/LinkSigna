@@ -4,7 +4,7 @@ import 'package:email_otp/email_otp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../infrastructure/navigation/routes.dart';
+import '../../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/user.controller.dart';
 
 class OtpController extends GetxController {
@@ -141,7 +141,7 @@ class OtpController extends GetxController {
       userController.setUser(name: userName, phone: userPhone);
 
       // Navigate to home page and clear navigation stack
-      Get.offAllNamed(StudentRoutes.HOME);
+      Get.offAllNamed(Routes.STUDENT_HOME);
     } catch (e) {
       // Clear OTP fields on error
       clearOtpFields();

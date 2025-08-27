@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../infrastructure/navigation/routes.dart';
+import '../../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/country.controller.dart';
 
 class SignupController extends GetxController {
@@ -36,8 +36,6 @@ class SignupController extends GetxController {
 
   void validatePhone() {
     final value = phoneController.text.trim();
-    // Phone validation - should be between 10 and 15 digits, allowing + and country code
-    // This regex allows: +233240067412, 233240067412, 0240067412, 240067412
     final phoneRegex =
         RegExp(r'^(\+?233)?[0-9]{9}$|^(\+?233)?[0-9]{10}$|^[0-9]{10,15}$');
     isPhoneValid.value = phoneRegex.hasMatch(value);
@@ -50,8 +48,18 @@ class SignupController extends GetxController {
   }
 
   Future<void> signUp() async {
-    final isFormValid = validateAll();
-    if (!isFormValid) return;
+    if (!validateAll()) {
+      if (!isTermsAccepted.value) {
+        Get.snackbar(
+          'Terms Required',
+          'Please accept the terms to continue',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+          colorText: Colors.red[900],
+        );
+      }
+      return;
+    }
 
     isPhoneOtpLoading.value = true;
     try {
@@ -85,23 +93,14 @@ class SignupController extends GetxController {
         },
         codeSent: (String verificationId, int? resendToken) {
           otpUserId.value = verificationId;
-          Get.snackbar('Success', 'OTP sent to your phone',
-              snackPosition: SnackPosition.BOTTOM);
-
-          // Navigate to OTP screen with phone number as argument
-          Get.toNamed(StudentRoutes.OTP, arguments: {
+          Get.toNamed(Routes.STUDENT_OTP, arguments: {
             'phone': phoneNumber,
             'verificationId': verificationId,
           });
         },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          Get.snackbar('Error', 'Verification timeout: $verificationId',
-              snackPosition: SnackPosition.BOTTOM);
-        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
       );
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to verify phone number: ${e.toString()}');
-    }
+    } catch (e) {}
   }
 
   @override
