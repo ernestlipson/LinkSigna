@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import '../../infrastructure/theme/app_theme.dart';
 
-import '../shared/controllers/user.controller.dart';
 import 'controllers/interpreter.controller.dart';
 
 class InterpreterScreen extends GetView<InterpreterController> {
@@ -11,7 +10,7 @@ class InterpreterScreen extends GetView<InterpreterController> {
 
   @override
   Widget build(BuildContext context) {
-    final userController = Get.find<UserController>();
+    // Note: UserController is managed globally by student section
 
     return Scaffold(
       backgroundColor: Colors.white,

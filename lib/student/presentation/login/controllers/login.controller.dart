@@ -76,7 +76,7 @@ class LoginController extends GetxController {
         Get.snackbar('Success', 'Welcome! Google sign-in successful',
             snackPosition: SnackPosition.BOTTOM);
         // Navigate to home screen
-        Get.offAllNamed(Routes.HOME);
+        Get.offAllNamed(StudentRoutes.HOME);
       }
     } catch (e) {
       Get.snackbar('Error', 'Google Sign-in failed: ${e.toString()}',
@@ -91,7 +91,7 @@ class LoginController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (prefs.getBool('has_logged_in_before') ?? false) {
-        Get.offAllNamed(Routes.HOME);
+        Get.offAllNamed(StudentRoutes.HOME);
       }
     } catch (e) {
       print('Error checking auth status: $e');

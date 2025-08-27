@@ -2,9 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import '../../../interpreter/presentation/screens.dart';
+
 import '../../infrastructure/theme/app_theme.dart';
-import '../../../interpreter/int.home.dart';
 
 import '../../infrastructure/navigation/routes.dart';
 import '../../infrastructure/utils/app.constants.dart';
@@ -65,8 +64,7 @@ class SignupScreen extends GetView<SignupController> {
                           onChanged: (String? value) {
                             controller.selectedUserType.value = value!;
                             // Immediately navigate to interpreter sign-up flow
-                            // Navigate to interpreter app
-                            Get.offAll(() => const InterpreterSignupScreen());
+                            Get.offAllNamed('/interpreter/signup');
                           },
                           activeColor: primaryColor,
                         ),
@@ -190,8 +188,8 @@ class SignupScreen extends GetView<SignupController> {
                           ), // Colored text
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              Get.offAndToNamed(
-                                  Routes.LOGIN); // Navigate to login page
+                              Get.offAndToNamed(StudentRoutes
+                                  .LOGIN); // Navigate to login page
                             },
                         ),
                       ],

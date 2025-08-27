@@ -194,7 +194,7 @@ class LoginScreen extends GetView<LoginController> {
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
-                                Get.toNamed(Routes.SIGNUP);
+                                Get.toNamed(StudentRoutes.SIGNUP);
                               },
                           ),
                         ],

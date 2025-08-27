@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:email_otp/email_otp.dart';
 
-class InterpreterController extends GetxController {
-  // Form controllers
+import '../../../../infrastructure/navigation/routes.dart';
+
+class InterpreterSignupController extends GetxController {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  final otpController = TextEditingController();
 
   // Validation state
   final isNameValid = true.obs;
@@ -34,34 +34,6 @@ class InterpreterController extends GetxController {
     return isNameValid.value && isEmailValid.value && isTermsAccepted.value;
   }
 
-  Future<void> sendOtp() async {
-    validateEmail();
-    if (!isEmailValid.value) {
-      Get.snackbar('Invalid Email', 'Please enter a valid email address',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
-      return;
-    }
-
-    isSendingOtp.value = true;
-    try {
-      await EmailOTP.sendOTP(email: emailController.text.trim());
-      isOtpSent.value = true;
-      Get.snackbar('OTP Sent', 'Verification code sent to your email',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900]);
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to send OTP: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
-    } finally {
-      isSendingOtp.value = false;
-    }
-  }
-
   Future<void> resendOtp() async {
     validateEmail();
     if (!isEmailValid.value) {
@@ -74,11 +46,15 @@ class InterpreterController extends GetxController {
 
     isSendingOtp.value = true;
     try {
-      await EmailOTP.sendOTP(email: emailController.text.trim());
-      Get.snackbar('OTP Resent', 'New verification code sent to your email',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900]);
+      final result = await EmailOTP.sendOTP(email: emailController.text.trim());
+      if (result == true) {
+        Get.snackbar('OTP Resent', 'New verification code sent to your email',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green[100],
+            colorText: Colors.green[900]);
+      } else {
+        throw Exception('Failed to resend OTP');
+      }
     } catch (e) {
       Get.snackbar('Error', 'Failed to resend OTP: ${e.toString()}',
           snackPosition: SnackPosition.BOTTOM,
@@ -86,40 +62,6 @@ class InterpreterController extends GetxController {
           colorText: Colors.red[900]);
     } finally {
       isSendingOtp.value = false;
-    }
-  }
-
-  Future<void> verifyOtp() async {
-    if (otpController.text.trim().isEmpty) {
-      Get.snackbar('OTP Required', 'Please enter the verification code',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
-      return;
-    }
-
-    isVerifyingOtp.value = true;
-    try {
-      final isValid = EmailOTP.verifyOTP(otp: otpController.text.trim());
-      if (isValid) {
-        isOtpVerified.value = true;
-        Get.snackbar('Success', 'Email verified successfully',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green[100],
-            colorText: Colors.green[900]);
-      } else {
-        Get.snackbar('Invalid OTP', 'Please check your verification code',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red[100],
-            colorText: Colors.red[900]);
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to verify OTP: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
-    } finally {
-      isVerifyingOtp.value = false;
     }
   }
 
@@ -134,30 +76,29 @@ class InterpreterController extends GetxController {
       return;
     }
 
-    if (!isOtpVerified.value) {
-      Get.snackbar(
-          'Email Verification Required', 'Please verify your email first',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
-      return;
-    }
-
     isSubmitting.value = true;
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      Get.snackbar('Success', 'Interpreter account created successfully',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900]);
-      // Navigate to home or next step
-      // Get.offAllNamed(Routes.HOME);
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to create account: ${e.toString()}',
+      final result = await EmailOTP.sendOTP(email: emailController.text.trim());
+
+      if (result == true) {
+        Get.snackbar('OTP Sent', 'Verification code sent to your email',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green[100],
+            colorText: Colors.green[900]);
+
+        Get.toNamed(Routes.INTERPRETER_OTP, arguments: {
+          'email': emailController.text.trim(),
+          'name': nameController.text.trim(),
+        });
+      } else {
+        throw Exception('Failed to send OTP');
+      }
+    } catch (e, stackTrace) {
+      Get.snackbar('Error', 'Failed to send OTP: ${e.toString()} $stackTrace',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red[100],
           colorText: Colors.red[900]);
+      Get.log("Error: $e $stackTrace");
     } finally {
       isSubmitting.value = false;
     }
@@ -167,7 +108,6 @@ class InterpreterController extends GetxController {
   void onClose() {
     nameController.dispose();
     emailController.dispose();
-    otpController.dispose();
     super.onClose();
   }
 }

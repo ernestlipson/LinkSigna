@@ -141,7 +141,7 @@ class OtpController extends GetxController {
       userController.setUser(name: userName, phone: userPhone);
 
       // Navigate to home page and clear navigation stack
-      Get.offAllNamed(Routes.HOME);
+      Get.offAllNamed(StudentRoutes.HOME);
     } catch (e) {
       // Clear OTP fields on error
       clearOtpFields();

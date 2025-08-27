@@ -89,7 +89,7 @@ class SignupController extends GetxController {
               snackPosition: SnackPosition.BOTTOM);
 
           // Navigate to OTP screen with phone number as argument
-          Get.toNamed(Routes.OTP, arguments: {
+          Get.toNamed(StudentRoutes.OTP, arguments: {
             'phone': phoneNumber,
             'verificationId': verificationId,
           });

@@ -22,26 +22,26 @@ class StudentApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       initialBinding: GlobalBinding(),
-      initialRoute: Routes.LOGIN,
+      initialRoute: StudentRoutes.LOGIN,
       getPages: [
         GetPage(
-          name: Routes.LOGIN,
+          name: StudentRoutes.LOGIN,
           page: () => const LoginScreen(),
         ),
         GetPage(
-          name: Routes.SIGNUP,
+          name: StudentRoutes.SIGNUP,
           page: () => SignupScreen(),
         ),
         GetPage(
-          name: Routes.FORGOT_PASSWORD,
+          name: StudentRoutes.FORGOT_PASSWORD,
           page: () => const ForgotPasswordScreen(),
         ),
         GetPage(
-          name: Routes.OTP,
+          name: StudentRoutes.OTP,
           page: () => const OtpScreen(),
         ),
         GetPage(
-          name: Routes.HOME,
+          name: StudentRoutes.HOME,
           page: () => const HomeScreen(),
         ),
       ],

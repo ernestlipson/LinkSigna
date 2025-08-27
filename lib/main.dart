@@ -5,9 +5,9 @@ import 'package:email_otp/email_otp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
-import 'student/infrastructure/navigation/routes.dart';
+import 'infrastructure/navigation/routes.dart';
 import 'student/infrastructure/navigation/bindings/global.binding.dart';
-import 'student/infrastructure/navigation/navigation.dart';
+import 'infrastructure/navigation/navigation.dart';
 import 'student/infrastructure/theme/app_theme.dart';
 import 'student/presentation/shared/controllers/user.controller.dart';
 
@@ -26,7 +26,8 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final seenOnboardingOrReturning =
       prefs.getBool('has_logged_in_before') ?? false;
-  final initial = seenOnboardingOrReturning ? Routes.HOME : Routes.initialRoute;
+  final initial =
+      seenOnboardingOrReturning ? Routes.STUDENT_HOME : Routes.initialRoute;
 
   if (seenOnboardingOrReturning) {
     final userName = prefs.getString('userName') ?? 'User';

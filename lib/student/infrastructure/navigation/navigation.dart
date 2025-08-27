@@ -27,47 +27,47 @@ class EnvironmentsBadge extends StatelessWidget {
 class Nav {
   static List<GetPage> routes = [
     GetPage(
-      name: Routes.HOME,
+      name: StudentRoutes.HOME,
       page: () => const HomeScreen(),
       binding: HomeControllerBinding(),
     ),
     GetPage(
-      name: Routes.LOGIN,
+      name: StudentRoutes.LOGIN,
       page: () => const LoginScreen(),
       binding: LoginControllerBinding(),
     ),
     GetPage(
-      name: Routes.SIGNUP,
+      name: StudentRoutes.SIGNUP,
       page: () => SignupScreen(),
       binding: SignupControllerBinding(),
     ),
     GetPage(
-      name: Routes.FORGOT_PASSWORD,
+      name: StudentRoutes.FORGOT_PASSWORD,
       page: () => const ForgotPasswordScreen(),
       binding: ForgotPasswordControllerBinding(),
     ),
     GetPage(
-      name: Routes.OTP,
+      name: StudentRoutes.OTP,
       page: () => const OtpScreen(),
       binding: OtpControllerBinding(),
     ),
     GetPage(
-      name: Routes.INTERPRETERS,
+      name: StudentRoutes.INTERPRETERS,
       page: () => const InterpretersScreen(),
       binding: InterpretersControllerBinding(),
     ),
     GetPage(
-      name: Routes.SESSIONS,
+      name: StudentRoutes.SESSIONS,
       page: () => const SessionsScreen(),
       binding: SessionsControllerBinding(),
     ),
     GetPage(
-      name: Routes.DEAF_HISTORY,
+      name: StudentRoutes.DEAF_HISTORY,
       page: () => const DeafHistoryScreen(),
       binding: DeafHistoryControllerBinding(),
     ),
     GetPage(
-      name: Routes.SETTINGS,
+      name: StudentRoutes.SETTINGS,
       page: () => const SettingsScreen(),
       binding: SettingsControllerBinding(),
     ),

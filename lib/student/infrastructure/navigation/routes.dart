@@ -1,4 +1,4 @@
-class Routes {
+class StudentRoutes {
   //TODO: Initial Route Should Go SignUp
   static get initialRoute => SIGNUP;
 
