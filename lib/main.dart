@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_zoom_videosdk/native/zoom_videosdk.dart';
 
 import 'firebase_options.dart';
 import 'infrastructure/navigation/routes.dart';
@@ -13,6 +14,19 @@ import 'student/presentation/shared/controllers/user.controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Zoom Video SDK
+  try {
+    var zoom = ZoomVideoSdk();
+    InitConfig initConfig = InitConfig(
+      domain: "zoom.us",
+      enableLog: true,
+    );
+    await zoom.initSdk(initConfig);
+    print('Zoom Video SDK initialized successfully');
+  } catch (e) {
+    print('Failed to initialize Zoom Video SDK: $e');
+  }
 
   EmailOTP.config(
     appName: 'LinkSigna',

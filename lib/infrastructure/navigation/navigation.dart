@@ -87,6 +87,11 @@ class Nav {
       page: () => const SettingsScreen(),
       binding: SettingsControllerBinding(),
     ),
+    GetPage(
+      name: Routes.STUDENT_ZOOM,
+      page: () => const StudentZoomScreen(),
+      binding: null, // No binding for ZoomScreen
+    ),
 
     // Interpreter Routes
     GetPage(

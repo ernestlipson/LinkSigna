@@ -6,6 +6,7 @@ import '../../infrastructure/theme/app_theme.dart';
 import '../components/coming.soon.placeholder.dart';
 import '../messages/interpreter_messages.screen.dart';
 import 'controllers/interpreter_home.controller.dart';
+import '../zoom/zoom.screen.dart';
 
 class InterpreterHomeScreen extends StatelessWidget {
   const InterpreterHomeScreen({super.key});
@@ -74,9 +75,22 @@ class InterpreterHomeScreen extends StatelessWidget {
             onSelected: (value) async {
               if (value == 'logout') {
                 await controller.logout();
+              } else if (value == 'zoom') {
+                // Navigate to Zoom screen
+                Get.to(() => const InterpreterZoomScreen());
               }
             },
             itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'zoom',
+                child: Row(
+                  children: [
+                    Icon(Icons.video_call, color: Colors.blue),
+                    SizedBox(width: 8),
+                    Text('Zoom Video'),
+                  ],
+                ),
+              ),
               const PopupMenuItem<String>(
                 value: 'logout',
                 child: Row(

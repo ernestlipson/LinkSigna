@@ -7,3 +7,4 @@ export 'otp/otp.screen.dart';
 export 'sessions/sessions.screen.dart';
 export 'settings/settings.screen.dart';
 export 'signup/signup.screen.dart';
+export 'zoom/zoom.screen.dart' show StudentZoomScreen;

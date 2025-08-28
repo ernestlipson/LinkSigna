@@ -11,6 +11,7 @@ class Routes {
   static const STUDENT_SESSIONS = '/student/sessions';
   static const STUDENT_SETTINGS = '/student/settings';
   static const STUDENT_SIGNUP = '/student/signup';
+  static const STUDENT_ZOOM = '/student/zoom';
 
   // Interpreter Routes
   static const INTERPRETER = '/interpreter/main';

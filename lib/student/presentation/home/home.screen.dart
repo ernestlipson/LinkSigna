@@ -4,6 +4,7 @@ import 'package:sign_language_app/student/infrastructure/theme/app_theme.dart';
 import 'package:sign_language_app/student/presentation/components/custom_app_bar.component.dart';
 import 'package:sign_language_app/student/presentation/deaf-history/deaf_history.screen.dart';
 import 'package:sign_language_app/student/presentation/home/home.dashboard.dart';
+import 'package:sign_language_app/student/presentation/zoom/zoom.screen.dart';
 
 import '../../infrastructure/utils/app_icons.dart';
 import '../deaf-history/controllers/deaf_history.controller.dart';
@@ -114,6 +115,13 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 20),
           Expanded(child: _pages[_selectedIndex]),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Get.to(() => const StudentZoomScreen()),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.video_call),
+        label: const Text('Zoom'),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(boxShadow: [
