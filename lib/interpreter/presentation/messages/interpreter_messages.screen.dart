@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'controllers/interpreter_messages.controller.dart';
 
 class InterpreterMessagesScreen extends StatelessWidget {
@@ -129,7 +129,8 @@ class SessionCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: isActive ? onOpenChat : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: isActive ? primaryColor : Colors.grey[300],
+                backgroundColor:
+                    isActive ? AppColors.primary : Colors.grey[300],
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),

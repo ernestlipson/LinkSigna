@@ -2,24 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../config.dart';
-// Student imports
-import '../../student/presentation/screens.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/home.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/login.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/signup.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/forgot_password.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/otp.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/interpreters.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/sessions.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/deaf_history.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/settings.controller.binding.dart';
-// Interpreter imports
-import '../../interpreter/presentation/screens.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/inteerpreter.controller.binding.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter.controller.binding.dart';
-import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_otp.controller.binding.dart';
-import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_home.controller.binding.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_chat.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_home.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_otp.controller.binding.dart';
+import '../../interpreter/presentation/sessions/interpreter_sessions.screen.dart';
+import 'package:sign_language_app/interpreter/presentation/sessions/controllers/interpreter_sessions.controller.dart';
+// Interpreter imports
+import '../../interpreter/presentation/screens.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/deaf_history.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/forgot_password.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/home.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/interpreters.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/login.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/otp.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/sessions.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/settings.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/signup.controller.binding.dart';
+// Student imports
+import '../../student/presentation/screens.dart';
 import 'routes.dart';
 
 class EnvironmentsBadge extends StatelessWidget {
@@ -41,7 +43,6 @@ class EnvironmentsBadge extends StatelessWidget {
 
 class Nav {
   static List<GetPage> routes = [
-    // Student Routes
     GetPage(
       name: Routes.STUDENT_HOME,
       page: () => const HomeScreen(),
@@ -54,7 +55,7 @@ class Nav {
     ),
     GetPage(
       name: Routes.STUDENT_SIGNUP,
-      page: () => SignupScreen(),
+      page: () => StudentSignupScreen(),
       binding: SignupControllerBinding(),
     ),
     GetPage(
@@ -69,7 +70,7 @@ class Nav {
     ),
     GetPage(
       name: Routes.STUDENT_INTERPRETERS,
-      page: () => const InterpretersScreen(),
+      page: () => const StudentBookInterpretersScreen(),
       binding: InterpretersControllerBinding(),
     ),
     GetPage(
@@ -113,6 +114,13 @@ class Nav {
       name: Routes.INTERPRETER,
       page: () => const InterpreterScreen(),
       binding: InterpreterControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.INTERPRETER_SESSIONS,
+      page: () => const InterpreterSessionsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => InterpreterSessionsController());
+      }),
     ),
   ];
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'controllers/interpreter_chat.controller.dart';
 
 class InterpreterChatScreen extends StatelessWidget {
@@ -142,7 +142,7 @@ class InterpreterChatScreen extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: primaryColor,
+                      color: AppColors.primary,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -225,7 +225,7 @@ class MessageBubble extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: isMe ? primaryColor : Colors.grey[200],
+                        color: isMe ? AppColors.primary : Colors.grey[200],
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(

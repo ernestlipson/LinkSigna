@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 
 import 'controllers/interpreter.controller.dart';
 
@@ -208,7 +208,7 @@ class InterpreterScreen extends GetView<InterpreterController> {
                   child: ElevatedButton(
                     onPressed: () => controller.bookInterpreter(interpreter),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -226,8 +226,8 @@ class InterpreterScreen extends GetView<InterpreterController> {
                   child: OutlinedButton(
                     onPressed: () => controller.viewMore(interpreter),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: primaryColor,
-                      side: BorderSide(color: primaryColor),
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -315,7 +315,7 @@ class InterpreterScreen extends GetView<InterpreterController> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: primaryColor),
+                  borderSide: const BorderSide(color: AppColors.primary),
                 ),
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -431,7 +431,7 @@ class InterpreterScreen extends GetView<InterpreterController> {
                   child: ElevatedButton(
                     onPressed: () => controller.applyFilters(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

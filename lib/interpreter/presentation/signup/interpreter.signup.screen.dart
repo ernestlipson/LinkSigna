@@ -46,7 +46,7 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
                         // Switch back to student sign up
                         Get.offNamed('/student/signup');
                       },
-                      activeColor: primaryColor,
+                      activeColor: AppColors.primary,
                     ),
                     const Text('Student'),
                   ]),
@@ -56,7 +56,7 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
                       value: 'interpreter',
                       groupValue: 'interpreter',
                       onChanged: (_) {},
-                      activeColor: primaryColor,
+                      activeColor: AppColors.primary,
                     ),
                     const Text('Interpreter'),
                   ]),
@@ -129,7 +129,7 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
                       TextSpan(
                         text: 'Login',
                         style: TextStyle(
-                          color: primaryColor,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
                         recognizer: TapGestureRecognizer()

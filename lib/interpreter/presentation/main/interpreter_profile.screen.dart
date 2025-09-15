@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import '../components/payment_modal.component.dart';
 import 'interpreter.screen.dart';
 
@@ -123,7 +123,7 @@ class InterpreterProfileScreen extends StatelessWidget {
                 onPressed: () => PaymentModalComponent.showPaymentModal(context,
                     interpreterName: interpreter.name),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

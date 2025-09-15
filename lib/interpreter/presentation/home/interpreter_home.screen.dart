@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import '../components/coming.soon.placeholder.dart';
 import '../messages/interpreter_messages.screen.dart';
 import 'controllers/interpreter_home.controller.dart';
+import '../../../infrastructure/navigation/routes.dart';
 
 class InterpreterHomeScreen extends StatelessWidget {
   const InterpreterHomeScreen({super.key});
@@ -70,6 +71,12 @@ class InterpreterHomeScreen extends StatelessWidget {
             },
             icon: const Icon(Icons.notifications_outlined, color: Colors.grey),
           ),
+          IconButton(
+            onPressed: () => Get.toNamed(Routes.INTERPRETER_SESSIONS),
+            icon: const Icon(Icons.video_camera_front_outlined,
+                color: Colors.grey),
+            tooltip: 'Sessions',
+          ),
           PopupMenuButton<String>(
             onSelected: (value) async {
               if (value == 'logout') {
@@ -110,7 +117,7 @@ class InterpreterHomeScreen extends StatelessWidget {
               type: BottomNavigationBarType.fixed,
               currentIndex: controller.selectedIndex.value,
               onTap: controller.changeTab,
-              selectedItemColor: primaryColor,
+              selectedItemColor: AppColors.primary,
               unselectedItemColor: Colors.grey[600],
               selectedLabelStyle: const TextStyle(
                 fontWeight: FontWeight.w600,
@@ -128,7 +135,7 @@ class InterpreterHomeScreen extends StatelessWidget {
                     height: 24,
                     colorFilter: ColorFilter.mode(
                       controller.selectedIndex.value == 0
-                          ? primaryColor
+                          ? AppColors.primary
                           : Colors.grey[600]!,
                       BlendMode.srcIn,
                     ),
@@ -142,7 +149,7 @@ class InterpreterHomeScreen extends StatelessWidget {
                     height: 24,
                     colorFilter: ColorFilter.mode(
                       controller.selectedIndex.value == 1
-                          ? primaryColor
+                          ? AppColors.primary
                           : Colors.grey[600]!,
                       BlendMode.srcIn,
                     ),
@@ -156,7 +163,7 @@ class InterpreterHomeScreen extends StatelessWidget {
                     height: 24,
                     colorFilter: ColorFilter.mode(
                       controller.selectedIndex.value == 2
-                          ? primaryColor
+                          ? AppColors.primary
                           : Colors.grey[600]!,
                       BlendMode.srcIn,
                     ),
@@ -170,7 +177,7 @@ class InterpreterHomeScreen extends StatelessWidget {
                     height: 24,
                     colorFilter: ColorFilter.mode(
                       controller.selectedIndex.value == 3
-                          ? primaryColor
+                          ? AppColors.primary
                           : Colors.grey[600]!,
                       BlendMode.srcIn,
                     ),
@@ -184,7 +191,7 @@ class InterpreterHomeScreen extends StatelessWidget {
                     height: 24,
                     colorFilter: ColorFilter.mode(
                       controller.selectedIndex.value == 4
-                          ? primaryColor
+                          ? AppColors.primary
                           : Colors.grey[600]!,
                       BlendMode.srcIn,
                     ),

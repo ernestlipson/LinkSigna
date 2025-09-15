@@ -13,7 +13,6 @@ class SettingsScreen extends GetView<SettingsController> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Top Navigation Tabs
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -35,8 +34,6 @@ class SettingsScreen extends GetView<SettingsController> {
               ],
             ),
           ),
-
-          // Content based on selected tab
           Expanded(
             child: Obx(() => controller.selectedTab.value == 0
                 ? _buildProfileTab()
@@ -55,7 +52,7 @@ class SettingsScreen extends GetView<SettingsController> {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isSelected ? primaryColor : Colors.transparent,
+              color: isSelected ? AppColors.primary : Colors.transparent,
               width: 2,
             ),
           ),
@@ -66,7 +63,7 @@ class SettingsScreen extends GetView<SettingsController> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? primaryColor : Colors.grey[600],
+            color: isSelected ? AppColors.primary : Colors.grey[600],
           ),
         ),
       ),
@@ -96,7 +93,7 @@ class SettingsScreen extends GetView<SettingsController> {
                     backgroundColor: Colors.white,
                     child: CircleAvatar(
                       radius: 15,
-                      backgroundColor: primaryColor,
+                      backgroundColor: AppColors.primary,
                       child: Icon(
                         Icons.camera_alt,
                         size: 18,
@@ -121,8 +118,8 @@ class SettingsScreen extends GetView<SettingsController> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(primaryColor),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary),
                           ),
                         ),
                       ),
@@ -175,11 +172,11 @@ class SettingsScreen extends GetView<SettingsController> {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: () => controller.addLanguage(),
-              icon: Icon(Icons.add, color: primaryColor, size: 20),
+              icon: Icon(Icons.add, color: AppColors.primary, size: 20),
               label: Text(
                 'Add Language',
                 style: TextStyle(
-                  color: primaryColor,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -190,22 +187,34 @@ class SettingsScreen extends GetView<SettingsController> {
           // Save Changes Button
           Align(
             alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: () => controller.saveChanges(),
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 0),
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: Text(
-                'Save Changes',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
+            child: Obx(() => ElevatedButton(
+                  onPressed: controller.isSaving.value
+                      ? null
+                      : () => controller.saveChangesAsync(),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 0),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  child: controller.isSaving.value
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          'Save Changes',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                )),
           ),
           SizedBox(height: 32),
 
@@ -290,7 +299,7 @@ class SettingsScreen extends GetView<SettingsController> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: primaryColor),
+              borderSide: BorderSide(color: AppColors.primary),
             ),
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
@@ -342,7 +351,7 @@ class SettingsScreen extends GetView<SettingsController> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: primaryColor),
+                  borderSide: BorderSide(color: AppColors.primary),
                 ),
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 16, vertical: 12),

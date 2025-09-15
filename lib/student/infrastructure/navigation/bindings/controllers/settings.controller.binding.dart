@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../../../presentation/settings/controllers/settings.controller.dart';
-import '../../../services/firebase_storage_service.dart';
+import '../../../dal/services/firebase_storage_service.dart';
 
 class SettingsControllerBinding extends Bindings {
   @override

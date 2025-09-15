@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../components/app.button.dart';
 import 'controllers/otp.controller.dart';
 
 class OtpScreen extends GetView<OtpController> {
@@ -10,6 +12,7 @@ class OtpScreen extends GetView<OtpController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -21,28 +24,9 @@ class OtpScreen extends GetView<OtpController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 40),
-              RichText(
-                text: const TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Link',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'Signa',
-                      style: TextStyle(
-                        color: Color(0xFF9C0057),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
-                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: SvgPicture.asset("assets/icons/TravelIB.svg"),
               ),
               const SizedBox(height: 60),
               const Text(
@@ -124,7 +108,7 @@ class OtpScreen extends GetView<OtpController> {
                               fontSize: 15,
                               color: controller.isResendingOtp.value
                                   ? Colors.grey
-                                  : Colors.blue,
+                                  : Color(0xFF9E1068),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -140,34 +124,15 @@ class OtpScreen extends GetView<OtpController> {
                 ],
               ),
               const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: Obx(() => ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF9C0057),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: controller.verifyOTP,
-                      child: Text(
-                        controller.isVerifyingOtp.value
-                            ? 'Verifying...'
-                            : 'Verify Code',
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.white),
-                      ),
-                    )),
-              ),
+
+              Obx(() => CustomButton(
+                    text: controller.isVerifyingOtp.value
+                        ? 'Verifying...'
+                        : 'Verify Code',
+                    isLoading: controller.isVerifyingOtp.value,
+                    onPressed: controller.verifyOTP,
+                  )),
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => Get.back(),
-                child: const Text(
-                  'Change Phone Number',
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
-                ),
-              ),
             ],
           ),
         ),

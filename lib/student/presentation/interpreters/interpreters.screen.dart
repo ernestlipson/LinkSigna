@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'controllers/interpreters.controller.dart';
 
-class InterpretersScreen extends StatelessWidget {
-  const InterpretersScreen({super.key});
+class StudentBookInterpretersScreen extends StatelessWidget {
+  const StudentBookInterpretersScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Ensure controller is registered
     final controller = Get.put(InterpretersController());
 
     return Scaffold(
@@ -28,8 +27,10 @@ class InterpretersScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: TextField(
+                      controller: controller.searchController,
+                      onChanged: (_) => {},
                       decoration: InputDecoration(
-                        hintText: 'Search',
+                        hintText: 'Search interpreters',
                         prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
                         border: InputBorder.none,
                         contentPadding:
@@ -76,13 +77,25 @@ class InterpretersScreen extends StatelessWidget {
 
             // Interpreter Cards List
             Expanded(
-              child: Obx(() => ListView.builder(
-                    itemCount: controller.interpreters.length,
-                    itemBuilder: (context, index) {
-                      final interpreter = controller.interpreters[index];
-                      return _buildInterpreterCard(interpreter, controller);
-                    },
-                  )),
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (controller.loadError.value != null) {
+                  return Center(child: Text(controller.loadError.value!));
+                }
+                final list = controller.filteredInterpreters;
+                if (list.isEmpty) {
+                  return const Center(child: Text('No interpreters found'));
+                }
+                return ListView.builder(
+                  itemCount: list.length,
+                  itemBuilder: (context, index) {
+                    final interpreter = list[index];
+                    return _buildInterpreterCard(interpreter, controller);
+                  },
+                );
+              }),
             ),
           ],
         ),
@@ -206,29 +219,36 @@ class InterpretersScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => controller.bookInterpreter(interpreter),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  child: Builder(builder: (_) {
+                    final booked = interpreter.isBooked == true;
+                    return ElevatedButton(
+                      onPressed: booked
+                          ? null
+                          : () => controller.bookInterpreter(interpreter),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            booked ? Colors.grey[400] : AppColors.primary,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: Colors.grey[400],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Text(
-                      'Book interpreter',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
+                      child: Text(
+                        booked ? 'Booked' : 'Book interpreter',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    );
+                  }),
                 ),
                 SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => controller.viewMore(interpreter),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: primaryColor,
-                      side: BorderSide(color: primaryColor),
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -317,7 +337,7 @@ class InterpretersScreen extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: primaryColor),
+                  borderSide: const BorderSide(color: AppColors.primary),
                 ),
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -433,7 +453,7 @@ class InterpretersScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => controller.applyFilters(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/infrastructure/navigation/routes.dart';
-import '../../../infrastructure/dal/services/google.signin.service.dart';
+
 import '../../shared/controllers/country.controller.dart';
 
 class LoginController extends GetxController {
@@ -30,6 +31,31 @@ class LoginController extends GetxController {
 
   // Get the shared country controller
   CountryController get countryController => Get.find<CountryController>();
+
+  // Flag loading state (mirrors signup controller behavior)
+  final RxBool isLoadingFlag = false.obs;
+  final RxString countryFlagUrl = ''.obs;
+
+  Future<void> fetchCountryFlag() async {
+    try {
+      isLoadingFlag.value = true;
+      await countryController.fetchCountryFlag();
+      if (countryController.countryFlag.value != null) {
+        countryFlagUrl.value = countryController.countryFlag.value!.png;
+      } else {
+        countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
+      }
+      // Log flag URL
+      // ignore: avoid_print
+      print('Login flag URL => ${countryFlagUrl.value}');
+    } catch (e) {
+      countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
+      // ignore: avoid_print
+      print('Flag fetch error (login): $e');
+    } finally {
+      isLoadingFlag.value = false;
+    }
+  }
 
   // Add this method to toggle password visibility
   void togglePasswordVisibility() {
@@ -63,26 +89,54 @@ class LoginController extends GetxController {
   }
 
   // Phone OTP Authentication
-  Future<void> sendPhoneOTP() async {}
-
-  // Google Authentication
-  Future<void> signInWithGoogle() async {
-    isGoogleSignInLoading.value = true;
-    try {
-      // For now, we'll keep the Google Sign-in service separate
-      // You can integrate Firebase Google Auth later if needed
-      final user = await GoogleSignInService.instance.signInWithGoogle();
-      if (user != null) {
-        Get.snackbar('Success', 'Welcome! Google sign-in successful',
-            snackPosition: SnackPosition.BOTTOM);
-        // Navigate to home screen
-        Get.offAllNamed(Routes.STUDENT_HOME);
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Google Sign-in failed: ${e.toString()}',
+  Future<void> sendPhoneOTP() async {
+    if (phoneController.text.trim().isEmpty) {
+      isPhoneValid.value = false;
+      Get.snackbar('Phone Required', 'Enter your phone number',
           snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isGoogleSignInLoading.value = false;
+      return;
+    }
+    isPhoneOtpLoading.value = true;
+    final raw = phoneController.text.trim();
+    // Basic Ghana formatting fallback
+    final formatted = raw.startsWith('+')
+        ? raw
+        : (raw.startsWith('0') ? '+233${raw.substring(1)}' : '+233$raw');
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: formatted,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Optional: Auto-sign in handler; skipping immediate signIn to preserve manual OTP UX
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          Get.snackbar('OTP Failed', e.message ?? 'Verification failed',
+              snackPosition: SnackPosition.BOTTOM);
+          isPhoneOtpLoading.value = false;
+        },
+        codeSent: (String verificationId, int? resendToken) async {
+          // Persist phone locally for subsequent profile creation
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('userPhone', formatted);
+          await prefs.setString(
+              'userName',
+              nameController.text.trim().isEmpty
+                  ? 'User'
+                  : nameController.text.trim());
+          // Navigate to OTP screen
+          Get.toNamed(Routes.STUDENT_OTP, arguments: {
+            'phone': formatted,
+            'verificationId': verificationId,
+          });
+          isPhoneOtpLoading.value = false;
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          // Timeout - user can request resend
+        },
+      );
+    } catch (e) {
+      isPhoneOtpLoading.value = false;
+      Get.snackbar('Error', 'Could not send OTP: $e',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -102,6 +156,7 @@ class LoginController extends GetxController {
   void onInit() {
     super.onInit();
     checkAuthStatus();
+    fetchCountryFlag();
   }
 
   @override

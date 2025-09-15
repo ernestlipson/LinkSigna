@@ -18,4 +18,5 @@ class Routes {
   static const INTERPRETER_HOME = '/interpreter/home';
   static const INTERPRETER_OTP = '/interpreter/otp';
   static const INTERPRETER_SIGNUP = '/interpreter/signup';
+  static const INTERPRETER_SESSIONS = '/interpreter/sessions';
 }

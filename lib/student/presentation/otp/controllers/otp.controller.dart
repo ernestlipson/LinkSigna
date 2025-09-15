@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/user.controller.dart';
+import '../../shared/controllers/student_user.controller.dart';
 
 class OtpController extends GetxController {
   // OTP Controllers for 6 separate boxes
@@ -108,7 +109,7 @@ class OtpController extends GetxController {
     try {
       if (isEmailFlow.value) {
         // Email OTP verification
-        final isValid = await EmailOTP.verifyOTP(otp: otpCode);
+        final isValid = EmailOTP.verifyOTP(otp: otpCode);
         if (!isValid) {
           throw Exception('Invalid OTP');
         }
@@ -131,14 +132,27 @@ class OtpController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('student_logged_in', true);
 
-      // Load user data and set it in UserController
+      // Load locally cached prelim data
       final userName = prefs.getString('userName') ?? 'User';
       final userPhone = prefs.getString('userPhone') ?? '';
+
+      // Legacy UI controller
       if (!Get.isRegistered<UserController>()) {
         Get.put(UserController());
       }
-      final userController = Get.find<UserController>();
-      userController.setUser(name: userName, phone: userPhone);
+      Get.find<UserController>().setUser(name: userName, phone: userPhone);
+
+      // Firestore student profile
+      if (!Get.isRegistered<StudentUserController>()) {
+        Get.put(StudentUserController());
+      }
+      final stuCtrl = Get.find<StudentUserController>();
+      await stuCtrl.ensureProfileExists(
+        displayName: userName,
+        phone: userPhone,
+        language: 'Ghanaian Sign Language',
+        universityLevel: 'Level 400',
+      );
 
       // Navigate to home page and clear navigation stack
       Get.offAllNamed(Routes.STUDENT_HOME);

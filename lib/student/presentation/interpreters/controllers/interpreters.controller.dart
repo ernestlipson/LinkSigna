@@ -1,10 +1,15 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../interpreter_profile.screen.dart';
-import '../../components/payment_modal.component.dart';
+import '../../../infrastructure/dal/services/interpreter.service.dart';
+import '../../../infrastructure/dal/daos/models/Interpreter.model.dart';
+import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 
 class InterpretersController extends GetxController {
   final RxList<InterpreterData> interpreters = <InterpreterData>[].obs;
+  final isLoading = false.obs;
+  final loadError = RxnString();
 
   // Filter form controllers
   final searchController = TextEditingController();
@@ -21,84 +26,79 @@ class InterpretersController extends GetxController {
   final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
   final Rx<TimeOfDay?> selectedTime = Rx<TimeOfDay?>(null);
 
+  late final InterpreterService _service;
+  StreamSubscription<List<Interpreter>>? _sub;
+  late final SessionFirestoreService _sessionService;
+  final _bookingInProgress = false.obs;
+  late final String _studentId;
+
   @override
   void onInit() {
     super.onInit();
-    _loadInterpreters();
+    _service = Get.find<InterpreterService>();
+    _sessionService = Get.find<SessionFirestoreService>();
+    _studentId = _resolveStudentId();
+    _listen();
   }
 
-  void _loadInterpreters() {
-    // Mock data for interpreters
-    interpreters.value = [
-      InterpreterData(
-        name: 'Arlene McCoy',
-        email: 'arlene.mccoy@example.com',
-        profileImage:
-            'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-        experience: 4,
-        isFree: true,
-      ),
-      InterpreterData(
-        name: 'Arlene McCoy',
-        email: 'arlene.mccoy@example.com',
-        profileImage:
-            'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-        experience: 4,
-        isFree: false,
-        price: 50,
-      ),
-      InterpreterData(
-        name: 'Arlene McCoy',
-        email: 'arlene.mccoy@example.com',
-        profileImage:
-            'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
-        experience: 4,
-        isFree: true,
-      ),
-      InterpreterData(
-        name: 'Ama Buabeng',
-        email: 'ama.buabeng@example.com',
-        profileImage:
-            'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face',
-        experience: 4,
-        isFree: true,
-      ),
-      InterpreterData(
-        name: 'Arlene McCoy',
-        email: 'arlene.mccoy@example.com',
-        profileImage:
-            'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-        experience: 4,
-        isFree: true,
-      ),
-      InterpreterData(
-        name: 'Arlene McCoy',
-        email: 'arlene.mccoy@example.com',
-        profileImage:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-        experience: 4,
-        isFree: false,
-        price: 50,
-      ),
-      InterpreterData(
-        name: 'Arlene McCoy',
-        email: 'arlene.mccoy@example.com',
-        profileImage:
-            'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-        experience: 4,
-        isFree: false,
-        price: 50,
-      ),
-      InterpreterData(
-        name: 'Millicent Boateng',
-        email: 'millicent.boateng@example.com',
-        profileImage:
-            'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face',
-        experience: 4,
-        isFree: false,
-        price: 50,
-      ),
-    ];
+  String _resolveStudentId() {
+    // TODO: integrate actual auth; placeholder for now
+    return 'student_test_id';
+  }
+
+  void _listen() {
+    isLoading.value = true;
+    loadError.value = null;
+    _sub = _service.streamAllInterpreters().listen((list) {
+      interpreters.assignAll(list.map(_mapToData).toList());
+      isLoading.value = false;
+    }, onError: (e) {
+      loadError.value = 'Failed to load interpreters';
+      isLoading.value = false;
+      Get.log('Interpreter stream error: $e');
+    });
+  }
+
+  InterpreterData _mapToData(Interpreter i) {
+    final fullName = _fullName(i.firstName, i.lastName);
+    return InterpreterData(
+      id: i.id,
+      name: fullName,
+      email: i.email,
+      profileImage: i.profileAvatar.isNotEmpty
+          ? i.profileAvatar
+          : 'https://via.placeholder.com/150?text=Interpreter',
+      experience: _inferExperience(i.description),
+      isFree: i.price <= 0,
+      price: i.price > 0 ? i.price.toInt() : null,
+      description: i.description,
+      isBooked: i.isBooked,
+    );
+  }
+
+  int _inferExperience(String description) {
+    final d = description.toLowerCase();
+    if (d.contains('senior')) return 7;
+    if (d.contains('intermediate')) return 4;
+    return 2; // default
+  }
+
+  String _fullName(String first, String last) {
+    if (first.isEmpty && last.isEmpty) return 'Unknown Interpreter';
+    if (first.isEmpty) return last;
+    if (last.isEmpty) return first;
+    return '$first $last';
+  }
+
+  List<InterpreterData> get filteredInterpreters {
+    final q = searchController.text.trim().toLowerCase();
+    if (q.isEmpty) return interpreters;
+    return interpreters
+        .where((i) =>
+            i.name.toLowerCase().contains(q) ||
+            i.email.toLowerCase().contains(q) ||
+            (i.description?.toLowerCase().contains(q) ?? false))
+        .toList();
   }
 
   void showFilterModal() {
@@ -156,26 +156,68 @@ class InterpretersController extends GetxController {
     subjectController.clear();
   }
 
-  void bookInterpreter(InterpreterData interpreter) {
-    // Check if interpreter is free or paid
-    if (interpreter.isFree) {
-      // For free interpreters, directly book without payment
+  Future<void> bookInterpreter(InterpreterData interpreter) async {
+    if (_bookingInProgress.value) return; // prevent double tap
+    if (interpreter.isBooked == true) {
       Get.snackbar(
-        'Success',
-        'Free interpreter session booked successfully with ${interpreter.name}!',
+        'Already Booked',
+        'This interpreter is already booked.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.orange[100],
+        colorText: Colors.orange[900],
+      );
+      return;
+    }
+    _bookingInProgress.value = true;
+    try {
+      // For now we treat both free & paid similarly (paid path can add payment confirmation before calling)
+      final startTime = _deriveStartTime();
+      final className = _deriveClassName();
+      final sessionDocId = await _sessionService.createSession(
+        studentId: _studentId,
+        interpreterId: interpreter.id,
+        className: className,
+        startTime: startTime,
+      );
+
+      // Mark interpreter as booked
+      await _service.setBookingStatus(
+          interpreterId: interpreter.id, isBooked: true);
+
+      Get.snackbar(
+        'Session Created',
+        'Session booked with ${interpreter.name}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green[100],
         colorText: Colors.green[900],
       );
-    } else {
-      // For paid interpreters, show payment modal
-      if (Get.context != null) {
-        PaymentModalComponent.showPaymentModal(
-          Get.context!,
-          interpreterName: interpreter.name,
-        );
-      }
+      Get.log('Session created: $sessionDocId');
+    } catch (e) {
+      Get.snackbar(
+        'Booking Failed',
+        'Could not create session: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+      Get.log('Error booking interpreter: $e');
+    } finally {
+      _bookingInProgress.value = false;
     }
+  }
+
+  DateTime _deriveStartTime() {
+    // If user selected date/time filters, use them; else schedule 30 mins ahead
+    final base = DateTime.now().add(const Duration(minutes: 30));
+    final date = selectedDate.value;
+    final time = selectedTime.value;
+    if (date == null || time == null) return base;
+    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  }
+
+  String _deriveClassName() {
+    if (selectedSubject.value.isNotEmpty) return selectedSubject.value;
+    return 'Communication Skills';
   }
 
   void viewMore(InterpreterData interpreter) {
@@ -183,33 +225,34 @@ class InterpretersController extends GetxController {
   }
 
   @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
   void onClose() {
+    _sub?.cancel();
     searchController.dispose();
     subjectController.dispose();
     super.onClose();
   }
 }
 
-// Data model for interpreter
 class InterpreterData {
+  final String id;
   final String name;
   final String email;
   final String profileImage;
   final int experience;
   final bool isFree;
   final int? price;
+  final String? description;
+  final bool? isBooked;
 
   InterpreterData({
+    required this.id,
     required this.name,
     required this.email,
     required this.profileImage,
     required this.experience,
     required this.isFree,
     this.price,
+    this.description,
+    this.isBooked,
   });
 }

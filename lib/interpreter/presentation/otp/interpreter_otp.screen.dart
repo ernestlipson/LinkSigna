@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'controllers/interpreter_otp.controller.dart';
 
 class InterpreterOtpScreen extends StatelessWidget {
@@ -70,8 +70,8 @@ class InterpreterOtpScreen extends StatelessWidget {
                             text: 'We Have Sent a One-Time Password\nto '),
                         TextSpan(
                           text: controller.email.value,
-                          style: TextStyle(
-                            color: primaryColor,
+                          style: const TextStyle(
+                            color: AppColors.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -90,7 +90,7 @@ class InterpreterOtpScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       border: Border.all(
                         color: controller.focusedIndex.value == index
-                            ? primaryColor
+                            ? AppColors.primary
                             : Colors.grey[300]!,
                         width: 2,
                       ),
@@ -140,7 +140,7 @@ class InterpreterOtpScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             color: controller.canResend.value
-                                ? primaryColor
+                                ? AppColors.primary
                                 : Colors.grey[400],
                             fontWeight: FontWeight.w600,
                           ),
@@ -158,7 +158,7 @@ class InterpreterOtpScreen extends StatelessWidget {
                           ? null
                           : () => controller.verifyOTP(),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
+                        backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

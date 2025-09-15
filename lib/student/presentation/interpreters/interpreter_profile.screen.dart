@@ -123,7 +123,7 @@ class InterpreterProfileScreen extends StatelessWidget {
                 onPressed: () => PaymentModalComponent.showPaymentModal(context,
                     interpreterName: interpreter.name),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

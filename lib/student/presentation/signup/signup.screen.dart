@@ -5,15 +5,14 @@ import 'package:get/get.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
 import '../../infrastructure/theme/app_theme.dart';
-
 import '../../infrastructure/utils/app.constants.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/signup.controller.dart';
 
-class SignupScreen extends GetView<SignupController> {
-  const SignupScreen({super.key});
+class StudentSignupScreen extends GetView<SignupController> {
+  const StudentSignupScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +44,7 @@ class SignupScreen extends GetView<SignupController> {
                           onChanged: (String? value) {
                             controller.selectedUserType.value = value!;
                           },
-                          activeColor: primaryColor,
+                          activeColor: AppColors.primary,
                         ),
                         Text(
                           'Student',
@@ -66,7 +65,7 @@ class SignupScreen extends GetView<SignupController> {
                             // Immediately navigate to interpreter sign-up flow
                             Get.offAllNamed('/interpreter/signup');
                           },
-                          activeColor: primaryColor,
+                          activeColor: AppColors.primary,
                         ),
                         Text(
                           'Interpreter',
@@ -183,7 +182,7 @@ class SignupScreen extends GetView<SignupController> {
                         TextSpan(
                           text: ScreenStrings.loginText,
                           style: TextStyle(
-                            color: primaryColor,
+                            color: AppColors.primary,
                             fontWeight: FontWeight.w600,
                           ), // Colored text
                           recognizer: TapGestureRecognizer()

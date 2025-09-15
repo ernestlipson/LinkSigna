@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 
 class CustomTextFormField extends StatelessWidget {
   /// Hint text to display when the field is empty.
@@ -64,7 +64,7 @@ class CustomTextFormField extends StatelessWidget {
                 if (isRequired)
                   TextSpan(
                     text: ' *',
-                    style: TextStyle(color: primaryColor),
+                    style: const TextStyle(color: AppColors.primary),
                   ),
               ],
             ),
@@ -90,7 +90,7 @@ class CustomTextFormField extends StatelessWidget {
               hintText: hintText,
               hintStyle: TextStyle(
                 fontFamily: "WorkSans",
-                color: alternateColor,
+                color: AppColors.alternate,
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'controllers/deaf_history.controller.dart';
 
 class DeafHistoryScreen extends GetView<DeafHistoryController> {
@@ -105,8 +105,9 @@ class DeafHistoryScreen extends GetView<DeafHistoryController> {
                     ? () => controller.messageInterpreter(session)
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      session.isChatActive ? primaryColor : Colors.grey[300],
+                  backgroundColor: session.isChatActive
+                      ? AppColors.primary
+                      : Colors.grey[300],
                   foregroundColor:
                       session.isChatActive ? Colors.white : Colors.grey[600],
                   shape: RoundedRectangleBorder(

@@ -1,13 +1,15 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../infrastructure/dal/services/firebase_storage_service.dart';
 import '../../shared/controllers/user.controller.dart';
-import '../../../infrastructure/services/firebase_storage_service.dart';
 
 class SettingsController extends GetxController {
   // Tab selection
@@ -26,6 +28,8 @@ class SettingsController extends GetxController {
   final RxString displayName = ''.obs;
   final RxString displayPhone = ''.obs;
   final RxBool isUploadingImage = false.obs;
+  final RxBool isSaving = false.obs;
+  final RxString userDocId = ''.obs;
   final ImagePicker _picker = ImagePicker();
 
   // Firebase Storage Service
@@ -90,8 +94,28 @@ class SettingsController extends GetxController {
       universityLevel.value = 'TTU - Level 300';
       languagesController.text = 'Ghanaian Sign Language';
 
+      // Load existing stored Firestore doc id if any
+      userDocId.value = prefs.getString('user_doc_id') ?? '';
+
       // Load profile image URL from Firebase Storage
       await _loadProfileImageUrl();
+
+      // Attempt to discover Firestore doc if unknown and we have a phone
+      if (userDocId.value.isEmpty && phoneController.text.trim().isNotEmpty) {
+        try {
+          final q = await FirebaseFirestore.instance
+              .collection('users')
+              .where('phone', isEqualTo: phoneController.text.trim())
+              .limit(1)
+              .get();
+          if (q.docs.isNotEmpty) {
+            userDocId.value = q.docs.first.id;
+            await prefs.setString('user_doc_id', userDocId.value);
+          }
+        } catch (e) {
+          Get.log('Error locating user doc by phone: $e');
+        }
+      }
     } catch (e) {
       // Fallback to default values on error
       fullNameController.text = 'User';
@@ -323,7 +347,7 @@ class SettingsController extends GetxController {
               ),
             ),
             // Language list
-            Container(
+            SizedBox(
               height: 100, // Fixed height for the list
               child: ListView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 20),
@@ -401,7 +425,7 @@ class SettingsController extends GetxController {
               ),
             ),
             // Level list
-            Container(
+            SizedBox(
               height: 300, // Fixed height for the list
               child: ListView.builder(
                 padding: EdgeInsets.symmetric(horizontal: 20),
@@ -509,13 +533,102 @@ class SettingsController extends GetxController {
   }
 
   void saveChanges() {
-    Get.snackbar(
-      'Success',
-      'Changes saved successfully!',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green[100],
-      colorText: Colors.green[900],
-    );
+    // Legacy no-op replaced by Firestore version below (kept for potential backward compatibility call sites)
+    saveChangesAsync();
+  }
+
+  List<String> _parseLanguages() {
+    final raw = languagesController.text.trim();
+    if (raw.isEmpty) return [];
+    return raw
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList();
+  }
+
+  Future<void> _ensureUserDocExists() async {
+    if (userDocId.value.isNotEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final col = FirebaseFirestore.instance.collection('users');
+    final docRef = col.doc();
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final authUid = FirebaseAuth.instance.currentUser?.uid;
+    await docRef.set({
+      'displayName': fullNameController.text.trim(),
+      'phone': phoneController.text.trim(),
+      'languages': _parseLanguages(),
+      'universityLevel': universityLevel.value,
+      'photoUrl': profileImageUrl.value,
+      'role': 'student',
+      'authUid': authUid,
+      'createdAt': now,
+      'updatedAt': now,
+    });
+    userDocId.value = docRef.id;
+    await prefs.setString('user_doc_id', docRef.id);
+  }
+
+  Future<void> saveChangesAsync() async {
+    if (isSaving.value) return;
+    isSaving.value = true;
+    try {
+      await _ensureUserDocExists();
+      if (userDocId.value.isEmpty) {
+        throw 'Unable to resolve user document.';
+      }
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final data = {
+        'displayName': fullNameController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'languages': _parseLanguages(),
+        'universityLevel': universityLevel.value,
+        'photoUrl': profileImageUrl.value,
+        'updatedAt': now,
+      };
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userDocId.value)
+          .update(data);
+
+      // Persist locally
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userName', fullNameController.text.trim());
+      await prefs.setString('userPhone', phoneController.text.trim());
+      if (userDocId.value.isNotEmpty) {
+        await prefs.setString('user_doc_id', userDocId.value);
+      }
+
+      displayName.value = fullNameController.text.trim();
+      displayPhone.value = phoneController.text.trim();
+      if (Get.isRegistered<UserController>()) {
+        Get.find<UserController>().setUser(
+          name: displayName.value,
+          phone: displayPhone.value,
+          photo:
+              profileImageUrl.value.isNotEmpty ? profileImageUrl.value : null,
+        );
+      }
+
+      Get.snackbar(
+        'Saved',
+        'Profile updated successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green[100],
+        colorText: Colors.green[900],
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Update Failed',
+        'Could not save changes: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+    } finally {
+      isSaving.value = false;
+    }
   }
 
   void changePassword() {
@@ -556,11 +669,6 @@ class SettingsController extends GetxController {
         ],
       ),
     );
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'controllers/sessions.controller.dart';
+import '../../../domain/sessions/session.model.dart';
 
 class SessionsScreen extends GetView<SessionsController> {
   const SessionsScreen({super.key});
@@ -65,11 +66,11 @@ class SessionsScreen extends GetView<SessionsController> {
           Expanded(
             child: Obx(() => ListView.separated(
                   physics: const BouncingScrollPhysics(),
-                  itemCount: controller.sessions.length,
+                  itemCount: controller.filteredSessions.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    final session = controller.sessions[index];
+                    final session = controller.filteredSessions[index];
                     return _buildSessionCard(session);
                   },
                 )),
@@ -79,7 +80,7 @@ class SessionsScreen extends GetView<SessionsController> {
     );
   }
 
-  Widget _buildSessionCard(Session session) {
+  Widget _buildSessionCard(SessionModel session) {
     final isActive = controller.isSessionActive(session);
     final statusColor = controller.getStatusColor(session.status);
     final statusBgColor = controller.getStatusBackgroundColor(session.status);
@@ -104,7 +105,7 @@ class SessionsScreen extends GetView<SessionsController> {
           children: [
             // Session Title
             Text(
-              'Session with ${session.name}',
+              'Session with Interpreter',
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -116,9 +117,15 @@ class SessionsScreen extends GetView<SessionsController> {
             // Session Details
             _buildDetailRow('Class', session.className),
             const SizedBox(height: 4),
-            _buildDetailRow('Date', session.date),
+            _buildDetailRow(
+              'Date',
+              '${session.startTime.year}-${session.startTime.month.toString().padLeft(2, '0')}-${session.startTime.day.toString().padLeft(2, '0')}',
+            ),
             const SizedBox(height: 4),
-            _buildDetailRow('Time', session.time),
+            _buildDetailRow(
+              'Time',
+              TimeOfDay.fromDateTime(session.startTime).format(Get.context!),
+            ),
             const SizedBox(height: 12),
 
             // Status
@@ -166,24 +173,29 @@ class SessionsScreen extends GetView<SessionsController> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: isActive
+                    onPressed: (isActive && session.status != 'Cancelled')
                         ? () => controller.joinVideoCall(session)
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isActive
-                          ? const Color(0xFF9B197D)
-                          : Colors.grey.shade300,
+                      backgroundColor:
+                          (isActive && session.status != 'Cancelled')
+                              ? const Color(0xFF9B197D)
+                              : Colors.grey.shade300,
                       foregroundColor:
-                          isActive ? Colors.white : Colors.grey.shade600,
+                          (isActive && session.status != 'Cancelled')
+                              ? Colors.white
+                              : Colors.grey.shade600,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Text(
-                      'Join Video Call',
-                      style: TextStyle(
+                    child: Text(
+                      session.status == 'Cancelled'
+                          ? 'Cancelled'
+                          : 'Join Video Call',
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -193,18 +205,32 @@ class SessionsScreen extends GetView<SessionsController> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => controller.cancelSession(session),
+                    onPressed: session.status == 'Cancelled'
+                        ? null
+                        : () async {
+                            final confirmed = await _confirmCancel();
+                            if (confirmed == true) {
+                              controller.cancelSession(session);
+                            }
+                          },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF9B197D),
-                      side: const BorderSide(color: Color(0xFF9B197D)),
+                      disabledForegroundColor: Colors.grey.shade500,
+                      side: BorderSide(
+                        color: session.status == 'Cancelled'
+                            ? Colors.grey.shade400
+                            : const Color(0xFF9B197D),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: const Text(
-                      'Cancel Session',
-                      style: TextStyle(
+                    child: Text(
+                      session.status == 'Cancelled'
+                          ? 'Cancelled'
+                          : 'Cancel Session',
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -244,6 +270,30 @@ class SessionsScreen extends GetView<SessionsController> {
           ),
         ),
       ],
+    );
+  }
+
+  Future<bool?> _confirmCancel() {
+    return showDialog<bool>(
+      context: Get.context!,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Session'),
+        content: const Text('Are you sure you want to cancel this session?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF9B197D),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
     );
   }
 }

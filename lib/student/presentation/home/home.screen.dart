@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sign_language_app/student/infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'package:sign_language_app/student/presentation/components/custom_app_bar.component.dart';
 import 'package:sign_language_app/student/presentation/deaf-history/deaf_history.screen.dart';
 import 'package:sign_language_app/student/presentation/home/home.dashboard.dart';
@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> get _pages => <Widget>[
         const HomeDashboard(),
-        const InterpretersScreen(),
+        const StudentBookInterpretersScreen(),
         const SessionsScreen(),
         const DeafHistoryScreen(),
         const SettingsScreen(),
@@ -129,33 +129,33 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          selectedItemColor: primaryColor,
+          selectedItemColor: AppColors.primary,
           unselectedItemColor: Colors.grey[700],
           selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
           items: [
             BottomNavigationBarItem(
               icon: AppIcons.home(size: 24, color: Colors.grey[700]),
-              activeIcon: AppIcons.home(size: 24, color: primaryColor),
+              activeIcon: AppIcons.home(size: 24, color: AppColors.primary),
               label: 'Home',
             ),
             BottomNavigationBarItem(
               icon: AppIcons.calendar(size: 24, color: Colors.grey[700]),
-              activeIcon: AppIcons.calendar(size: 24, color: primaryColor),
+              activeIcon: AppIcons.calendar(size: 24, color: AppColors.primary),
               label: 'Interpreter',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.access_time, color: Colors.grey[700]),
-              activeIcon: Icon(Icons.access_time, color: primaryColor),
+              activeIcon: Icon(Icons.access_time, color: AppColors.primary),
               label: 'Sessions',
             ),
             BottomNavigationBarItem(
               icon: AppIcons.diagram(size: 24),
-              activeIcon: AppIcons.diagram(size: 24, color: primaryColor),
+              activeIcon: AppIcons.diagram(size: 24, color: AppColors.primary),
               label: 'History',
             ),
             BottomNavigationBarItem(
               icon: AppIcons.setting(size: 24),
-              activeIcon: AppIcons.setting(size: 24, color: primaryColor),
+              activeIcon: AppIcons.setting(size: 24, color: AppColors.primary),
               label: 'Setting',
             ),
           ],
