@@ -4,6 +4,9 @@ import 'package:email_otp/email_otp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
+import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
+import '../../../../domain/users/interpreter_user.model.dart';
+import '../../../presentation/shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterOtpController extends GetxController {
   // OTP Controllers for 6 separate boxes
@@ -13,6 +16,9 @@ class InterpreterOtpController extends GetxController {
 
   // Arguments from previous screen
   final email = ''.obs;
+  final name = ''.obs;
+  final isSignin = false.obs;
+  final Rx<InterpreterUser?> existingUser = Rx<InterpreterUser?>(null);
 
   // Loading state
   final RxBool isVerifyingOtp = false.obs;
@@ -22,6 +28,10 @@ class InterpreterOtpController extends GetxController {
   final RxInt resendTimer = 60.obs;
   final RxBool canResend = false.obs;
 
+  // Services
+  final InterpreterUserFirestoreService _firestoreService =
+      Get.find<InterpreterUserFirestoreService>();
+
   @override
   void onInit() {
     super.onInit();
@@ -30,10 +40,29 @@ class InterpreterOtpController extends GetxController {
     otpControllers = List.generate(6, (index) => TextEditingController());
     focusNodes = List.generate(6, (index) => FocusNode());
 
-    // Get email from arguments
+    // Get email, name, and signin flag from arguments
     final args = Get.arguments as Map<String, dynamic>?;
-    if (args != null && args['email'] != null) {
-      email.value = args['email'];
+    if (args != null) {
+      if (args['email'] != null) email.value = args['email'];
+      if (args['name'] != null) name.value = args['name'];
+      if (args['isSignin'] != null) isSignin.value = args['isSignin'];
+      if (args['interpreterUser'] != null) {
+        final userData = args['interpreterUser'] as Map<String, dynamic>;
+        // Create a temporary document snapshot to use fromFirestore
+        existingUser.value = InterpreterUser(
+          interpreterID: userData['interpreter_id'] ?? '',
+          firstName: userData['firstName'] ?? '',
+          lastName: userData['lastName'] ?? '',
+          email: userData['email'] ?? '',
+          phone: userData['phone'],
+          languages: List<String>.from(userData['languages'] ?? []),
+          specializations: List<String>.from(userData['specializations'] ?? []),
+          rating: (userData['rating'] ?? 0.0).toDouble(),
+          bio: userData['bio'],
+          isAvailable: userData['isAvailable'] ?? false,
+          profilePictureUrl: userData['profilePictureUrl'],
+        );
+      }
     }
 
     startResendTimer();
@@ -100,26 +129,71 @@ class InterpreterOtpController extends GetxController {
         throw Exception('Invalid OTP');
       }
 
-      // Mark that interpreter has logged in before
+      InterpreterUser interpreterUser;
+
+      if (isSignin.value && existingUser.value != null) {
+        // Signin flow - use existing user data
+        interpreterUser = existingUser.value!;
+
+        Get.snackbar('Success', 'Welcome back, ${interpreterUser.firstName}!',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green[100],
+            colorText: Colors.green[900]);
+      } else {
+        // Signup flow - create new user
+        // Parse name into first and last name
+        final nameParts = name.value.trim().split(' ');
+        final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+        final lastName =
+            nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
+        // Check if user already exists (for redundancy)
+        final existing = await _firestoreService.findByEmail(email.value);
+        if (existing != null) {
+          interpreterUser = existing;
+          Get.snackbar('Info', 'Account already exists. Signing you in.',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.blue[100],
+              colorText: Colors.blue[900]);
+        } else {
+          // Create new Firestore document for interpreter
+          interpreterUser = await _firestoreService.createNew(
+            firstName: firstName,
+            lastName: lastName,
+            email: email.value,
+          );
+
+          Get.snackbar('Success', 'Account created successfully!',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.green[100],
+              colorText: Colors.green[900]);
+        }
+      }
+
+      // Store interpreter data in SharedPreferences for redundancy
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('interpreter_logged_in', true);
+      await prefs.setString('interpreter_id', interpreterUser.interpreterID);
+      await prefs.setString('interpreter_email', interpreterUser.email);
+      await prefs.setString('interpreter_name', interpreterUser.displayName);
 
-      // Store interpreter data
-      final args = Get.arguments as Map<String, dynamic>?;
-      if (args != null && args['name'] != null) {
-        await prefs.setString('userName', args['name']);
+      // Set profile in profile controller if it exists
+      if (Get.isRegistered<InterpreterProfileController>()) {
+        final profileController = Get.find<InterpreterProfileController>();
+        profileController.setProfile(interpreterUser);
       }
-      await prefs.setString('userEmail', email.value);
-
-      Get.snackbar('Success', 'Email verified successfully!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900]);
 
       // Navigate to interpreter home screen
       Get.offAllNamed(Routes.INTERPRETER_HOME);
     } catch (e) {
-      Get.snackbar('Error', 'Invalid OTP. Please try again.',
+      String errorMessage = 'Invalid OTP. Please try again.';
+      if (e.toString().contains('email-already-in-use') ||
+          e.toString().contains('already exists')) {
+        errorMessage =
+            'Account with this email already exists. Please sign in instead.';
+      }
+
+      Get.snackbar('Error', errorMessage,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red[100],
           colorText: Colors.red[900]);

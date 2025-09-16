@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../infrastructure/dal/services/firebase_storage_service.dart';
 import '../../shared/controllers/user.controller.dart';
@@ -552,10 +553,10 @@ class SettingsController extends GetxController {
     if (userDocId.value.isNotEmpty) return;
     final prefs = await SharedPreferences.getInstance();
     final col = FirebaseFirestore.instance.collection('users');
-    final docRef = col.doc();
+    final id = const Uuid().v4();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     final authUid = FirebaseAuth.instance.currentUser?.uid;
-    await docRef.set({
+    await col.doc(id).set({
       'displayName': fullNameController.text.trim(),
       'phone': phoneController.text.trim(),
       'languages': _parseLanguages(),
@@ -565,9 +566,9 @@ class SettingsController extends GetxController {
       'authUid': authUid,
       'createdAt': now,
       'updatedAt': now,
-    });
-    userDocId.value = docRef.id;
-    await prefs.setString('user_doc_id', docRef.id);
+    }, SetOptions(merge: true));
+    userDocId.value = id;
+    await prefs.setString('user_doc_id', id);
   }
 
   Future<void> saveChangesAsync() async {

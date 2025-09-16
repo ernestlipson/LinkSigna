@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:uuid/uuid.dart';
 import '../../../domain/users/student_user.model.dart';
 
 class StudentUserFirestoreService extends GetxService {
@@ -30,10 +31,12 @@ class StudentUserFirestoreService extends GetxService {
 
   Future<StudentUser> createNew(StudentUser user) async {
     try {
-      final docRef = await _col.add(user.toMap());
-      // Return a copy with the generated document id (authUid preserved)
+      final id = const Uuid().v4();
+      await _col
+          .doc(id)
+          .set(user.toMap(isUpdate: false), SetOptions(merge: true));
       return StudentUser(
-        uid: docRef.id,
+        uid: id,
         authUid: user.authUid,
         displayName: user.displayName,
         email: user.email,
@@ -46,6 +49,34 @@ class StudentUserFirestoreService extends GetxService {
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<StudentUser> getOrCreateByAuthUid({
+    required String authUid,
+    String? displayName,
+    String? phone,
+    String? email,
+    String? universityLevel,
+    String? language,
+    String? bio,
+  }) async {
+    final existing = await findByAuthUid(authUid);
+    if (existing != null) return existing;
+
+    final id = const Uuid().v4();
+    final user = StudentUser(
+      uid: id,
+      authUid: authUid,
+      displayName: displayName,
+      email: email,
+      phone: phone,
+      avatarUrl: null,
+      bio: bio,
+      universityLevel: universityLevel,
+      language: language,
+    );
+    await _col.doc(id).set(user.toMap(isUpdate: false), SetOptions(merge: true));
+    return user;
   }
 
   Future<StudentUser?> findByAuthUid(String authUid) async {

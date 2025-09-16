@@ -7,10 +7,12 @@ import '../../interpreter/infrastructure/navigation/bindings/controllers/interpr
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_chat.controller.binding.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_home.controller.binding.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_otp.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_signin.controller.binding.dart';
 import '../../interpreter/presentation/sessions/interpreter_sessions.screen.dart';
 import 'package:sign_language_app/interpreter/presentation/sessions/controllers/interpreter_sessions.controller.dart';
 // Interpreter imports
 import '../../interpreter/presentation/screens.dart';
+import '../../interpreter/presentation/signin/signin.int.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/deaf_history.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/forgot_password.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/home.controller.binding.dart';
@@ -90,6 +92,11 @@ class Nav {
     ),
 
     // Interpreter Routes
+    GetPage(
+      name: Routes.INTERPRETER_SIGNIN,
+      page: () => const InterpreterSignInScreen(),
+      binding: InterpreterSigninControllerBinding(),
+    ),
     GetPage(
       name: Routes.INTERPRETER_SIGNUP,
       page: () => const InterpreterSignupScreen(),

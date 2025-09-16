@@ -90,9 +90,8 @@ class StudentUserController extends GetxController {
         return;
       }
 
-      // Create new document with auto id
-      final newUser = StudentUser(
-        uid: 'temp', // placeholder, actual uid is doc id after add
+      // Idempotent: returns existing user by authUid or creates a new UUID doc
+      final created = await _service.getOrCreateByAuthUid(
         authUid: authUser.uid,
         displayName: displayName,
         phone: phone,
@@ -101,7 +100,6 @@ class StudentUserController extends GetxController {
         language: language,
         bio: bio,
       );
-      final created = await _service.createNew(newUser);
       _docId = created.uid;
       await prefs.setString(_prefsDocKey, _docId!);
       _subscribe(_docId!);

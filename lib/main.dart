@@ -7,8 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'infrastructure/navigation/navigation.dart';
 import 'infrastructure/navigation/routes.dart';
-import 'student/infrastructure/navigation/bindings/global.binding.dart';
 import 'infrastructure/theme/app_theme.dart';
+import 'student/infrastructure/navigation/bindings/global.binding.dart';
 import 'student/presentation/shared/controllers/user.controller.dart';
 
 void main() async {
@@ -32,20 +32,16 @@ void main() async {
   final hasInterpreterLoggedIn =
       prefs.getBool('interpreter_logged_in') ?? false;
 
-  // Determine initial route
   final initial = hasInterpreterLoggedIn
       ? Routes.INTERPRETER_HOME
       : hasStudentLoggedIn
           ? Routes.STUDENT_HOME
           : Routes.initialRoute;
 
-  // Legacy simple user controller for non-Firestore UI pieces
   if (!Get.isRegistered<UserController>()) {
     Get.put(UserController());
   }
   if (hasStudentLoggedIn) {
-    // Seed legacy user display name from prefs; StudentUserController will be
-    // created lazily via GlobalBinding when first accessed in UI.
     final userController = Get.find<UserController>();
     userController.setUser(name: prefs.getString('userName') ?? 'User');
   }

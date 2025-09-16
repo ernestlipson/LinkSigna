@@ -1,14 +1,14 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import 'package:get/get.dart';
 
+import '../../../infrastructure/navigation/routes.dart';
 import '../../../student/presentation/utils/screens.strings.dart';
 import '../../infrastructure/theme/app_theme.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
-import 'controllers/interpreter.controller.dart';
+import 'controllers/signup.int.controller.dart';
 
 class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
   const InterpreterSignupScreen({super.key});
@@ -133,7 +133,8 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
                           fontWeight: FontWeight.w600,
                         ),
                         recognizer: TapGestureRecognizer()
-                          ..onTap = () => Get.back(),
+                          ..onTap = () =>
+                              Get.offAndToNamed(Routes.INTERPRETER_SIGNIN),
                       )
                     ],
                   ),

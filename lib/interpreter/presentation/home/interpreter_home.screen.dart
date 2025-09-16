@@ -3,9 +3,12 @@ import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
-import '../components/coming.soon.placeholder.dart';
 import '../messages/interpreter_messages.screen.dart';
+import '../sessions/interpreter_sessions.screen.dart';
+import '../history/interpreter_history.screen.dart';
+import '../settings/interpreter_settings.screen.dart';
 import 'controllers/interpreter_home.controller.dart';
+import 'widgets/interpreter_dashboard.dart';
 import '../../../infrastructure/navigation/routes.dart';
 
 class InterpreterHomeScreen extends StatelessWidget {
@@ -17,23 +20,11 @@ class InterpreterHomeScreen extends StatelessWidget {
 
     // Define the pages for each tab
     final List<Widget> pages = [
-      const ComingSoonPlaceholder(
-        title: 'Home Dashboard',
-        subtitle: 'Your interpreter dashboard will be available soon.',
-      ),
-      const ComingSoonPlaceholder(
-        title: 'Sessions',
-        subtitle: 'Manage your interpretation sessions here.',
-      ),
+      const InterpreterDashboard(),
+      InterpreterSessionsScreen(),
       const InterpreterMessagesScreen(),
-      const ComingSoonPlaceholder(
-        title: 'History',
-        subtitle: 'View your session history and earnings.',
-      ),
-      const ComingSoonPlaceholder(
-        title: 'Settings',
-        subtitle: 'Manage your profile and preferences.',
-      ),
+      const InterpreterHistoryScreen(),
+      const InterpreterSettingsScreen(),
     ];
 
     return Scaffold(
