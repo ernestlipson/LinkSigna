@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../domain/sessions/session.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 import '../../call/video_call.screen.dart';
+import '../../shared/controllers/student_user.controller.dart';
 
 class SessionsController extends GetxController {
   final sessions = <SessionModel>[].obs;
@@ -20,8 +21,18 @@ class SessionsController extends GetxController {
   }
 
   String _resolveStudentId() {
-    // TODO: integrate real auth uid
-    return 'student_test_id';
+    // Get student ID from StudentUserController if available
+    if (Get.isRegistered<StudentUserController>()) {
+      final studentController = Get.find<StudentUserController>();
+      final currentStudent = studentController.current.value;
+      if (currentStudent != null && currentStudent.uid.isNotEmpty) {
+        return currentStudent.uid; // This is the Firestore document ID
+      }
+    }
+
+    // Fallback: generate a UUID if no proper student ID found
+    Get.log('Warning: No proper student ID found, using fallback');
+    return 'student_fallback_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   void _listen() {

@@ -56,4 +56,25 @@ class SessionFirestoreService extends GetxService {
       'updatedAt': DateTime.now().toUtc().millisecondsSinceEpoch,
     });
   }
+
+  Future<void> confirmSession(String sessionId) async {
+    await updateStatus(sessionId, 'Confirmed');
+  }
+
+  Future<void> cancelSession(String sessionId) async {
+    await updateStatus(sessionId, 'Cancelled');
+  }
+
+  Future<SessionModel?> getSessionById(String sessionId) async {
+    try {
+      final doc = await _col.doc(sessionId).get();
+      if (doc.exists && doc.data() != null) {
+        return SessionModel.fromFirestore(doc.id, doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      Get.log('Error getting session by ID: $e');
+      return null;
+    }
+  }
 }

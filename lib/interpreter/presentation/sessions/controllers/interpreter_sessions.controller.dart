@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:sign_language_app/call/video_call.screen.dart';
 import '../../../../domain/sessions/session.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
+import '../../shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterSessionsController extends GetxController {
   final sessions = <SessionModel>[].obs;
@@ -20,8 +21,18 @@ class InterpreterSessionsController extends GetxController {
   }
 
   String _resolveInterpreterId() {
-    // TODO: replace with real interpreter auth UID
-    return 'interpreter_test_id';
+    // Get interpreter ID from InterpreterProfileController if available
+    if (Get.isRegistered<InterpreterProfileController>()) {
+      final interpreterController = Get.find<InterpreterProfileController>();
+      final interpreterId = interpreterController.interpreterId.value;
+      if (interpreterId.isNotEmpty) {
+        return interpreterId; // This is the Firestore document ID
+      }
+    }
+
+    // Fallback: generate a UUID if no proper interpreter ID found
+    Get.log('Warning: No proper interpreter ID found, using fallback');
+    return 'interpreter_fallback_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   void _listen() {
@@ -77,12 +88,47 @@ class InterpreterSessionsController extends GetxController {
 
   Future<void> cancelSession(SessionModel session) async {
     if (session.status == 'Cancelled') return;
-    await _service.updateStatus(session.id, 'Cancelled');
+
+    try {
+      await _service.cancelSession(session.id);
+      Get.snackbar(
+        'Session Cancelled',
+        'Session "${session.className}" has been cancelled',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to cancel session: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+    }
   }
 
   Future<void> confirmSession(SessionModel session) async {
-    if (session.status == 'Pending') {
-      await _service.updateStatus(session.id, 'Confirmed');
+    if (session.status != 'Pending') return;
+
+    try {
+      await _service.confirmSession(session.id);
+      Get.snackbar(
+        'Session Confirmed',
+        'Session "${session.className}" has been confirmed',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green[100],
+        colorText: Colors.green[900],
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to confirm session: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
     }
   }
 

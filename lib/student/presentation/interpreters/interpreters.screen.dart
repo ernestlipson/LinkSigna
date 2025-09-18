@@ -117,6 +117,7 @@ class StudentBookInterpretersScreen extends StatelessWidget {
 
   Widget _buildInterpreterCard(
       InterpreterData interpreter, InterpretersController controller) {
+    // New model: isAvailable, languages, rating, experience, profileImage, name, email
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -142,26 +143,31 @@ class StudentBookInterpretersScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Interpreter Available',
+                  interpreter.isAvailable
+                      ? 'Interpreter Available'
+                      : 'Not Available',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey[600],
+                    color: interpreter.isAvailable
+                        ? Colors.green[700]
+                        : Colors.red[700],
                   ),
                 ),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color:
-                        interpreter.isFree ? Colors.green[50] : Colors.red[50],
+                    color: interpreter.isAvailable
+                        ? Colors.green[50]
+                        : Colors.red[50],
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    interpreter.isFree ? 'Free' : 'Paid',
+                    interpreter.isAvailable ? 'Available' : 'Unavailable',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: interpreter.isFree
+                      color: interpreter.isAvailable
                           ? Colors.green[700]
                           : Colors.red[700],
                     ),
@@ -177,6 +183,7 @@ class StudentBookInterpretersScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 25,
                   backgroundImage: NetworkImage(interpreter.profileImage),
+                  backgroundColor: Colors.grey[200],
                 ),
                 SizedBox(width: 12),
                 Expanded(
@@ -197,25 +204,34 @@ class StudentBookInterpretersScreen extends StatelessWidget {
                           color: Colors.grey[600],
                         ),
                       ),
-                      SizedBox(height: 14),
-                      Text(
-                        'Experience: ${interpreter.experience} years in Sign Language interpretation',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      if (!interpreter.isFree) ...[
-                        SizedBox(height: 4),
+                      SizedBox(height: 8),
+                      if (interpreter.languages.isNotEmpty)
                         Text(
-                          'Price: GHS ${interpreter.price}',
+                          'Languages: ${interpreter.languages.join(", ")}',
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
                             color: Colors.grey[700],
                           ),
                         ),
-                      ],
+                      Row(
+                        children: [
+                          Icon(Icons.star, color: Colors.amber, size: 16),
+                          SizedBox(width: 4),
+                          Text(
+                            interpreter.rating.toStringAsFixed(1),
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey[700]),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Experience: ${interpreter.experience} years',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -228,14 +244,15 @@ class StudentBookInterpretersScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: Builder(builder: (_) {
-                    final booked = interpreter.isBooked == true;
+                    final booked = interpreter.isAvailable == false;
                     return ElevatedButton(
-                      onPressed: booked
+                      onPressed: booked || !interpreter.isAvailable
                           ? null
                           : () => controller.bookInterpreter(interpreter),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            booked ? Colors.grey[400] : AppColors.primary,
+                        backgroundColor: booked || !interpreter.isAvailable
+                            ? Colors.grey[400]
+                            : AppColors.primary,
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: Colors.grey[400],
                         shape: RoundedRectangleBorder(
@@ -244,7 +261,11 @@ class StudentBookInterpretersScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(vertical: 12),
                       ),
                       child: Text(
-                        booked ? 'Booked' : 'Book interpreter',
+                        booked
+                            ? 'Booked'
+                            : interpreter.isAvailable
+                                ? 'Book interpreter'
+                                : 'Unavailable',
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     );

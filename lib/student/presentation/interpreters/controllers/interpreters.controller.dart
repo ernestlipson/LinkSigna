@@ -5,6 +5,7 @@ import '../interpreter_profile.screen.dart';
 import '../../../infrastructure/dal/services/interpreter.service.dart';
 import '../../../infrastructure/dal/daos/models/Interpreter.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
+import '../../shared/controllers/student_user.controller.dart';
 
 class InterpretersController extends GetxController {
   final RxList<InterpreterData> interpreters = <InterpreterData>[].obs;
@@ -42,8 +43,18 @@ class InterpretersController extends GetxController {
   }
 
   String _resolveStudentId() {
-    // TODO: integrate actual auth; placeholder for now
-    return 'student_test_id';
+    // Get student ID from StudentUserController if available
+    if (Get.isRegistered<StudentUserController>()) {
+      final studentController = Get.find<StudentUserController>();
+      final currentStudent = studentController.current.value;
+      if (currentStudent != null && currentStudent.uid.isNotEmpty) {
+        return currentStudent.uid; // This is the Firestore document ID
+      }
+    }
+
+    // Fallback: generate a UUID if no proper student ID found
+    Get.log('Warning: No proper student ID found, using fallback');
+    return 'student_fallback_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   void _listen() {
@@ -63,16 +74,18 @@ class InterpretersController extends GetxController {
     final fullName = _fullName(i.firstName, i.lastName);
     return InterpreterData(
       id: i.id,
+      interpreterId: i.interpreterId,
       name: fullName,
       email: i.email,
-      profileImage: i.profileAvatar.isNotEmpty
-          ? i.profileAvatar
+      profileImage: i.profilePictureUrl.isNotEmpty
+          ? i.profilePictureUrl
           : 'https://via.placeholder.com/150?text=Interpreter',
-      experience: _inferExperience(i.description),
-      isFree: i.price <= 0,
-      price: i.price > 0 ? i.price.toInt() : null,
-      description: i.description,
-      isBooked: i.isBooked,
+      experience: 2, // You can infer from joinedDate or add logic if needed
+      isAvailable: i.isAvailable,
+      languages: i.languages,
+      rating: i.rating,
+      specializations: i.specializations,
+      updatedAt: i.updatedAt,
     );
   }
 
@@ -97,7 +110,8 @@ class InterpretersController extends GetxController {
         .where((i) =>
             i.name.toLowerCase().contains(q) ||
             i.email.toLowerCase().contains(q) ||
-            (i.description?.toLowerCase().contains(q) ?? false))
+            (i.languages.join(',').toLowerCase().contains(q)) ||
+            (i.specializations.join(',').toLowerCase().contains(q)))
         .toList();
   }
 
@@ -110,7 +124,6 @@ class InterpretersController extends GetxController {
   }
 
   void applyFilters() {
-    // TODO: Implement filter logic
     Get.snackbar(
       'Filters Applied',
       'Filters have been applied successfully!',
@@ -158,40 +171,40 @@ class InterpretersController extends GetxController {
 
   Future<void> bookInterpreter(InterpreterData interpreter) async {
     if (_bookingInProgress.value) return; // prevent double tap
-    if (interpreter.isBooked == true) {
+
+    if (!interpreter.isAvailable) {
       Get.snackbar(
-        'Already Booked',
-        'This interpreter is already booked.',
+        'Unavailable',
+        'This interpreter is currently unavailable.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.orange[100],
         colorText: Colors.orange[900],
       );
       return;
     }
+
     _bookingInProgress.value = true;
     try {
-      // For now we treat both free & paid similarly (paid path can add payment confirmation before calling)
       final startTime = _deriveStartTime();
       final className = _deriveClassName();
-      final sessionDocId = await _sessionService.createSession(
+      await _sessionService.createSession(
         studentId: _studentId,
         interpreterId: interpreter.id,
         className: className,
         startTime: startTime,
       );
 
-      // Mark interpreter as booked
+      // Optionally, set interpreter as unavailable after booking
       await _service.setBookingStatus(
           interpreterId: interpreter.id, isBooked: true);
 
       Get.snackbar(
         'Session Created',
-        'Session booked with ${interpreter.name}',
+        'Session booked with ${interpreter.name}. Waiting for interpreter confirmation.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green[100],
         colorText: Colors.green[900],
       );
-      Get.log('Session created: $sessionDocId');
     } catch (e) {
       Get.snackbar(
         'Booking Failed',
@@ -235,24 +248,28 @@ class InterpretersController extends GetxController {
 
 class InterpreterData {
   final String id;
+  final String interpreterId;
   final String name;
   final String email;
   final String profileImage;
   final int experience;
-  final bool isFree;
-  final int? price;
-  final String? description;
-  final bool? isBooked;
+  final bool isAvailable;
+  final List<dynamic> languages;
+  final double rating;
+  final List<dynamic> specializations;
+  final DateTime? updatedAt;
 
   InterpreterData({
     required this.id,
+    required this.interpreterId,
     required this.name,
     required this.email,
     required this.profileImage,
     required this.experience,
-    required this.isFree,
-    this.price,
-    this.description,
-    this.isBooked,
+    this.isAvailable = false,
+    required this.languages,
+    required this.rating,
+    required this.specializations,
+    required this.updatedAt,
   });
 }

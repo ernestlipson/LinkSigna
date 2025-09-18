@@ -1,56 +1,107 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../domain/models/session.dart';
+import '../../../../infrastructure/dal/services/session.firestore.service.dart';
+import '../../shared/controllers/interpreter_profile.controller.dart';
+import '../../../../domain/sessions/session.model.dart';
+import 'dart:async';
 
 class InterpreterHomeController extends GetxController {
   final RxInt selectedIndex = 0.obs;
   final RxList<Session> upcomingSessions = <Session>[].obs;
   final RxList<Session> historySessions = <Session>[].obs;
+  StreamSubscription<List<SessionModel>>? _sub;
+  late final SessionFirestoreService _sessionService;
+  late final String _interpreterId;
 
   @override
   void onInit() {
     super.onInit();
-    _loadSessions();
+    _sessionService = Get.find<SessionFirestoreService>();
+    _interpreterId = _resolveInterpreterId();
+    _listenToSessions();
   }
 
   void changeTab(int index) {
     selectedIndex.value = index;
   }
 
-  void _loadSessions() {
-    // Mock data - replace with actual API calls
-    upcomingSessions.value = [
-      Session(
-        id: '1',
-        studentName: 'Micheal Chen',
-        className: 'Communication Skills',
-        date: DateTime(2025, 4, 15),
-        time: '10:00 am',
-        status: SessionStatus.confirmed,
-      ),
-      Session(
-        id: '2',
-        studentName: 'Micheal Chen',
-        className: 'Communication Skills',
-        date: DateTime(2025, 4, 15),
-        time: '10:00 am',
-        status: SessionStatus.pending,
-      ),
-    ];
+  String _resolveInterpreterId() {
+    if (Get.isRegistered<InterpreterProfileController>()) {
+      final profileController = Get.find<InterpreterProfileController>();
+      final id = profileController.interpreterId.value;
+      if (id.isNotEmpty) return id;
+    }
+    Get.log('Warning: No proper interpreter ID found, using fallback');
+    return 'interpreter_fallback_${DateTime.now().millisecondsSinceEpoch}';
+  }
 
-    historySessions.value = [
-      Session(
-        id: '3',
-        studentName: 'Micheal Chen',
-        className: 'Communication Skills',
-        date: DateTime(2025, 4, 15),
-        time: '10:00 am',
-        status: SessionStatus.completed,
-        rating: 4,
-      ),
-    ];
+  void _listenToSessions() {
+    _sub?.cancel();
+    _sub =
+        _sessionService.sessionsForInterpreter(_interpreterId).listen((list) {
+      final now = DateTime.now();
+      final upcoming = <Session>[];
+      final history = <Session>[];
+      for (final s in list) {
+        // Only show sessions in the future as upcoming, and not cancelled
+        if ((s.status == 'Confirmed' || s.status == 'Pending') &&
+            s.startTime.isAfter(now)) {
+          upcoming.add(_toDashboardSession(s));
+        } else if (s.status == 'Cancelled' ||
+            s.status == 'Completed' ||
+            s.startTime.isBefore(now)) {
+          history.add(_toDashboardSession(s));
+        }
+      }
+      upcomingSessions
+          .assignAll(upcoming..sort((a, b) => a.date.compareTo(b.date)));
+      historySessions
+          .assignAll(history..sort((a, b) => b.date.compareTo(a.date)));
+    });
+  }
+
+  Session _toDashboardSession(SessionModel s) {
+    // You may want to fetch student name from another service if needed
+    return Session(
+      id: s.id,
+      studentName: s.studentId, // Replace with actual student name if available
+      className: s.className,
+      date: s.startTime,
+      time: _formatTime(s.startTime),
+      status: _toSessionStatus(s.status),
+      rating: null,
+      feedback: null,
+    );
+  }
+
+  SessionStatus _toSessionStatus(String status) {
+    switch (status) {
+      case 'Confirmed':
+        return SessionStatus.confirmed;
+      case 'Pending':
+        return SessionStatus.pending;
+      case 'Cancelled':
+        return SessionStatus.cancelled;
+      case 'Completed':
+        return SessionStatus.completed;
+      default:
+        return SessionStatus.pending;
+    }
+  }
+
+  String _formatTime(DateTime dt) {
+    final hour = dt.hour > 12 ? dt.hour - 12 : dt.hour;
+    final ampm = dt.hour >= 12 ? 'pm' : 'am';
+    final min = dt.minute.toString().padLeft(2, '0');
+    return '$hour:$min $ampm';
+  }
+
+  @override
+  void onClose() {
+    _sub?.cancel();
+    super.onClose();
   }
 
   Future<void> logout() async {

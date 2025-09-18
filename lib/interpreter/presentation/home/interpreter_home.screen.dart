@@ -11,7 +11,6 @@ import '../settings/interpreter_settings.screen.dart';
 import '../shared/controllers/interpreter_profile.controller.dart';
 import 'controllers/interpreter_home.controller.dart';
 import 'widgets/interpreter_dashboard.dart';
-import '../../../infrastructure/navigation/routes.dart';
 
 class InterpreterHomeScreen extends StatelessWidget {
   const InterpreterHomeScreen({super.key});
