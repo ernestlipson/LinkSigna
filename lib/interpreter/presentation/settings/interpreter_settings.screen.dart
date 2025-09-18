@@ -149,7 +149,17 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
                 controller.fullNameController,
                 controller.displayName.value.isEmpty
                     ? 'Enter your full name'
-                    : controller.displayName.value,
+                    : '',
+                placeholder: 'Enter your full name',
+              )),
+          const SizedBox(height: 16),
+
+          // Email
+          Obx(() => _buildFormField(
+                'Email',
+                controller.emailController,
+                controller.displayEmail.value.isEmpty ? 'Enter your email' : '',
+                placeholder: 'Enter your email',
               )),
           const SizedBox(height: 16),
 
@@ -290,7 +300,8 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
   }
 
   Widget _buildFormField(
-      String label, TextEditingController controller, String placeholder) {
+      String label, TextEditingController controller, String displayText,
+      {String? placeholder}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -306,7 +317,7 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
         TextField(
           controller: controller,
           decoration: InputDecoration(
-            hintText: placeholder,
+            hintText: placeholder ?? displayText,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey[300]!),

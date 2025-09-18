@@ -9,8 +9,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../infrastructure/dal/services/firebase_storage_service.dart';
+import '../../../../config/cloudinary.config.dart';
+import '../../../../infrastructure/dal/services/cloudinary.service.dart';
 import '../../shared/controllers/user.controller.dart';
+import '../../shared/controllers/student_user.controller.dart';
 
 class SettingsController extends GetxController {
   // Tab selection
@@ -33,8 +35,8 @@ class SettingsController extends GetxController {
   final RxString userDocId = ''.obs;
   final ImagePicker _picker = ImagePicker();
 
-  // Firebase Storage Service
-  late FirebaseStorageService _storageService;
+  // Cloudinary Service
+  late CloudinaryService _cloudinary;
 
   // Available languages list
   final List<String> availableLanguages = [
@@ -47,8 +49,22 @@ class SettingsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _storageService = Get.put(FirebaseStorageService());
+    _cloudinary = Get.put(CloudinaryService());
     _loadUserData();
+    _loadExistingProfileImage(); // Add this
+  }
+
+  void _loadExistingProfileImage() {
+    // Load existing profile image if user has one
+    if (Get.isRegistered<UserController>()) {
+      final userController = Get.find<UserController>();
+      if (userController.localImagePath.value.isNotEmpty) {
+        final file = File(userController.localImagePath.value);
+        if (file.existsSync()) {
+          profileImage.value = file;
+        }
+      }
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -129,14 +145,33 @@ class SettingsController extends GetxController {
     }
   }
 
-  /// Load profile image URL from Firebase Storage
+  Future<String> _resolveUserIdentifier() async {
+    try {
+      // Prefer cached Firestore student doc id
+      final prefs = await SharedPreferences.getInstance();
+      final cachedDocId = prefs.getString('student_user_doc_id');
+      if (cachedDocId != null && cachedDocId.isNotEmpty) {
+        return cachedDocId;
+      }
+      // Fallback to Firebase Auth UID
+      final authUid = FirebaseAuth.instance.currentUser?.uid;
+      if (authUid != null && authUid.isNotEmpty) {
+        return authUid;
+      }
+      // Last resort: userName from prefs (legacy), ensures consistent publicId
+      final legacy = prefs.getString('userName') ?? 'User';
+      return legacy;
+    } catch (_) {
+      return FirebaseAuth.instance.currentUser?.uid ?? 'User';
+    }
+  }
+
+  /// Load profile image URL from Cloudinary (via local cache)
   Future<void> _loadProfileImageUrl() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userName = prefs.getString('userName') ?? 'User';
+      final userId = await _resolveUserIdentifier();
 
-      // Check if user has a profile image in Firebase Storage
-      final imageUrl = await _storageService.getProfileImageUrl(userName);
+      final imageUrl = await _cloudinary.getProfileImageUrl(userId);
       if (imageUrl != null && imageUrl.isNotEmpty) {
         profileImageUrl.value = imageUrl;
 
@@ -166,6 +201,12 @@ class SettingsController extends GetxController {
         // Set the local file for immediate UI update
         profileImage.value = File(image.path);
 
+        // Update UserController with new profile image path
+        if (Get.isRegistered<UserController>()) {
+          final userController = Get.find<UserController>();
+          userController.setLocalProfileImage(image.path);
+        }
+
         // Show success message
         Get.snackbar(
           'Image Selected',
@@ -175,8 +216,8 @@ class SettingsController extends GetxController {
           colorText: Colors.blue[900],
         );
 
-        // Upload to Firebase Storage
-        await _uploadProfileImageToFirebase(File(image.path));
+        // Upload to Cloudinary
+        await _uploadProfileImageToCloudinary(File(image.path));
       }
     } catch (e) {
       Get.snackbar(
@@ -189,26 +230,34 @@ class SettingsController extends GetxController {
     }
   }
 
-  /// Upload profile image to Firebase Storage
-  Future<void> _uploadProfileImageToFirebase(File imageFile) async {
+  /// Upload profile image to Cloudinary and update Firestore
+  Future<void> _uploadProfileImageToCloudinary(File imageFile) async {
     try {
       isUploadingImage.value = true;
 
-      final prefs = await SharedPreferences.getInstance();
-      final userName = prefs.getString('userName') ?? 'User';
+      final userId = await _resolveUserIdentifier();
 
-      // Upload image to Firebase Storage (will auto-replace old image)
-      final downloadUrl =
-          await _storageService.uploadProfileImage(imageFile, userName);
+      // Upload image to Cloudinary (overwrites by publicId)
+      final downloadUrl = await _cloudinary.uploadProfileImage(
+        imageFile: imageFile,
+        userId: userId,
+        folder: CloudinaryConfig.folderStudents,
+      );
 
       if (downloadUrl != null) {
-        // Update the profile image URL
+        // Update the profile image URL in UI
         profileImageUrl.value = downloadUrl;
 
         // Update UserController with new profile image URL
         if (Get.isRegistered<UserController>()) {
           final userController = Get.find<UserController>();
           userController.setUser(photo: downloadUrl);
+        }
+
+        // Update Firestore student document via controller (avatarUrl)
+        if (Get.isRegistered<StudentUserController>()) {
+          final stuCtrl = Get.find<StudentUserController>();
+          await stuCtrl.updateProfile({'avatarUrl': downloadUrl});
         }
 
         // Clear the local file since we now have a cloud URL
@@ -222,7 +271,7 @@ class SettingsController extends GetxController {
           colorText: Colors.green[900],
         );
 
-        Get.log('Profile image uploaded successfully: $downloadUrl');
+        Get.log('Cloudinary upload success: $downloadUrl');
       } else {
         // Keep the local file if upload failed
         Get.snackbar(
@@ -579,19 +628,31 @@ class SettingsController extends GetxController {
       if (userDocId.value.isEmpty) {
         throw 'Unable to resolve user document.';
       }
-      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-      final data = {
-        'displayName': fullNameController.text.trim(),
+      // Map to StudentUser schema
+      final nameParts = fullNameController.text.trim().split(' ');
+      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+      final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
+      final updateData = {
+        'firstname': firstName,
+        'lastname': lastName,
         'phone': phoneController.text.trim(),
-        'languages': _parseLanguages(),
-        'universityLevel': universityLevel.value,
-        'photoUrl': profileImageUrl.value,
-        'updatedAt': now,
+        'language': languagesController.text.trim(),
+        'university_level': universityLevel.value,
+        if (profileImageUrl.value.isNotEmpty)
+          'avatarUrl': profileImageUrl.value,
       };
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userDocId.value)
-          .update(data);
+
+      // Prefer updating via StudentUserController to ensure consistency
+      if (Get.isRegistered<StudentUserController>()) {
+        final stuCtrl = Get.find<StudentUserController>();
+        await stuCtrl.updateProfile(updateData);
+      } else if (userDocId.value.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userDocId.value)
+            .set(updateData, SetOptions(merge: true));
+      }
 
       // Persist locally
       final prefs = await SharedPreferences.getInstance();

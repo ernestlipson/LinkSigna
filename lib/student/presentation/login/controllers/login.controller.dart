@@ -1,10 +1,13 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 
 import '../../shared/controllers/country.controller.dart';
+import '../../shared/controllers/student_user.controller.dart';
+import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
 
 class LoginController extends GetxController {
   // Firebase removed
@@ -122,6 +125,46 @@ class LoginController extends GetxController {
               nameController.text.trim().isEmpty
                   ? 'User'
                   : nameController.text.trim());
+
+          // Check if user already exists in Firestore for login
+          try {
+            if (!Get.isRegistered<StudentUserController>()) {
+              Get.put(StudentUserController());
+            }
+
+            // Get the Firestore service to check for existing user
+            final firestoreService = Get.find<StudentUserFirestoreService>();
+
+            // Try to find existing user by phone
+            final existingUser = await firestoreService.findByPhone(formatted);
+
+            if (existingUser != null) {
+              // User exists - this is a login flow
+              await prefs.setString('existing_user_id', existingUser.uid);
+              await prefs.setString(
+                  'userName', existingUser.displayName ?? 'User');
+
+              Get.snackbar('Welcome Back', 'Please verify your OTP to sign in',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.blue[100],
+                  colorText: Colors.blue[900]);
+            } else {
+              // User doesn't exist - this is effectively a signup flow
+              Get.snackbar('New Account',
+                  'Please verify your OTP to create your account',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: Colors.green[100],
+                  colorText: Colors.green[900]);
+            }
+          } catch (firestoreError) {
+            // If Firestore check fails, proceed with OTP but log the error
+            print('Error checking existing user: $firestoreError');
+            Get.snackbar('Info', 'Please verify your OTP to continue',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.blue[100],
+                colorText: Colors.blue[900]);
+          }
+
           // Navigate to OTP screen
           Get.toNamed(Routes.STUDENT_OTP, arguments: {
             'phone': formatted,

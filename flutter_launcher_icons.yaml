@@ -1,0 +1,41 @@
+flutter_launcher_icons:
+  # Enable Android launcher icons
+  android: true
+  
+  # Enable iOS launcher icons  
+  ios: true
+  
+  # The path to the icon image file
+  image_path: "assets/icons/app_icon.png"
+  
+  # Optional: Different icons for different platforms
+  # android_image_path: "assets/icons/android_icon.png"
+  # ios_image_path: "assets/icons/ios_icon.png"
+  
+  # Minimum SDK is Android 21+
+  min_sdk_android: 21
+  
+  # Remove old icons before generating new ones
+  remove_alpha_ios: true
+  
+  # Generate adaptive icons for Android (API 26+)
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
+  
+  # Web support (if you plan to deploy to web)
+  web:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"
+  
+  # Windows support (if you plan to deploy to Windows)
+  windows:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+    icon_size: 48
+  
+  # macOS support (if you plan to deploy to macOS)
+  macos:
+    generate: true
+    image_path: "assets/icons/app_icon.png"

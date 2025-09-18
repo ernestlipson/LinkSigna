@@ -31,11 +31,17 @@ class StudentUser {
 
   factory StudentUser.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
+
+    // Combine firstname and lastname into displayName
+    final firstName = data['firstname'] ?? '';
+    final lastName = data['lastname'] ?? '';
+    final combinedName = '$firstName $lastName'.trim();
+
     return StudentUser(
       uid: doc.id,
       authUid: data['authUid'],
       role: data['role'] ?? 'student',
-      displayName: data['displayName'],
+      displayName: combinedName.isNotEmpty ? combinedName : data['displayName'],
       email: data['email'],
       phone: data['phone'],
       avatarUrl: data['avatarUrl'],
@@ -48,10 +54,16 @@ class StudentUser {
   }
 
   Map<String, dynamic> toMap({bool isUpdate = false}) {
+    // Split displayName into firstname and lastname for Firestore
+    final nameParts = displayName?.split(' ') ?? [];
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
     return {
       'role': role,
       'authUid': authUid,
-      'displayName': displayName,
+      'firstname': firstName,
+      'lastname': lastName,
       'email': email,
       'phone': phone,
       'avatarUrl': avatarUrl,

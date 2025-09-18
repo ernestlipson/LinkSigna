@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../infrastructure/theme/app_theme.dart';
 import '../../../domain/models/session.dart';
 import '../controllers/interpreter_home.controller.dart';
+import '../../shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterDashboard extends StatelessWidget {
   const InterpreterDashboard({super.key});
@@ -33,146 +34,164 @@ class InterpreterDashboard extends StatelessWidget {
   }
 
   Widget _buildWelcomeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Welcome back Arlene McCoy',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
+    final profileController = Get.find<InterpreterProfileController>();
+
+    return Obx(() {
+      final user = profileController.profile.value;
+      final userName = user?.displayName ?? 'Interpreter';
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Welcome $userName',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Here\'s what\'s happening with your interpreter sessions today.',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-            height: 1.3,
+          const SizedBox(height: 4),
+          Text(
+            'Here\'s what\'s happening with your interpreter sessions today.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              height: 1.3,
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   Widget _buildUpcomingSessionsSection(InterpreterHomeController controller) {
-    return Obx(() => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Upcoming Session',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () =>
-                      controller.changeTab(1), // Navigate to Sessions tab
-                  child: const Text(
-                    'View All',
+    return Obx(() => Container(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!, width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Upcoming Session',
                     style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (controller.upcomingSessions.isEmpty)
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: const Center(
-                  child: Text(
-                    'No upcoming sessions',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
+                  TextButton(
+                    onPressed: () =>
+                        controller.changeTab(1), // Navigate to Sessions tab
+                    child: const Text(
+                      'View All',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-              )
-            else
-              ...controller.upcomingSessions
-                  .map((session) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildSessionCard(session, isUpcoming: true),
-                      ))
-                  .toList(),
-          ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (controller.upcomingSessions.isEmpty)
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'No upcoming sessions',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ...controller.upcomingSessions.map((session) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildSessionCard(session, isUpcoming: true),
+                    )),
+            ],
+          ),
         ));
   }
 
   Widget _buildHistorySection(InterpreterHomeController controller) {
-    return Obx(() => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'History',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () =>
-                      controller.changeTab(3), // Navigate to History tab
-                  child: const Text(
-                    'View All',
+    return Obx(() => Container(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[200]!, width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'History',
                     style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (controller.historySessions.isEmpty)
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: const Center(
-                  child: Text(
-                    'No session history',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
+                  TextButton(
+                    onPressed: () =>
+                        controller.changeTab(3), // Navigate to History tab
+                    child: const Text(
+                      'View All',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-              )
-            else
-              ...controller.historySessions
-                  .take(3)
-                  .map((session) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildSessionCard(session, isUpcoming: false),
-                      ))
-                  .toList(),
-          ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (controller.historySessions.isEmpty)
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'No session history',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ...controller.historySessions.take(3).map((session) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildSessionCard(session, isUpcoming: false),
+                    )),
+            ],
+          ),
         ));
   }
 
@@ -183,14 +202,6 @@ class InterpreterDashboard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

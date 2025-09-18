@@ -8,7 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../../../student/infrastructure/dal/services/firebase_storage_service.dart';
+import '../../../../infrastructure/dal/services/cloudinary.service.dart';
+import '../../../../config/cloudinary.config.dart';
+import '../../../presentation/shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterSettingsController extends GetxController {
   // Tab selection
@@ -16,6 +18,7 @@ class InterpreterSettingsController extends GetxController {
 
   // Form controllers
   final fullNameController = TextEditingController();
+  final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final experienceController = TextEditingController();
   final languagesController = TextEditingController();
@@ -27,14 +30,15 @@ class InterpreterSettingsController extends GetxController {
   final Rx<File?> profileImage = Rx<File?>(null);
   final RxString profileImageUrl = ''.obs;
   final RxString displayName = ''.obs;
+  final RxString displayEmail = ''.obs;
   final RxString displayPhone = ''.obs;
   final RxBool isUploadingImage = false.obs;
   final RxBool isSaving = false.obs;
   final RxString userDocId = ''.obs;
   final ImagePicker _picker = ImagePicker();
 
-  // Firebase Storage Service
-  late FirebaseStorageService _storageService;
+  // Cloudinary Service
+  late CloudinaryService _cloudinary;
 
   // Available experience levels
   final List<String> experienceLevels = [
@@ -63,18 +67,83 @@ class InterpreterSettingsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _storageService = Get.put(FirebaseStorageService());
+    _cloudinary = Get.put(CloudinaryService());
     _loadUserData();
+    _loadProfileImageFromStorage();
   }
 
   Future<void> _loadUserData() async {
     try {
+      // Get the profile controller to access Firestore data
+      final profileController = Get.find<InterpreterProfileController>();
+      final user = profileController.profile.value;
+
+      if (user != null) {
+        // Load data from Firestore user profile
+        fullNameController.text = user.displayName;
+        displayName.value = user.displayName;
+
+        emailController.text = user.email;
+        displayEmail.value = user.email;
+
+        phoneController.text = user.phone ?? '';
+        displayPhone.value = user.phone ?? '';
+
+        // Set professional information with defaults
+        if (user.specializations.isNotEmpty) {
+          experienceController.text = user.specializations.first;
+          experience.value = user.specializations.first;
+        } else {
+          experienceController.text = 'Senior (5+ years)';
+          experience.value = 'Senior (5+ years)';
+        }
+
+        certificationController.text = 'Ghana Sign Language Certified';
+        certification.value = 'Ghana Sign Language Certified';
+
+        // Set languages
+        if (user.languages.isNotEmpty) {
+          languagesController.text = user.languages.join(', ');
+        } else {
+          languagesController.text = 'Ghanaian Sign Language';
+        }
+
+        // Set profile image URL if available
+        if (user.profilePictureUrl != null &&
+            user.profilePictureUrl!.isNotEmpty) {
+          profileImageUrl.value = user.profilePictureUrl!;
+        }
+
+        // Store interpreter ID for future updates
+        userDocId.value = user.interpreterID;
+      } else {
+        // Fallback to SharedPreferences if Firestore data not available
+        await _loadFromSharedPreferences();
+      }
+    } catch (e) {
+      // Fallback to SharedPreferences if there's an error
+      await _loadFromSharedPreferences();
+      print('Error loading user data from Firestore: $e');
+    }
+  }
+
+  Future<void> _loadFromSharedPreferences() async {
+    try {
       final prefs = await SharedPreferences.getInstance();
 
       // Load user name from SharedPreferences (saved during signup)
-      final userName = prefs.getString('userName') ?? '';
+      final userName = prefs.getString('interpreter_name') ??
+          prefs.getString('userName') ??
+          '';
       fullNameController.text = userName;
       displayName.value = userName;
+
+      // Load email from SharedPreferences if available
+      final userEmail = prefs.getString('interpreter_email') ??
+          prefs.getString('userEmail') ??
+          '';
+      emailController.text = userEmail;
+      displayEmail.value = userEmail;
 
       // Load phone number from SharedPreferences if available
       final userPhone = prefs.getString('userPhone') ?? '';
@@ -85,8 +154,8 @@ class InterpreterSettingsController extends GetxController {
 
       // Set default values if no user data is found
       if (fullNameController.text.isEmpty) {
-        fullNameController.text = 'Interpreter';
-        displayName.value = 'Interpreter';
+        fullNameController.text = '';
+        displayName.value = '';
       }
 
       // Set default values for interpreter-specific fields
@@ -97,10 +166,7 @@ class InterpreterSettingsController extends GetxController {
       languagesController.text = 'Ghanaian Sign Language';
 
       // Load existing stored Firestore doc id if any
-      userDocId.value = prefs.getString('interpreter_doc_id') ?? '';
-
-      // Load profile image URL from Firebase Storage
-      await _loadProfileImageFromStorage();
+      userDocId.value = prefs.getString('interpreter_id') ?? '';
     } catch (e) {
       Get.snackbar('Error', 'Failed to load user data: ${e.toString()}');
     }
@@ -108,13 +174,14 @@ class InterpreterSettingsController extends GetxController {
 
   Future<void> _loadProfileImageFromStorage() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      // if (user != null) {
-      //   final url = await _storageService.getProfileImageUrl(user.uid);
-      //   if (url.isNotEmpty) {
-      //     profileImageUrl.value = url;
-      //   }
-      // }
+      // Load profile image from InterpreterProfileController first
+      final profileController = Get.find<InterpreterProfileController>();
+      final user = profileController.profile.value;
+
+      if (user?.profilePictureUrl != null &&
+          user!.profilePictureUrl!.isNotEmpty) {
+        profileImageUrl.value = user.profilePictureUrl!;
+      }
     } catch (e) {
       print('Failed to load profile image: $e');
     }
@@ -165,23 +232,66 @@ class InterpreterSettingsController extends GetxController {
     }
   }
 
+  Future<String> _resolveInterpreterIdentifier() async {
+    try {
+      // Prefer controller id, fallback to SharedPreferences, then Firebase Auth UID
+      final profileController = Get.find<InterpreterProfileController>();
+      final idFromCtrl = profileController.interpreterId.value;
+      if (idFromCtrl.isNotEmpty) return idFromCtrl;
+
+      final prefs = await SharedPreferences.getInstance();
+      final cachedId = prefs.getString('interpreter_id');
+      if (cachedId != null && cachedId.isNotEmpty) return cachedId;
+
+      final authUid = FirebaseAuth.instance.currentUser?.uid;
+      if (authUid != null && authUid.isNotEmpty) return authUid;
+
+      return 'interpreter';
+    } catch (_) {
+      return 'interpreter';
+    }
+  }
+
   Future<void> _uploadProfileImage() async {
     if (profileImage.value == null) return;
 
     try {
       isUploadingImage.value = true;
-      final user = FirebaseAuth.instance.currentUser;
 
-      if (user != null) {
-        // final imageUrl = await _storageService.uploadProfileImage(
-        //   user.uid,
-        //   profileImage.value!,
-        // );
-        //
-        // if (imageUrl.isNotEmpty) {
-        //   profileImageUrl.value = imageUrl;
-        //   Get.snackbar('Success', 'Profile image updated successfully');
-        // }
+      final interpreterId = await _resolveInterpreterIdentifier();
+      final file = profileImage.value!;
+
+      final downloadUrl = await _cloudinary.uploadProfileImage(
+        imageFile: file,
+        userId: interpreterId,
+        folder: CloudinaryConfig.folderInterpreters,
+      );
+
+      if (downloadUrl != null) {
+        profileImageUrl.value = downloadUrl;
+
+        // Update Firestore via profile controller
+        final profileController = Get.find<InterpreterProfileController>();
+        await profileController.updateProfile({
+          'profilePictureUrl': downloadUrl,
+        });
+
+        // Clear local file after success
+        profileImage.value = null;
+
+        Get.snackbar(
+          'Success',
+          'Profile image updated successfully',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Upload Failed',
+          'Failed to upload image to cloud. Please try again.',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to upload image: ${e.toString()}');
@@ -298,20 +408,53 @@ class InterpreterSettingsController extends GetxController {
     try {
       isSaving.value = true;
 
+      // Parse the name into first and last name
+      final nameParts = fullNameController.text.trim().split(' ');
+      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+      final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
+      // Parse languages
+      final languagesList = languagesController.text
+          .split(',')
+          .map((lang) => lang.trim())
+          .where((lang) => lang.isNotEmpty)
+          .toList();
+
+      // Parse specializations (using experience as specialization for now)
+      final specializationsList = [experience.value];
+
       final prefs = await SharedPreferences.getInstance();
 
       // Save to SharedPreferences
-      await prefs.setString('userName', fullNameController.text);
+      await prefs.setString('interpreter_name', fullNameController.text);
+      await prefs.setString('interpreter_email', emailController.text);
       if (phoneController.text.isNotEmpty) {
         await prefs.setString('userPhone', phoneController.text);
       }
 
       // Update display values
       displayName.value = fullNameController.text;
+      displayEmail.value = emailController.text;
       displayPhone.value = phoneController.text;
 
-      // Save to Firestore
-      await _saveToFirestore();
+      // Get the profile controller and update Firestore
+      final profileController = Get.find<InterpreterProfileController>();
+
+      // Prepare update data
+      final updateData = {
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': emailController.text,
+        'phone': phoneController.text.isNotEmpty ? phoneController.text : null,
+        'languages': languagesList,
+        'specializations': specializationsList,
+        'bio': null, // Can be added later when bio field is implemented
+        'profilePictureUrl':
+            profileImageUrl.value.isNotEmpty ? profileImageUrl.value : null,
+      };
+
+      // Update via profile controller
+      await profileController.updateProfile(updateData);
 
       Get.snackbar(
         'Success',
@@ -328,35 +471,6 @@ class InterpreterSettingsController extends GetxController {
       );
     } finally {
       isSaving.value = false;
-    }
-  }
-
-  Future<void> _saveToFirestore() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      final userDoc =
-          FirebaseFirestore.instance.collection('interpreters').doc(user.uid);
-
-      final userData = {
-        'name': fullNameController.text,
-        'phone': phoneController.text,
-        'experience': experience.value,
-        'certification': certification.value,
-        'languages': languagesController.text,
-        'profileImageUrl': profileImageUrl.value,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-
-      await userDoc.set(userData, SetOptions(merge: true));
-
-      // Save document ID for future reference
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('interpreter_doc_id', user.uid);
-      userDocId.value = user.uid;
-    } catch (e) {
-      throw Exception('Failed to save to Firestore: $e');
     }
   }
 
@@ -396,8 +510,7 @@ class InterpreterSettingsController extends GetxController {
           .doc(user.uid)
           .delete();
 
-      // Delete profile image from Storage
-      await _storageService.deleteProfileImage(user.uid);
+      // Note: Cloudinary asset deletion requires server-side API. Skipping client-side delete.
 
       // Delete Firebase Auth account
       await user.delete();
@@ -428,6 +541,7 @@ class InterpreterSettingsController extends GetxController {
   @override
   void onClose() {
     fullNameController.dispose();
+    emailController.dispose();
     phoneController.dispose();
     experienceController.dispose();
     languagesController.dispose();

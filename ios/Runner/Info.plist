@@ -50,7 +50,7 @@
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
 		<key>NSLocationWhenInUseUsageDescription</key>
-        <string>Need location to determine country</string>
+		<string>Need location to determine country</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Camera permission is required for video calls</string>
 		<key>NSMicrophoneUsageDescription</key>

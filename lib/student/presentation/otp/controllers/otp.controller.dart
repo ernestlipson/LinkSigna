@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/user.controller.dart';
 import '../../shared/controllers/student_user.controller.dart';
+import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
 
 class OtpController extends GetxController {
   // OTP Controllers for 6 separate boxes
@@ -135,6 +136,7 @@ class OtpController extends GetxController {
       // Load locally cached prelim data
       final userName = prefs.getString('userName') ?? 'User';
       final userPhone = prefs.getString('userPhone') ?? '';
+      final existingUserId = prefs.getString('existing_user_id');
 
       // Legacy UI controller
       if (!Get.isRegistered<UserController>()) {
@@ -142,23 +144,85 @@ class OtpController extends GetxController {
       }
       Get.find<UserController>().setUser(name: userName, phone: userPhone);
 
-      // Firestore student profile
+      // Firestore student profile - create immediately after Firebase Auth success
       if (!Get.isRegistered<StudentUserController>()) {
         Get.put(StudentUserController());
       }
       final stuCtrl = Get.find<StudentUserController>();
-      await stuCtrl.ensureProfileExists(
-        displayName: userName,
-        phone: userPhone,
-        language: 'Ghanaian Sign Language',
-        universityLevel: 'Level 400',
-      );
 
-      // Navigate to home page and clear navigation stack
-      Get.offAllNamed(Routes.STUDENT_HOME);
+      try {
+        if (existingUserId != null) {
+          // This is a login flow - user already exists
+          // Load existing profile and set it as current
+          final studentService = Get.find<StudentUserFirestoreService>();
+          final existingUser = await studentService.getById(existingUserId);
+
+          if (existingUser != null) {
+            // User found - this is a successful login
+            stuCtrl.current.value = existingUser;
+
+            Get.snackbar('Welcome Back',
+                'Successfully signed in, ${existingUser.displayName}!',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.green[100],
+                colorText: Colors.green[900]);
+          } else {
+            // User ID was cached but user not found - treat as new signup
+            await stuCtrl.ensureProfileExists(
+              displayName: userName,
+              phone: userPhone,
+              language: 'Ghanaian Sign Language',
+              universityLevel: 'Level 100',
+            );
+
+            Get.snackbar('Welcome', 'Account created successfully!',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.green[100],
+                colorText: Colors.green[900]);
+          }
+        } else {
+          // This is a signup flow - create new profile
+          await stuCtrl.ensureProfileExists(
+            displayName: userName,
+            phone: userPhone,
+            language: 'Ghanaian Sign Language',
+            universityLevel: 'Level 100', // Updated to Level 100 as requested
+          );
+
+          Get.snackbar('Success', 'Account created successfully!',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.green[100],
+              colorText: Colors.green[900]);
+        }
+
+        // Clear existing user ID from preferences after successful processing
+        await prefs.remove('existing_user_id');
+
+        // Navigate to home page and clear navigation stack
+        Get.offAllNamed(Routes.STUDENT_HOME);
+      } catch (firestoreError) {
+        // If Firestore fails, show error and keep user on current page
+        Get.snackbar(
+            'Error', 'Failed to load profile: ${firestoreError.toString()}',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red[100],
+            colorText: Colors.red[900]);
+
+        // Clear Firebase Auth state if Firestore fails
+        await FirebaseAuth.instance.signOut();
+        await prefs.setBool('student_logged_in', false);
+
+        // Keep user on current page (OTP page) - don't navigate
+        return;
+      }
     } catch (e) {
       // Clear OTP fields on error
       clearOtpFields();
+
+      Get.snackbar('Error', 'Failed to verify OTP: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+          colorText: Colors.red[900]);
     } finally {
       isVerifyingOtp.value = false;
     }

@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
+import '../components/custom_app_bar.component.dart';
 import '../messages/interpreter_messages.screen.dart';
 import '../sessions/interpreter_sessions.screen.dart';
 import '../history/interpreter_history.screen.dart';
 import '../settings/interpreter_settings.screen.dart';
+import '../shared/controllers/interpreter_profile.controller.dart';
 import 'controllers/interpreter_home.controller.dart';
 import 'widgets/interpreter_dashboard.dart';
 import '../../../infrastructure/navigation/routes.dart';
@@ -29,67 +31,37 @@ class InterpreterHomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: RichText(
-          text: const TextSpan(
-            children: [
-              TextSpan(
-                text: 'Link',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
+      appBar: CustomAppBar(
+        profileImageUrl: Get.find<InterpreterProfileController>()
+            .profile
+            .value
+            ?.profilePictureUrl,
+        onHelpTap: () {
+          // Handle help button tap
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Help'),
+              content: const Text('How can we help you?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
                 ),
-              ),
-              TextSpan(
-                text: 'Signa',
-                style: TextStyle(
-                  color: Color(0xFF9C0057),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Get.snackbar('Notifications', 'No new notifications');
-            },
-            icon: const Icon(Icons.notifications_outlined, color: Colors.grey),
-          ),
-          IconButton(
-            onPressed: () => Get.toNamed(Routes.INTERPRETER_SESSIONS),
-            icon: const Icon(Icons.video_camera_front_outlined,
-                color: Colors.grey),
-            tooltip: 'Sessions',
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) async {
-              if (value == 'logout') {
-                await controller.logout();
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Logout'),
-                  ],
-                ),
-              ),
-            ],
-            child: const Icon(Icons.more_vert, color: Colors.grey),
-          ),
-          const SizedBox(width: 8),
-        ],
+              ],
+            ),
+          );
+        },
+        onNotificationTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Notifications clicked')),
+          );
+        },
+        onProfileTap: () {
+          // // Navigate to profile screen
+          // Get.toNamed(Routes.interpreterProfile);
+        },
+        hasNotification: false,
       ),
       body: Obx(() => pages[controller.selectedIndex.value]),
       bottomNavigationBar: Container(

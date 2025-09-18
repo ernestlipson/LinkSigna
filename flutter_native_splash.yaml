@@ -7,11 +7,11 @@ flutter_native_splash:
   # background_image: "assets/background.png"
 
   # Image displayed in the center of the splash screen
-  image: assets/splash-screen/splash.png
+  image: assets/icons/app_icon.png
 
   # Splash screen for Android 12+
   android_12:
-    image: assets/splash-screen/splash.png
+    image: assets/icons/app_icon.png
     color: "#FFFFFF"
 
   # iOS configuration

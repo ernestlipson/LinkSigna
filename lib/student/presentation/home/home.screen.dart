@@ -101,6 +101,9 @@ class _HomeScreenState extends State<HomeScreen> {
               profileImageUrl: userController.photoUrl.value.isNotEmpty
                   ? userController.photoUrl.value
                   : null, // Use null to show default avatar
+              localImagePath: userController.localImagePath.value.isNotEmpty
+                  ? userController.localImagePath.value
+                  : null, // Add this line
               hasNotification:
                   true, // Set to true to show the red notification dot
               onHelpTap: _onHelpTap,

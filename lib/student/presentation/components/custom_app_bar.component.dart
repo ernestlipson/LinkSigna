@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:io';
 
 import '../../infrastructure/utils/app_icons.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? profileImageUrl;
+  final String? localImagePath; // Add this parameter
   final VoidCallback? onHelpTap;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
@@ -13,6 +15,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
     this.profileImageUrl,
+    this.localImagePath, // Add this
     this.onHelpTap,
     this.onNotificationTap,
     this.onProfileTap,
@@ -73,23 +76,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ),
                   child: ClipOval(
-                    child: profileImageUrl != null &&
-                            profileImageUrl!.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: profileImageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              color: Colors.grey[300],
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.grey),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) =>
-                                _buildDefaultAvatar(),
-                          )
-                        : _buildDefaultAvatar(),
+                    child: _buildProfileImage(),
                   ),
                 ),
               ),
@@ -98,6 +85,39 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildProfileImage() {
+    // Prioritize local image over network image
+    if (localImagePath != null && localImagePath!.isNotEmpty) {
+      final file = File(localImagePath!);
+      if (file.existsSync()) {
+        return Image.file(
+          file,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+        );
+      }
+    }
+
+    // Fall back to network image
+    if (profileImageUrl != null && profileImageUrl!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: profileImageUrl!,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => Container(
+          color: Colors.grey[300],
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+          ),
+        ),
+        errorWidget: (context, url, error) => _buildDefaultAvatar(),
+      );
+    }
+
+    // Default avatar
+    return _buildDefaultAvatar();
   }
 
   Widget _buildDefaultAvatar() {
