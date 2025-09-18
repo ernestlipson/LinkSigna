@@ -2,8 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../config.dart';
-import '../../presentation/screens.dart';
-import 'bindings/controllers/controllers_bindings.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/inteerpreter.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_chat.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_home.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_otp.controller.binding.dart';
+import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_signin.controller.binding.dart';
+import '../../interpreter/presentation/sessions/interpreter_sessions.screen.dart';
+import 'package:sign_language_app/interpreter/presentation/sessions/controllers/interpreter_sessions.controller.dart';
+// Interpreter imports
+import '../../interpreter/presentation/screens.dart';
+import '../../interpreter/presentation/signin/signin.int.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/deaf_history.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/forgot_password.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/home.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/interpreters.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/login.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/otp.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/sessions.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/settings.controller.binding.dart';
+import '../../student/infrastructure/navigation/bindings/controllers/signup.controller.binding.dart';
+// Student imports
+import '../../student/presentation/screens.dart';
 import 'routes.dart';
 
 class EnvironmentsBadge extends StatelessWidget {
@@ -26,34 +46,76 @@ class EnvironmentsBadge extends StatelessWidget {
 class Nav {
   static List<GetPage> routes = [
     GetPage(
-      name: Routes.HOME,
+      name: Routes.STUDENT_HOME,
       page: () => const HomeScreen(),
       binding: HomeControllerBinding(),
     ),
     GetPage(
-      name: Routes.LOGIN,
+      name: Routes.STUDENT_LOGIN,
       page: () => const LoginScreen(),
       binding: LoginControllerBinding(),
     ),
     GetPage(
-      name: Routes.SIGNUP,
-      page: () => SignupScreen(),
+      name: Routes.STUDENT_SIGNUP,
+      page: () => StudentSignupScreen(),
       binding: SignupControllerBinding(),
     ),
     GetPage(
-      name: Routes.FORGOT_PASSWORD,
+      name: Routes.STUDENT_FORGOT_PASSWORD,
       page: () => const ForgotPasswordScreen(),
       binding: ForgotPasswordControllerBinding(),
     ),
     GetPage(
-      name: Routes.OTP,
+      name: Routes.STUDENT_OTP,
       page: () => const OtpScreen(),
       binding: OtpControllerBinding(),
     ),
     GetPage(
-      name: Routes.SESSIONS,
+      name: Routes.STUDENT_INTERPRETERS,
+      page: () => const StudentBookInterpretersScreen(),
+      binding: InterpretersControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.STUDENT_SESSIONS,
       page: () => const SessionsScreen(),
       binding: SessionsControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.STUDENT_DEAF_HISTORY,
+      page: () => const DeafHistoryScreen(),
+      binding: DeafHistoryControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.STUDENT_SETTINGS,
+      page: () => const SettingsScreen(),
+      binding: SettingsControllerBinding(),
+    ),
+
+    // Interpreter Routes
+    GetPage(
+      name: Routes.INTERPRETER_SIGNIN,
+      page: () => const InterpreterSignInScreen(),
+      binding: InterpreterSigninControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.INTERPRETER_SIGNUP,
+      page: () => const InterpreterSignupScreen(),
+      binding: InterpreterSignupControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.INTERPRETER_OTP,
+      page: () => const InterpreterOtpScreen(),
+      binding: InterpreterOtpControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.INTERPRETER_HOME,
+      page: () => const InterpreterHomeScreen(),
+      binding: InterpreterHomeControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.INTERPRETER_CHAT,
+      page: () => const InterpreterChatScreen(),
+      binding: InterpreterChatControllerBinding(),
     ),
     GetPage(
       name: Routes.INTERPRETER,
@@ -61,19 +123,11 @@ class Nav {
       binding: InterpreterControllerBinding(),
     ),
     GetPage(
-      name: Routes.DEAF_HISTORY,
-      page: () => const DeafHistoryScreen(),
-      binding: DeafHistoryControllerBinding(),
-    ),
-    GetPage(
-      name: Routes.SETTINGS,
-      page: () => const SettingsScreen(),
-      binding: SettingsControllerBinding(),
-    ),
-    GetPage(
-      name: Routes.INTEERPRETER,
-      page: () => const InteerpreterScreen(),
-      binding: InteerpreterControllerBinding(),
+      name: Routes.INTERPRETER_SESSIONS,
+      page: () => const InterpreterSessionsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => InterpreterSessionsController());
+      }),
     ),
   ];
 }

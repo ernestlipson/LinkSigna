@@ -1,32 +1,40 @@
 import 'package:flutter/material.dart';
 
-const Color primaryColor = Color(0xFF9E1068);
-const Color secondaryColor = Color(0xFFFCF8F8);
-const Color alternateColor = Color(0xFFD9D9D9);
-const textColor = Color(0xFF374151);
-const iconColor = Color(0xFF292D32);
+// Centralized color definitions
+class AppColors {
+  static const Color primary = Color(0xFF9E1068);
+  static const Color secondary = Color(0xFFFCF8F8);
+  static const Color alternate = Color(0xFFD9D9D9);
+  static const Color text = Color(0xFF374151);
+  static const Color icon = Color(0xFF292D32);
+}
 
-final ThemeData appTheme = ThemeData(
-  fontFamily: "WorkSans",
-  primaryColor: primaryColor,
-  hintColor: secondaryColor,
-  scaffoldBackgroundColor: secondaryColor,
-  textTheme: TextTheme().apply(
-    fontFamily: 'WorkSans',
-  ),
-  appBarTheme: AppBarTheme(
-    color: secondaryColor,
-    iconTheme: IconThemeData(color: primaryColor),
-  ),
-  buttonTheme: ButtonThemeData(
-    buttonColor: primaryColor,
-    textTheme: ButtonTextTheme.primary,
-  ),
-  colorScheme: ColorScheme.fromSwatch()
-      .copyWith(
-        primary: primaryColor,
-        secondary: secondaryColor,
-        surface: alternateColor,
-      )
-      .copyWith(surface: secondaryColor),
-);
+class AppTheme {
+  static ThemeData light() {
+    final base = ThemeData.light();
+    return base.copyWith(
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.secondary,
+      hintColor: AppColors.secondary,
+      textTheme: base.textTheme.apply(
+        fontFamily: 'WorkSans',
+        bodyColor: AppColors.text,
+        displayColor: AppColors.text,
+      ),
+      appBarTheme: const AppBarTheme(
+        color: AppColors.secondary,
+        iconTheme: IconThemeData(color: AppColors.primary),
+        elevation: 0,
+      ),
+      buttonTheme: const ButtonThemeData(
+        buttonColor: AppColors.primary,
+        textTheme: ButtonTextTheme.primary,
+      ),
+      colorScheme: base.colorScheme.copyWith(
+        primary: AppColors.primary,
+        secondary: AppColors.secondary,
+        surface: AppColors.alternate,
+      ),
+    );
+  }
+}

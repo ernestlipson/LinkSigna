@@ -1,18 +1,19 @@
+import 'package:email_otp/email_otp.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:email_otp/email_otp.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'infrastructure/navigation/bindings/global.binding.dart';
+import 'firebase_options.dart';
 import 'infrastructure/navigation/navigation.dart';
 import 'infrastructure/navigation/routes.dart';
 import 'infrastructure/theme/app_theme.dart';
-import 'presentation/shared/controllers/user.controller.dart';
+import 'student/infrastructure/navigation/bindings/global.binding.dart';
+import 'student/presentation/shared/controllers/user.controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Configure Email OTP
   EmailOTP.config(
     appName: 'LinkSigna',
     otpType: OTPType.numeric,
@@ -22,18 +23,27 @@ void main() async {
     otpLength: 6,
   );
 
-  // Decide initial route based on login status or returning user flag
-  final prefs = await SharedPreferences.getInstance();
-  final seenOnboardingOrReturning =
-      prefs.getBool('has_logged_in_before') ?? false;
-  final initial = seenOnboardingOrReturning ? Routes.HOME : Routes.initialRoute;
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  // Load user name and set it in UserController if user has logged in before
-  if (seenOnboardingOrReturning) {
-    final userName = prefs.getString('userName') ?? 'User';
+  final prefs = await SharedPreferences.getInstance();
+  final hasStudentLoggedIn = prefs.getBool('student_logged_in') ?? false;
+  final hasInterpreterLoggedIn =
+      prefs.getBool('interpreter_logged_in') ?? false;
+
+  final initial = hasInterpreterLoggedIn
+      ? Routes.INTERPRETER_HOME
+      : hasStudentLoggedIn
+          ? Routes.STUDENT_HOME
+          : Routes.initialRoute;
+
+  if (!Get.isRegistered<UserController>()) {
     Get.put(UserController());
+  }
+  if (hasStudentLoggedIn) {
     final userController = Get.find<UserController>();
-    userController.setUser(name: userName);
+    userController.setUser(name: prefs.getString('userName') ?? 'User');
   }
 
   runApp(Main(initialRoute: initial));
@@ -46,11 +56,9 @@ class Main extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      theme: appTheme.copyWith(
-          textTheme: appTheme.textTheme.apply(
-        fontFamily: 'WorkSans',
-      )),
-      initialBinding: GlobalBinding(), // Add global binding
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      initialBinding: GlobalBinding(),
       initialRoute: initialRoute,
       getPages: Nav.routes,
     );
