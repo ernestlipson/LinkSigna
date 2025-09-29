@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
+import '../components/signup_logo.dart';
 import 'controllers/interpreter_otp.controller.dart';
 
 class InterpreterOtpScreen extends StatelessWidget {
@@ -25,28 +26,7 @@ class InterpreterOtpScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              RichText(
-                text: const TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Link',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'Signa',
-                      style: TextStyle(
-                        color: Color(0xFF9C0057),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SignupLogo(),
               const SizedBox(height: 60),
               const Text(
                 'Email Verification',

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../../interpreter/presentation/components/signup_logo.dart';
 import '../components/app.button.dart';
 import 'controllers/otp.controller.dart';
 
@@ -24,10 +25,7 @@ class OtpScreen extends GetView<OtpController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: SvgPicture.asset("assets/icons/TravelIB.svg"),
-              ),
+              const SignupLogo(),
               const SizedBox(height: 60),
               const Text(
                 'Verification Code',

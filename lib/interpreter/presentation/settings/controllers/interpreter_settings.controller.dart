@@ -499,6 +499,21 @@ class InterpreterSettingsController extends GetxController {
     );
   }
 
+  // Logout
+  Future<void> logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Get.offAllNamed('/interpreter/signup');
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to logout: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   Future<void> _performAccountDeletion() async {
     try {
       final user = FirebaseAuth.instance.currentUser;

@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
@@ -8,6 +7,7 @@ import '../../../student/presentation/utils/screens.strings.dart';
 import '../../infrastructure/theme/app_theme.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
+import '../components/signup_logo.dart';
 import 'controllers/signup.int.controller.dart';
 
 class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
@@ -27,14 +27,7 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: SvgPicture.asset(
-                    "assets/icons/TravelIB.svg",
-                  ),
-                ),
-              ),
+              const SignupLogo(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 
 // Removed intl_phone_number_input in favor of CustomTextFormField for consistency
 import '../../../infrastructure/navigation/routes.dart';
-import '../../infrastructure/utils/app.constants.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
 import '../utils/screens.strings.dart';
@@ -16,9 +15,6 @@ class LoginScreen extends GetView<LoginController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: AppConstants.toolbarHeightXS,
-      ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

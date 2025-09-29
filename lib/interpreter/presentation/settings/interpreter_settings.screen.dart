@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../infrastructure/theme/app_theme.dart';
@@ -166,85 +167,66 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
           // Phone Number
           _buildPhoneNumberField(),
           const SizedBox(height: 16),
-
-          // Professional Information Section
-          const Text(
-            'Professional Information',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Experience Level
           _buildExperienceLevelField(),
           const SizedBox(height: 16),
 
           // Certification
-          _buildCertificationField(),
-          const SizedBox(height: 16),
+          _buildExperienceYearsField(),
 
-          // Languages
-          _buildFormField(
-            'Languages',
-            controller.languagesController,
-            'Ghanaian Sign Language',
-          ),
-          const SizedBox(height: 12),
-
-          // Add Language Button
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () => controller.addLanguage(),
-              icon: const Icon(Icons.add, color: AppColors.primary, size: 20),
-              label: const Text(
-                'Add Language',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
           const SizedBox(height: 24),
 
           // Save Changes Button
-          Align(
-            alignment: Alignment.centerRight,
-            child: Obx(() => ElevatedButton(
-                  onPressed: controller.isSaving.value
-                      ? null
-                      : () => controller.saveChangesAsync(),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 0),
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+          Obx(() => ElevatedButton(
+                onPressed: controller.isSaving.value
+                    ? null
+                    : () => controller.saveChangesAsync(),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 0),
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: controller.isSaving.value
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : const Text(
-                          'Save Changes',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: controller.isSaving.value
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
-                )),
+                      )
+                    : const Text(
+                        'Save Changes',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+              )),
+          const SizedBox(height: 20),
+
+          // Logout
+          OutlinedButton(
+            onPressed: () => controller.logout(),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 0),
+              foregroundColor: AppColors.primary,
+              side: BorderSide(color: AppColors.primary),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Logout',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
-          const SizedBox(height: 32),
+
+          const SizedBox(height: 40),
 
           // Delete Account Section
           const Text(
@@ -396,7 +378,7 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Experience Level',
+          'Professional Experience',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -404,41 +386,42 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
           ),
         ),
         const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => controller.selectExperienceLevel(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
+        // Multiline text field for entering professional experience
+        TextField(
+          controller: controller.experienceController,
+          keyboardType: TextInputType.multiline,
+          minLines: 1,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: controller.experienceController.text.isEmpty
+                ? 'Describe your professional experience'
+                : controller.experienceController.text,
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Obx(() => Text(
-                        controller.experience.value,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                      )),
-                ),
-                Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
-              ],
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
             ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildCertificationField() {
+  Widget _buildExperienceYearsField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Certification',
+          'Years in Sign Language',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -446,29 +429,29 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
           ),
         ),
         const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => controller.selectCertification(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
+        TextField(
+          controller: controller.certificationController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: InputDecoration(
+            hintText: controller.certificationController.text.isEmpty
+                ? 'Enter years of experience'
+                : controller.certificationController.text,
+            border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Obx(() => Text(
-                        controller.certification.value,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                      )),
-                ),
-                Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
-              ],
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
             ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            suffixText: 'yrs',
           ),
         ),
       ],

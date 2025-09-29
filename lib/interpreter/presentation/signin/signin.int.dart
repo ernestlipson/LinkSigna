@@ -6,6 +6,7 @@ import '../../../infrastructure/navigation/routes.dart';
 import '../../../infrastructure/theme/app_theme.dart';
 import '../components/app.button.dart';
 import '../components/app.field.dart';
+import '../components/signup_logo.dart';
 import 'controllers/signin.controller.dart';
 
 class InterpreterSignInScreen extends StatelessWidget {
@@ -22,9 +23,7 @@ class InterpreterSignInScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              const SizedBox(height: 60),
-              // LinkSigna Logo
-              _buildLogo(),
+              const SignupLogo(),
               const SizedBox(height: 60),
 
               // Log In Title
@@ -99,32 +98,6 @@ class InterpreterSignInScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLogo() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "Link",
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF2196F3), // Blue color
-            fontFamily: 'WorkSans',
-          ),
-        ),
-        Text(
-          "Signa",
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: AppColors.primary, // Magenta color
-            fontFamily: 'WorkSans',
-          ),
-        ),
-      ],
     );
   }
 }
