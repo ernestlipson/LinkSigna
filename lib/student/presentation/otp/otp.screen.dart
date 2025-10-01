@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/shared/components/signup_logo.dart';
 
-import '../../../interpreter/presentation/components/signup_logo.dart';
-import '../components/app.button.dart';
+import '../../../shared/components/app.button.dart';
 import 'controllers/otp.controller.dart';
 
 class OtpScreen extends GetView<OtpController> {
@@ -124,11 +123,9 @@ class OtpScreen extends GetView<OtpController> {
               const SizedBox(height: 32),
 
               Obx(() => CustomButton(
-                    text: controller.isVerifyingOtp.value
-                        ? 'Verifying...'
-                        : 'Verify Code',
+                    text: "Verify Code",
                     isLoading: controller.isVerifyingOtp.value,
-                    onPressed: controller.verifyOTP,
+                    onPressed: () => controller.verifyOTP(),
                   )),
               const SizedBox(height: 16),
             ],

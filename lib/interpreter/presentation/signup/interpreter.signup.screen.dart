@@ -1,13 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/shared/components/signup_logo.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
+import '../../../shared/components/app.field.dart';
 import '../../../student/presentation/utils/screens.strings.dart';
 import '../../infrastructure/theme/app_theme.dart';
-import '../components/app.button.dart';
-import '../components/app.field.dart';
-import '../components/signup_logo.dart';
+import '../../../shared/components/app.button.dart';
 import 'controllers/signup.int.controller.dart';
 
 class InterpreterSignupScreen extends GetView<InterpreterSignupController> {

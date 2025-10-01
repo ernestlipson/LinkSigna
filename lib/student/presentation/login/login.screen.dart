@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
-// Removed intl_phone_number_input in favor of CustomTextFormField for consistency
 import '../../../infrastructure/navigation/routes.dart';
-import '../components/app.button.dart';
-import '../components/app.field.dart';
+import '../../../shared/components/app.button.dart';
+import '../../../shared/components/app.field.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/login.controller.dart';
 
@@ -86,11 +85,12 @@ class LoginScreen extends GetView<LoginController> {
 
                   SizedBox(height: 20),
                   Obx(() => CustomButton(
+                        isLoading: controller.isPhoneOtpLoading.value,
                         text: controller.isPhoneOtpLoading.value
                             ? "Sending OTP..."
                             : "Log In",
                         onPressed: controller.isPhoneOtpLoading.value
-                            ? () {} // Disabled when loading
+                            ? () {}
                             : () => controller.sendPhoneOTP(),
                       )),
                   SizedBox(height: 24),

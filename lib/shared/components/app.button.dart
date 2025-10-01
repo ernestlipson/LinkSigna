@@ -36,8 +36,9 @@ class CustomButton extends StatelessWidget {
       height: 44,
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       decoration: BoxDecoration(
-        color:
-            color ?? const Color(0xFF9E1068), // Use provided color or default
+        color: isLoading
+            ? const Color.fromARGB(255, 233, 189, 216)
+            : (color ?? const Color(0xFF9E1068)),
         borderRadius: BorderRadius.circular(8),
         boxShadow: const [
           BoxShadow(
@@ -55,8 +56,15 @@ class CustomButton extends StatelessWidget {
           onTap: isLoading ? null : onPressed,
           child: Center(
             child: isLoading
-                ? const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ? Container(
+                    // padding: const EdgeInsets.all(12.0),
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.white,
+                        )),
                   )
                 : icon != null
                     ? Row(

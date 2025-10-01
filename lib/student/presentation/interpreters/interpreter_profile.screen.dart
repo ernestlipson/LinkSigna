@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../shared/components/payment_modal.component.dart';
 import '../../infrastructure/theme/app_theme.dart';
-import '../components/payment_modal.component.dart';
 import 'controllers/interpreters.controller.dart';
 
 class InterpreterProfileScreen extends StatelessWidget {

@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
 import '../../../infrastructure/theme/app_theme.dart';
-import '../components/app.button.dart';
-import '../components/app.field.dart';
-import '../components/signup_logo.dart';
+import '../../../shared/components/app.button.dart';
+import '../../../shared/components/app.field.dart';
+import '../../../shared/components/signup_logo.dart';
 import 'controllers/signin.controller.dart';
 
 class InterpreterSignInScreen extends StatelessWidget {
@@ -60,6 +60,7 @@ class InterpreterSignInScreen extends StatelessWidget {
                     text: controller.isSubmitting.value
                         ? "Sending OTP..."
                         : "Log In",
+                    isLoading: controller.isSubmitting.value,
                     onPressed: controller.isSubmitting.value
                         ? () {}
                         : () => controller.submit(),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../../../shared/components/app.button.dart';
+import '../../../shared/components/app.field.dart';
 import '../../infrastructure/utils/app.constants.dart';
-import '../components/app.button.dart';
-import '../components/app.field.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/forgot_password.controller.dart';
 

@@ -17,7 +17,7 @@ void main() async {
   EmailOTP.config(
     appName: 'LinkSigna',
     otpType: OTPType.numeric,
-    expiry: 300000, // 5 minutes
+    expiry: 300000,
     emailTheme: EmailTheme.v6,
     appEmail: 'noreply@linksigna.com',
     otpLength: 6,

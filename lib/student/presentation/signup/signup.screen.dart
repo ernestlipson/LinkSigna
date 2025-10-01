@@ -4,9 +4,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
+import '../../../shared/components/app.button.dart';
+import '../../../shared/components/app.field.dart';
 import '../../infrastructure/theme/app_theme.dart';
-import '../components/app.button.dart';
-import '../components/app.field.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/signup.controller.dart';
 
@@ -30,7 +30,6 @@ class StudentSignupScreen extends GetView<SignupController> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Radio buttons for user type selection
                 Obx(() => Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -58,7 +57,6 @@ class StudentSignupScreen extends GetView<SignupController> {
                           groupValue: controller.selectedUserType.value,
                           onChanged: (String? value) {
                             controller.selectedUserType.value = value!;
-                            // Immediately navigate to interpreter sign-up flow
                             Get.offAllNamed('/interpreter/signup');
                           },
                           activeColor: AppColors.primary,
@@ -163,7 +161,7 @@ class StudentSignupScreen extends GetView<SignupController> {
                       isLoading: controller.isPhoneOtpLoading.value,
                       text: ScreenStrings.signUpButton,
                       onPressed: controller.isPhoneOtpLoading.value
-                          ? null
+                          ? () {}
                           : () => controller.signUp(),
                     )),
                 SizedBox(height: 30),
@@ -172,8 +170,7 @@ class StudentSignupScreen extends GetView<SignupController> {
                     text: TextSpan(
                       text: ScreenStrings.alreadyHaveAccount,
                       style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w400), // Default text style
+                          color: Colors.black, fontWeight: FontWeight.w400),
                       children: [
                         TextSpan(
                           text: ScreenStrings.loginText,
