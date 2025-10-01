@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../shared/components/payment_modal.component.dart';
 import '../interpreter.screen.dart';
 import '../interpreter_profile.screen.dart';
-import '../../components/payment_modal.component.dart';
 
 class InterpreterController extends GetxController {
   final RxList<InterpreterData> interpreters = <InterpreterData>[].obs;
