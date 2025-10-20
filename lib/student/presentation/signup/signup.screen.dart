@@ -18,15 +18,14 @@ class StudentSignupScreen extends GetView<SignupController> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: SafeArea(
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: SvgPicture.asset(
-                "assets/icons/TravelIB.svg",
-              ),
+            SvgPicture.asset(
+              "assets/icons/TravelIB.svg",
             ),
+            SizedBox(height: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -97,42 +96,69 @@ class StudentSignupScreen extends GetView<SignupController> {
                 }),
                 SizedBox(height: 10),
                 Obx(() => CustomTextFormField(
-                      hintText: ScreenStrings.phoneHint,
-                      labelText: ScreenStrings.phoneLabel,
-                      controller: controller.phoneController,
+                      hintText: ScreenStrings.emailHint,
+                      labelText: ScreenStrings.emailLabel,
+                      controller: controller.emailController,
                       isRequired: true,
-                      keyboardType: TextInputType.phone,
-                      errorText: controller.isPhoneValid.value
+                      keyboardType: TextInputType.emailAddress,
+                      errorText: controller.isEmailValid.value
                           ? null
-                          : controller.phoneController.text.trim().isEmpty
-                              ? ScreenStrings.requiredFieldError
-                              : ScreenStrings.phoneValidationError,
-                      onChanged: (_) => controller.validatePhone(),
-                      prefix: Obx(() => controller.isLoadingFlag.value
-                          ? Container(
-                              padding: const EdgeInsets.all(12.0),
-                              width: 10,
-                              height: 10,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    const Color.fromARGB(255, 206, 186, 198)),
-                              ),
-                            )
-                          : controller.countryFlagUrl.value.isNotEmpty
-                              ? Padding(
-                                  padding: const EdgeInsets.all(10.0),
-                                  child: Image.network(
-                                    controller.countryFlagUrl.value,
-                                    width: 16,
-                                    height: 16,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Text('🇬🇭');
-                                    },
-                                  ),
-                                )
-                              : Text('🇬🇭')),
+                          : ScreenStrings.requiredFieldError,
+                      onChanged: (value) => controller.validateEmail(),
                     )),
+                SizedBox(height: 10),
+                Obx(() => CustomTextFormField(
+                      hintText: ScreenStrings.passwordHint,
+                      labelText: ScreenStrings.passwordLabel,
+                      controller: controller.passwordController,
+                      isRequired: true,
+                      obscureText: true,
+                      errorText: controller.isPasswordValid.value
+                          ? null
+                          : ScreenStrings.requiredFieldError,
+                      onChanged: (value) => controller.validatePassword(),
+                    )),
+                SizedBox(height: 10),
+                Obx(() => _buildUniversityField()),
+                SizedBox(height: 10),
+
+                // Obx(() => CustomTextFormField(
+                //       hintText: ScreenStrings.phoneHint,
+                //       labelText: ScreenStrings.phoneLabel,
+                //       controller: controller.phoneController,
+                //       isRequired: true,
+                //       keyboardType: TextInputType.phone,
+                //       errorText: controller.isPhoneValid.value
+                //           ? null
+                //           : controller.phoneController.text.trim().isEmpty
+                //               ? ScreenStrings.requiredFieldError
+                //               : ScreenStrings.phoneValidationError,
+                //       onChanged: (_) => controller.validatePhone(),
+                //       prefix: Obx(() => controller.isLoadingFlag.value
+                //           ? Container(
+                //               padding: const EdgeInsets.all(12.0),
+                //               width: 10,
+                //               height: 10,
+                //               child: CircularProgressIndicator(
+                //                 strokeWidth: 2,
+                //                 valueColor: AlwaysStoppedAnimation<Color>(
+                //                     const Color.fromARGB(255, 206, 186, 198)),
+                //               ),
+                //             )
+                //           : controller.countryFlagUrl.value.isNotEmpty
+                //               ? Padding(
+                //                   padding: const EdgeInsets.all(10.0),
+                //                   child: Image.network(
+                //                     controller.countryFlagUrl.value,
+                //                     width: 16,
+                //                     height: 16,
+                //                     errorBuilder: (context, error, stackTrace) {
+                //                       return Text('🇬🇭');
+                //                     },
+                //                   ),
+                //                 )
+                //               : Text('🇬🇭')),
+                //     )),
                 SizedBox(height: 10),
                 Row(
                   children: [
@@ -177,21 +203,180 @@ class StudentSignupScreen extends GetView<SignupController> {
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
-                          ), // Colored text
+                          ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
-                              Get.offAndToNamed(Routes
-                                  .STUDENT_LOGIN); // Navigate to login page
+                              Get.offAndToNamed(
+                                Routes.STUDENT_LOGIN,
+                              );
                             },
                         ),
                       ],
                     ),
                   ),
                 ),
+                SizedBox(height: 70),
               ],
             ),
           ]),
         ),
+      ),
+    );
+  }
+
+  Widget _buildUniversityField() {
+    return SizedBox(
+      height: 90,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'University ',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+                TextSpan(
+                  text: '*',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 4),
+          GestureDetector(
+            onTap: () => _showUniversityBottomSheet(),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: controller.isUniversityValid.value
+                      ? Colors.grey[300]!
+                      : Colors.red,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        controller.selectedUniversity.value.isEmpty
+                            ? ScreenStrings.universityHint
+                            : controller.selectedUniversity.value,
+                        style: TextStyle(
+                          color: controller.selectedUniversity.value.isEmpty
+                              ? Colors.grey[600]
+                              : Colors.black,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.grey[600],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUniversityBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(height: 20),
+            // Title
+            Text(
+              'Select University',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 20),
+            ...controller.universities.map((university) => Obx(
+                  () => _buildUniversityListItem(university),
+                )),
+            SizedBox(height: 20),
+          ],
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildUniversityListItem(String university) {
+    final isSelected = controller.selectedUniversity.value == university;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? Color(0xFFFFF0F5) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : Colors.grey[200]!,
+          width: isSelected ? 1 : 0.5,
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 4,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        title: Text(
+          university,
+          style: TextStyle(
+            color: isSelected ? AppColors.primary : Colors.grey[800],
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 14,
+          ),
+        ),
+        onTap: () {
+          controller.selectUniversity(university);
+          Get.back();
+        },
       ),
     );
   }

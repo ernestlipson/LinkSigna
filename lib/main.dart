@@ -1,5 +1,6 @@
 import 'package:email_otp/email_otp.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,20 +29,18 @@ void main() async {
   );
 
   final prefs = await SharedPreferences.getInstance();
-  final hasStudentLoggedIn = prefs.getBool('student_logged_in') ?? false;
   final hasInterpreterLoggedIn =
       prefs.getBool('interpreter_logged_in') ?? false;
 
+  final firebaseUser = FirebaseAuth.instance.currentUser;
   final initial = hasInterpreterLoggedIn
       ? Routes.INTERPRETER_HOME
-      : hasStudentLoggedIn
-          ? Routes.STUDENT_HOME
-          : Routes.initialRoute;
+      : (firebaseUser != null ? Routes.STUDENT_HOME : Routes.initialRoute);
 
   if (!Get.isRegistered<UserController>()) {
     Get.put(UserController());
   }
-  if (hasStudentLoggedIn) {
+  if (firebaseUser != null) {
     final userController = Get.find<UserController>();
     userController.setUser(name: prefs.getString('userName') ?? 'User');
   }

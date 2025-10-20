@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../../../infrastructure/navigation/routes.dart';
 import '../../../shared/components/app.button.dart';
 import '../../../shared/components/app.field.dart';
+import '../../infrastructure/theme/app_theme.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/login.controller.dart';
 
@@ -21,7 +22,7 @@ class LoginScreen extends GetView<LoginController> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
+                padding: const EdgeInsets.symmetric(vertical: 0),
                 child: SvgPicture.asset(
                   "assets/icons/TravelIB.svg",
                 ),
@@ -32,66 +33,95 @@ class LoginScreen extends GetView<LoginController> {
                   Text(
                     "Log In",
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
-                  // Name Field
                   SizedBox(height: 30),
-                  Obx(() => CustomTextFormField(
-                        hintText: ScreenStrings.phoneHint,
-                        labelText: ScreenStrings.phoneLabel,
-                        controller: controller.phoneController,
-                        isRequired: true,
-                        keyboardType: TextInputType.phone,
-                        errorText: controller.isPhoneValid.value
-                            ? null
-                            : controller.phoneController.text.trim().isEmpty
-                                ? ScreenStrings.requiredFieldError
-                                : ScreenStrings.phoneValidationError,
-                        onChanged: (_) => controller.validatePhone(),
-                        prefix: controller.isLoadingFlag.value
-                            ? Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        const Color.fromARGB(
-                                            255, 206, 186, 198)),
-                                  ),
-                                ),
-                              )
-                            : controller.countryFlagUrl.value.isNotEmpty
-                                ? Padding(
-                                    padding: const EdgeInsets.all(10.0),
-                                    child: Image.network(
-                                      controller.countryFlagUrl.value,
-                                      width: 16,
-                                      height: 16,
-                                      errorBuilder: (context, error, stack) {
-                                        return const Text('🇬🇭');
-                                      },
-                                    ),
-                                  )
-                                : const Padding(
-                                    padding: EdgeInsets.all(10.0),
-                                    child: Text('🇬🇭'),
-                                  ),
-                      )),
-                  SizedBox(height: 10),
 
-                  SizedBox(height: 20),
+                  // Email Field
+                  Obx(() => CustomTextFormField(
+                        hintText: "ama@gmail.com",
+                        labelText: "University Email (.gh only)",
+                        controller: controller.emailController,
+                        isRequired: true,
+                        keyboardType: TextInputType.emailAddress,
+                        errorText: controller.isEmailValid.value
+                            ? null
+                            : controller.emailController.text.trim().isEmpty
+                                ? ScreenStrings.requiredFieldError
+                                : ScreenStrings.emailValidationError,
+                        onChanged: (value) => controller.validateEmail(),
+                      )),
+                  SizedBox(height: 16),
+
+                  // Password Field
+                  Obx(() => CustomTextFormField(
+                        hintText: ScreenStrings.passwordHint,
+                        labelText: ScreenStrings.passwordLabel,
+                        controller: controller.passwordController,
+                        isRequired: true,
+                        obscureText: !controller.isPasswordVisible.value,
+                        errorText: controller.isPasswordValid.value
+                            ? null
+                            : controller.passwordController.text.trim().isEmpty
+                                ? ScreenStrings.requiredFieldError
+                                : ScreenStrings.passwordValidationError,
+                        onChanged: (value) => controller.validatePassword(),
+                        suffix: GestureDetector(
+                          onTap: () => controller.togglePasswordVisibility(),
+                          child: Icon(
+                            controller.isPasswordVisible.value
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      )),
+                  SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Obx(() => Switch(
+                            value: controller.isRememberMe.value,
+                            onChanged: (value) {
+                              controller.isRememberMe.value = value;
+                            },
+                            activeColor: AppColors.primary,
+                            activeTrackColor:
+                                AppColors.primary.withOpacity(0.2),
+                          )),
+                      Text(
+                        ScreenStrings.rememberMe,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Spacer(),
+                      GestureDetector(
+                        onTap: () => controller.sendPasswordReset(),
+                        child: Text(
+                          ScreenStrings.forgotPassword,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+
+                  // Login Button
                   Obx(() => CustomButton(
-                        isLoading: controller.isPhoneOtpLoading.value,
-                        text: controller.isPhoneOtpLoading.value
-                            ? "Sending OTP..."
-                            : "Log In",
-                        onPressed: controller.isPhoneOtpLoading.value
+                        isLoading: controller.isLoading.value,
+                        text: "Log in",
+                        onPressed: controller.isLoading.value
                             ? () {}
-                            : () => controller.sendPhoneOTP(),
+                            : () => controller.login(),
                       )),
                   SizedBox(height: 24),
 
@@ -107,10 +137,9 @@ class LoginScreen extends GetView<LoginController> {
                             text: "Don't have an account? ",
                           ),
                           TextSpan(
-                            text: "SignUp",
+                            text: "Sign Up",
                             style: TextStyle(
-                              color: Color(0xFF9E1068),
-                              // decoration: TextDecoration.underline,
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w600,
                             ),
                             recognizer: TapGestureRecognizer()

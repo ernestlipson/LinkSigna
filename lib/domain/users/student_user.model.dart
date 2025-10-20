@@ -9,6 +9,8 @@ class StudentUser {
   final String? phone;
   final String? avatarUrl;
   final String? bio;
+  final String?
+      university; // University name (e.g. "University of Ghana, Legon")
   final String? universityLevel; // e.g. Level 400
   final String? language; // e.g. Ghanaian Sign Language
   final DateTime? createdAt;
@@ -23,6 +25,7 @@ class StudentUser {
     this.phone,
     this.avatarUrl,
     this.bio,
+    this.university,
     this.universityLevel,
     this.language,
     this.createdAt,
@@ -46,6 +49,7 @@ class StudentUser {
       phone: data['phone'],
       avatarUrl: data['avatarUrl'],
       bio: data['bio'],
+      university: data['university'],
       universityLevel: data['university_level'],
       language: data['language'],
       createdAt: _toDate(data['createdAt']),
@@ -68,6 +72,7 @@ class StudentUser {
       'phone': phone,
       'avatarUrl': avatarUrl,
       'bio': bio,
+      'university': university,
       'university_level': universityLevel,
       'language': language,
       if (!isUpdate) 'createdAt': FieldValue.serverTimestamp(),
@@ -81,6 +86,7 @@ class StudentUser {
     String? phone,
     String? avatarUrl,
     String? bio,
+    String? university,
     String? universityLevel,
     String? language,
     String? authUid,
@@ -94,6 +100,7 @@ class StudentUser {
       phone: phone ?? this.phone,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       bio: bio ?? this.bio,
+      university: university ?? this.university,
       universityLevel: universityLevel ?? this.universityLevel,
       language: language ?? this.language,
       createdAt: createdAt,

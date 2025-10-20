@@ -4,11 +4,15 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
+import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
 import '../../shared/controllers/country.controller.dart';
 
 class SignupController extends GetxController {
   final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   final phoneController = TextEditingController();
+  final universityController = TextEditingController();
 
   // User type selection
   final RxString selectedUserType = 'student'.obs;
@@ -24,7 +28,13 @@ class SignupController extends GetxController {
   CountryController get countryController => Get.find<CountryController>();
 
   final isNameValid = true.obs;
+  final isEmailValid = true.obs;
+  final isPasswordValid = true.obs;
   final isPhoneValid = true.obs;
+  final isUniversityValid = true.obs;
+
+  // Selected university
+  final RxString selectedUniversity = ''.obs;
 
   // Country flag for phone field
   final RxString countryFlagUrl = ''.obs;
@@ -34,6 +44,17 @@ class SignupController extends GetxController {
     isNameValid.value = nameController.text.trim().isNotEmpty;
   }
 
+  void validateEmail() {
+    final value = emailController.text.trim();
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.gh$');
+    isEmailValid.value = emailRegex.hasMatch(value);
+  }
+
+  void validatePassword() {
+    final value = passwordController.text.trim();
+    isPasswordValid.value = value.length >= 6;
+  }
+
   void validatePhone() {
     final value = phoneController.text.trim();
     final phoneRegex =
@@ -41,10 +62,20 @@ class SignupController extends GetxController {
     isPhoneValid.value = phoneRegex.hasMatch(value);
   }
 
+  void validateUniversity() {
+    isUniversityValid.value = selectedUniversity.value.isNotEmpty;
+  }
+
   bool validateAll() {
     validateName();
-    validatePhone();
-    return isNameValid.value && isPhoneValid.value && isTermsAccepted.value;
+    validateEmail();
+    validatePassword();
+    validateUniversity();
+    return isNameValid.value &&
+        isEmailValid.value &&
+        isPasswordValid.value &&
+        isUniversityValid.value &&
+        isTermsAccepted.value;
   }
 
   Future<void> signUp() async {
@@ -63,44 +94,72 @@ class SignupController extends GetxController {
 
     isPhoneOtpLoading.value = true;
     try {
-      final phone = phoneController.text.trim();
-      await verifyPhoneNumber(phone);
+      // Create Firebase Auth user with email/password
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
 
+      // Update Firebase Auth displayName
+      await credential.user?.updateDisplayName(nameController.text.trim());
+
+      // Create Firestore user document
+      final studentService = Get.find<StudentUserFirestoreService>();
+      await studentService.getOrCreateByAuthUid(
+        authUid: credential.user!.uid,
+        displayName: nameController.text.trim(),
+        email: emailController.text.trim(),
+        university: selectedUniversity.value,
+      );
+
+      // Save to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('student_logged_in', true);
       await prefs.setString('userName', nameController.text.trim());
-      await prefs.setString('userPhone', phone);
+      await prefs.setString('userEmail', emailController.text.trim());
+
+      // Navigate to home
+      Get.offAllNamed(Routes.STUDENT_HOME);
+
+      Get.snackbar('Success', 'Account created successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green[100],
+          colorText: Colors.green[900]);
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Signup failed';
+      if (e.code == 'weak-password') {
+        errorMessage = 'Password is too weak';
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = 'An account already exists with this email';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Invalid email format';
+      }
+
+      Get.snackbar('Signup Failed', errorMessage,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+          colorText: Colors.red[900]);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to send OTP: ${e.toString()}',
+      Get.snackbar('Error', 'Signup failed: ${e.toString()}',
           snackPosition: SnackPosition.BOTTOM);
     } finally {
       isPhoneOtpLoading.value = false;
     }
   }
 
-  Future<void> verifyPhoneNumber(String phoneNumber) async {
-    try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phoneNumber.startsWith('+233')
-            ? phoneNumber
-            : '+233${phoneNumber.startsWith('0') ? phoneNumber.substring(1) : phoneNumber}',
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await FirebaseAuth.instance.signInWithCredential(credential);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          Get.snackbar(
-              'Error', 'Failed to verify phone number: ${e.toString()}',
-              snackPosition: SnackPosition.BOTTOM);
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          otpUserId.value = verificationId;
-          Get.toNamed(Routes.STUDENT_OTP, arguments: {
-            'phone': phoneNumber,
-            'verificationId': verificationId,
-          });
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {},
-      );
-    } catch (e) {}
+  final List<String> universities = [
+    'Takoradi Technical University (TTU)',
+    'University of Education, Winneba (UEW)',
+    'Kwame Nkrumah University of Science and Technology (KNUST)',
+    'University of Ghana, Legon',
+    'Other Ghana University',
+  ];
+
+  void selectUniversity(String university) {
+    selectedUniversity.value = university;
+    universityController.text = university;
+    validateUniversity();
   }
 
   @override
@@ -115,17 +174,13 @@ class SignupController extends GetxController {
       final countryController = Get.find<CountryController>();
       await countryController.fetchCountryFlag();
 
-      // Get the flag URL from the country controller
       if (countryController.countryFlag.value != null) {
-        // Use PNG for better compatibility
         countryFlagUrl.value = countryController.countryFlag.value!.png;
       } else {
-        // Fallback to Ghana flag if no flag is available
         countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
       }
     } catch (e) {
       Get.log('Error fetching country flag: $e');
-      // Fallback to Ghana flag on error
       countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
     } finally {
       isLoadingFlag.value = false;

@@ -56,6 +56,7 @@ class StudentUserFirestoreService extends GetxService {
     String? displayName,
     String? phone,
     String? email,
+    String? university,
     String? universityLevel,
     String? language,
     String? bio,
@@ -72,10 +73,13 @@ class StudentUserFirestoreService extends GetxService {
       phone: phone,
       avatarUrl: null,
       bio: bio,
+      university: university,
       universityLevel: universityLevel,
       language: language,
     );
-    await _col.doc(id).set(user.toMap(isUpdate: false), SetOptions(merge: true));
+    await _col
+        .doc(id)
+        .set(user.toMap(isUpdate: false), SetOptions(merge: true));
     return user;
   }
 
