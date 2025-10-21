@@ -8,7 +8,6 @@ import '../messages/interpreter_messages.screen.dart';
 import '../sessions/interpreter_sessions.screen.dart';
 import '../history/interpreter_history.screen.dart';
 import '../settings/interpreter_settings.screen.dart';
-import '../shared/controllers/interpreter_profile.controller.dart';
 import 'controllers/interpreter_home.controller.dart';
 import 'widgets/interpreter_dashboard.dart';
 
@@ -19,7 +18,6 @@ class InterpreterHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(InterpreterHomeController());
 
-    // Define the pages for each tab
     final List<Widget> pages = [
       const InterpreterDashboard(),
       InterpreterSessionsScreen(),
@@ -31,34 +29,13 @@ class InterpreterHomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
-        profileImageUrl: Get.find<InterpreterProfileController>()
-            .profile
-            .value
-            ?.profilePictureUrl,
-        onHelpTap: () {
-          // Handle help button tap
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Help'),
-              content: const Text('How can we help you?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-          );
-        },
         onNotificationTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Notifications clicked')),
           );
         },
         onProfileTap: () {
-          // // Navigate to profile screen
-          // Get.toNamed(Routes.interpreterProfile);
+          Get.to(() => const InterpreterSettingsScreen(showBackButton: true));
         },
         hasNotification: false,
       ),

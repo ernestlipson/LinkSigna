@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../infrastructure/utils/app_icons.dart';
+import '../shared/controllers/interpreter_profile.controller.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? profileImageUrl;
@@ -72,15 +75,26 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                   ),
                   child: ClipOval(
-                    child: profileImageUrl != null
-                        ? Image.network(
-                            profileImageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildDefaultAvatar();
-                            },
-                          )
-                        : _buildDefaultAvatar(),
+                    child: Obx(() {
+                      // Get profile image from InterpreterProfileController
+                      final profileController =
+                          Get.find<InterpreterProfileController>();
+                      final currentProfileImageUrl =
+                          profileController.profile.value?.profilePictureUrl;
+
+                      if (currentProfileImageUrl != null &&
+                          currentProfileImageUrl.isNotEmpty) {
+                        return CachedNetworkImage(
+                          imageUrl: currentProfileImageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => _buildDefaultAvatar(),
+                          errorWidget: (context, url, error) =>
+                              _buildDefaultAvatar(),
+                        );
+                      } else {
+                        return _buildDefaultAvatar();
+                      }
+                    }),
                   ),
                 ),
               ),

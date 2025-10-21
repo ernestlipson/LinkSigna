@@ -1,16 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class StudentUser {
-  final String uid; // Firestore document id (auto generated)
-  final String? authUid; // Firebase Auth UID reference
-  final String role; // always 'student'
+  final String uid;
+  final String? authUid;
+  final String role;
   final String? displayName;
   final String? email;
   final String? phone;
   final String? avatarUrl;
   final String? bio;
-  final String? universityLevel; // e.g. Level 400
-  final String? language; // e.g. Ghanaian Sign Language
+  final String? university;
+  final String? universityLevel;
+  final String? language;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -23,6 +24,7 @@ class StudentUser {
     this.phone,
     this.avatarUrl,
     this.bio,
+    this.university,
     this.universityLevel,
     this.language,
     this.createdAt,
@@ -32,7 +34,6 @@ class StudentUser {
   factory StudentUser.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
 
-    // Combine firstname and lastname into displayName
     final firstName = data['firstname'] ?? '';
     final lastName = data['lastname'] ?? '';
     final combinedName = '$firstName $lastName'.trim();
@@ -46,6 +47,7 @@ class StudentUser {
       phone: data['phone'],
       avatarUrl: data['avatarUrl'],
       bio: data['bio'],
+      university: data['university'],
       universityLevel: data['university_level'],
       language: data['language'],
       createdAt: _toDate(data['createdAt']),
@@ -54,7 +56,6 @@ class StudentUser {
   }
 
   Map<String, dynamic> toMap({bool isUpdate = false}) {
-    // Split displayName into firstname and lastname for Firestore
     final nameParts = displayName?.split(' ') ?? [];
     final firstName = nameParts.isNotEmpty ? nameParts.first : '';
     final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
@@ -68,6 +69,7 @@ class StudentUser {
       'phone': phone,
       'avatarUrl': avatarUrl,
       'bio': bio,
+      'university': university,
       'university_level': universityLevel,
       'language': language,
       if (!isUpdate) 'createdAt': FieldValue.serverTimestamp(),
@@ -81,6 +83,7 @@ class StudentUser {
     String? phone,
     String? avatarUrl,
     String? bio,
+    String? university,
     String? universityLevel,
     String? language,
     String? authUid,
@@ -94,6 +97,7 @@ class StudentUser {
       phone: phone ?? this.phone,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       bio: bio ?? this.bio,
+      university: university ?? this.university,
       universityLevel: universityLevel ?? this.universityLevel,
       language: language ?? this.language,
       createdAt: createdAt,

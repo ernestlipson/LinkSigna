@@ -4,7 +4,7 @@ class SessionModel {
   final String interpreterId;
   final String className;
   final DateTime startTime;
-  final String status; // Pending | Confirmed | Cancelled
+  final String status;
   final String channelId;
 
   SessionModel({

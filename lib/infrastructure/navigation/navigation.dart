@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../config.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/inteerpreter.controller.binding.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter.controller.binding.dart';
 import '../../interpreter/infrastructure/navigation/bindings/controllers/interpreter_chat.controller.binding.dart';
@@ -22,26 +20,8 @@ import '../../student/infrastructure/navigation/bindings/controllers/otp.control
 import '../../student/infrastructure/navigation/bindings/controllers/sessions.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/settings.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/signup.controller.binding.dart';
-// Student imports
 import '../../student/presentation/screens.dart';
 import 'routes.dart';
-
-class EnvironmentsBadge extends StatelessWidget {
-  final Widget child;
-  const EnvironmentsBadge({super.key, required this.child});
-  @override
-  Widget build(BuildContext context) {
-    var env = ConfigEnvironments.getEnvironments()['env'];
-    return env != Environments.PRODUCTION
-        ? Banner(
-            location: BannerLocation.topStart,
-            message: env!,
-            color: env == Environments.QAS ? Colors.blue : Colors.purple,
-            child: child,
-          )
-        : SizedBox(child: child);
-  }
-}
 
 class Nav {
   static List<GetPage> routes = [

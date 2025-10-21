@@ -18,15 +18,10 @@ class InterpreterDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome Section
           _buildWelcomeSection(),
           const SizedBox(height: 24),
-
-          // Upcoming Sessions Section
           _buildUpcomingSessionsSection(controller),
           const SizedBox(height: 24),
-
-          // History Section
           _buildHistorySection(controller),
         ],
       ),
@@ -103,6 +98,7 @@ class InterpreterDashboard extends StatelessWidget {
               const SizedBox(height: 12),
               if (controller.upcomingSessions.isEmpty)
                 Container(
+                  margin: const EdgeInsets.only(bottom: 16),
                   height: 120,
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -168,6 +164,7 @@ class InterpreterDashboard extends StatelessWidget {
               const SizedBox(height: 12),
               if (controller.historySessions.isEmpty)
                 Container(
+                  margin: const EdgeInsets.only(bottom: 16),
                   height: 120,
                   width: double.infinity,
                   decoration: BoxDecoration(

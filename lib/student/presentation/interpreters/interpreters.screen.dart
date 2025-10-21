@@ -14,7 +14,7 @@ class StudentBookInterpretersScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: Size.zero, // Hide the app bar
+        preferredSize: Size.zero,
         child: AppBar(
           toolbarHeight: 0,
           elevation: 0,

@@ -7,7 +7,7 @@ class SessionHistoryModel {
   final DateTime date;
   final String time;
   final SessionHistoryStatus status;
-  final int rating; // 1-5 stars, 0 if not rated
+  final int rating;
   final bool hasFeedback;
   final String? feedbackText;
 

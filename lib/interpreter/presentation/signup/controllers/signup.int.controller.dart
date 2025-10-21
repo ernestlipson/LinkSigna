@@ -1,68 +1,63 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:email_otp/email_otp.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
+import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
+import '../../../../shared/utils/validation_utils.dart';
 
 class InterpreterSignupController extends GetxController {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   // Validation state
   final isNameValid = true.obs;
   final isEmailValid = true.obs;
+  final isPasswordValid = true.obs;
+  final isUniversityValid = true.obs;
   final isTermsAccepted = false.obs;
-  final isOtpSent = false.obs;
-  final isOtpVerified = false.obs;
+
+  // UI state
+  final RxBool isPasswordVisible = false.obs;
 
   final isSubmitting = false.obs;
-  final isSendingOtp = false.obs;
-  final isVerifyingOtp = false.obs;
+
+  // Selected university
+  final RxString selectedUniversity = ''.obs;
 
   void validateName() {
-    isNameValid.value = nameController.text.trim().isNotEmpty;
+    isNameValid.value = ValidationUtils.isNotEmpty(nameController.text);
   }
 
   void validateEmail() {
-    final email = emailController.text.trim();
-    isEmailValid.value = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+    isEmailValid.value = ValidationUtils.isValidEmail(emailController.text);
+  }
+
+  void validatePassword() {
+    isPasswordValid.value =
+        ValidationUtils.isValidPassword(passwordController.text);
+  }
+
+  void validateUniversity() {
+    isUniversityValid.value = selectedUniversity.value.isNotEmpty;
   }
 
   bool validateAll() {
     validateName();
     validateEmail();
-    return isNameValid.value && isEmailValid.value && isTermsAccepted.value;
+    validatePassword();
+    validateUniversity();
+    return isNameValid.value &&
+        isEmailValid.value &&
+        isPasswordValid.value &&
+        isUniversityValid.value &&
+        isTermsAccepted.value;
   }
 
-  Future<void> resendOtp() async {
-    validateEmail();
-    if (!isEmailValid.value) {
-      Get.snackbar('Invalid Email', 'Please enter a valid email address',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
-      return;
-    }
-
-    isSendingOtp.value = true;
-    try {
-      final result = await EmailOTP.sendOTP(email: emailController.text.trim());
-      if (result == true) {
-        Get.snackbar('OTP Resent', 'New verification code sent to your email',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green[100],
-            colorText: Colors.green[900]);
-      } else {
-        throw Exception('Failed to resend OTP');
-      }
-    } catch (e) {
-      Get.snackbar('Error', 'Failed to resend OTP: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
-    } finally {
-      isSendingOtp.value = false;
-    }
+  void togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
   }
 
   Future<void> submit() async {
@@ -78,27 +73,73 @@ class InterpreterSignupController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      final result = await EmailOTP.sendOTP(email: emailController.text.trim());
+      // Create Firebase Auth user
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
 
-      if (result == true) {
-        Get.snackbar('OTP Sent', 'Verification code sent to your email',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green[100],
-            colorText: Colors.green[900]);
+      // Update display name
+      await credential.user?.updateDisplayName(nameController.text.trim());
 
-        Get.toNamed(Routes.INTERPRETER_OTP, arguments: {
-          'email': emailController.text.trim(),
-          'name': nameController.text.trim(),
-        });
-      } else {
-        throw Exception('Failed to send OTP');
+      // Parse name into first and last name
+      final nameParts = nameController.text.trim().split(' ');
+      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+      final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+
+      // Create Firestore interpreter profile
+      final interpreterService = Get.find<InterpreterUserFirestoreService>();
+      await interpreterService.getOrCreateByAuthUid(
+        authUid: credential.user!.uid,
+        firstName: firstName,
+        lastName: lastName,
+        email: emailController.text.trim(),
+        university: selectedUniversity.value,
+      );
+
+      // Store session in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('interpreter_logged_in', true);
+      await prefs.setString('interpreter_email', emailController.text.trim());
+      await prefs.setString('interpreter_name', nameController.text.trim());
+      await prefs.setString('university', selectedUniversity.value);
+
+      Get.snackbar('Success', 'Account created successfully!',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green[100],
+          colorText: Colors.green[900]);
+
+      // Navigate directly to interpreter home
+      Get.offAllNamed(Routes.INTERPRETER_HOME);
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'An error occurred. Please try again.';
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage =
+              'An account with this email already exists. Please sign in instead.';
+          break;
+        case 'weak-password':
+          errorMessage =
+              'Password is too weak. Please choose a stronger password.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'operation-not-allowed':
+          errorMessage =
+              'Email/password accounts are not enabled. Please contact support.';
+          break;
       }
-    } catch (e, stackTrace) {
-      Get.snackbar('Error', 'Failed to send OTP: ${e.toString()} $stackTrace',
+      Get.snackbar('Error', errorMessage,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red[100],
           colorText: Colors.red[900]);
-      Get.log("Error: $e $stackTrace");
+    } catch (e) {
+      Get.snackbar('Error', 'An unexpected error occurred: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+          colorText: Colors.red[900]);
     } finally {
       isSubmitting.value = false;
     }
@@ -108,6 +149,21 @@ class InterpreterSignupController extends GetxController {
   void onClose() {
     nameController.dispose();
     emailController.dispose();
+    passwordController.dispose();
     super.onClose();
+  }
+
+  // List of universities in Ghana
+  final List<String> universities = [
+    'Takoradi Technical University (TTU)',
+    'University of Education, Winneba (UEW)',
+    'Kwame Nkrumah University of Science and Technology (KNUST)',
+    'University of Ghana, Legon',
+    'Other Ghana University',
+  ];
+
+  void selectUniversity(String university) {
+    selectedUniversity.value = university;
+    validateUniversity();
   }
 }

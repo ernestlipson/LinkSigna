@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/shared/components/app.button.dart';
+import 'package:sign_language_app/shared/components/signup_logo.dart';
 import 'controllers/interpreter_otp.controller.dart';
 
 class InterpreterOtpScreen extends StatelessWidget {
@@ -25,28 +27,7 @@ class InterpreterOtpScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
-              RichText(
-                text: const TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Link',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                      ),
-                    ),
-                    TextSpan(
-                      text: 'Signa',
-                      style: TextStyle(
-                        color: Color(0xFF9C0057),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 32,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SignupLogo(),
               const SizedBox(height: 60),
               const Text(
                 'Email Verification',
@@ -149,40 +130,10 @@ class InterpreterOtpScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 32),
-
-              // Verify Button
-              SizedBox(
-                width: double.infinity,
-                child: Obx(() => ElevatedButton(
-                      onPressed: controller.isVerifyingOtp.value
-                          ? null
-                          : () => controller.verifyOTP(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: controller.isVerifyingOtp.value
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text(
-                              'Verify Code',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    )),
+              CustomButton(
+                text: "Verify Code",
+                onPressed: () => controller.verifyOTP(),
+                isLoading: controller.isVerifyingOtp.value,
               ),
               const SizedBox(height: 40),
             ],

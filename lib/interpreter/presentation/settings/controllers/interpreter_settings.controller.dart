@@ -10,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../infrastructure/dal/services/cloudinary.service.dart';
 import '../../../../config/cloudinary.config.dart';
+import '../../../../infrastructure/navigation/routes.dart';
 import '../../../presentation/shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterSettingsController extends GetxController {
@@ -499,6 +500,21 @@ class InterpreterSettingsController extends GetxController {
     );
   }
 
+  // Logout
+  Future<void> logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Get.offAllNamed(Routes.INTERPRETER_SIGNUP);
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to logout: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   Future<void> _performAccountDeletion() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -527,7 +543,7 @@ class InterpreterSettingsController extends GetxController {
       );
 
       // Navigate to login/signup screen
-      Get.offAllNamed('/initial');
+      Get.offAllNamed(Routes.initialRoute);
     } catch (e) {
       Get.snackbar(
         'Error',

@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../domain/users/interpreter_user.model.dart';
 
 class InterpreterUserFirestoreService extends GetxService {
-  final _col = FirebaseFirestore.instance.collection('interpreter_user');
+  final _col = FirebaseFirestore.instance.collection('users');
 
   Future<InterpreterUser?> getById(String interpreterID) async {
     try {
@@ -32,21 +32,25 @@ class InterpreterUserFirestoreService extends GetxService {
     required String lastName,
     required String email,
     String? phone,
+    String? authUid,
+    String? university,
   }) async {
     try {
       final id = const Uuid().v4();
       final user = InterpreterUser(
         interpreterID: id,
+        authUid: authUid,
         firstName: firstName,
         lastName: lastName,
         email: email,
         phone: phone,
-        languages: [], // Default empty list
-        specializations: [], // Default empty list
-        rating: 0.0, // Default rating
-        bio: null, // No default bio
-        isAvailable: false, // Default to unavailable
-        profilePictureUrl: null, // No default profile picture
+        university: university,
+        languages: [],
+        specializations: [],
+        rating: 0.0,
+        bio: null,
+        isAvailable: false,
+        profilePictureUrl: null,
       );
 
       await _col
@@ -64,6 +68,8 @@ class InterpreterUserFirestoreService extends GetxService {
     String? firstName,
     String? lastName,
     String? phone,
+    String? authUid,
+    String? university,
   }) async {
     final existing = await findByEmail(email);
     if (existing != null) return existing;
@@ -73,12 +79,67 @@ class InterpreterUserFirestoreService extends GetxService {
       lastName: lastName ?? '',
       email: email,
       phone: phone,
+      authUid: authUid,
+      university: university,
     );
+  }
+
+  Future<InterpreterUser?> getOrCreateByAuthUid({
+    required String authUid,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? phone,
+    String? university,
+  }) async {
+    try {
+      final q = await _col
+          .where('authUid', isEqualTo: authUid)
+          .where('role', isEqualTo: 'interpreter')
+          .limit(1)
+          .get();
+      if (q.docs.isNotEmpty) {
+        return InterpreterUser.fromFirestore(q.docs.first);
+      }
+
+      if (email != null && firstName != null && lastName != null) {
+        return await createNew(
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          phone: phone,
+          authUid: authUid,
+          university: university,
+        );
+      }
+
+      return null;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<InterpreterUser?> findByAuthUid(String authUid) async {
+    try {
+      final q = await _col
+          .where('authUid', isEqualTo: authUid)
+          .where('role', isEqualTo: 'interpreter')
+          .limit(1)
+          .get();
+      if (q.docs.isEmpty) return null;
+      return InterpreterUser.fromFirestore(q.docs.first);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<InterpreterUser?> findByEmail(String email) async {
     try {
-      final q = await _col.where('email', isEqualTo: email).limit(1).get();
+      final q = await _col
+          .where('email', isEqualTo: email)
+          .where('role', isEqualTo: 'interpreter')
+          .limit(1)
+          .get();
       if (q.docs.isEmpty) return null;
       return InterpreterUser.fromFirestore(q.docs.first);
     } catch (e) {
@@ -88,7 +149,11 @@ class InterpreterUserFirestoreService extends GetxService {
 
   Future<InterpreterUser?> findByPhone(String phone) async {
     try {
-      final q = await _col.where('phone', isEqualTo: phone).limit(1).get();
+      final q = await _col
+          .where('phone', isEqualTo: phone)
+          .where('role', isEqualTo: 'interpreter')
+          .limit(1)
+          .get();
       if (q.docs.isEmpty) return null;
       return InterpreterUser.fromFirestore(q.docs.first);
     } catch (e) {
@@ -126,7 +191,10 @@ class InterpreterUserFirestoreService extends GetxService {
 
   Future<List<InterpreterUser>> getAvailableInterpreters() async {
     try {
-      final q = await _col.where('isAvailable', isEqualTo: true).get();
+      final q = await _col
+          .where('isAvailable', isEqualTo: true)
+          .where('role', isEqualTo: 'interpreter')
+          .get();
       return q.docs.map((doc) => InterpreterUser.fromFirestore(doc)).toList();
     } catch (e) {
       rethrow;

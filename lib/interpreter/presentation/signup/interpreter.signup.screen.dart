@@ -1,13 +1,15 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/shared/components/signup_logo.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
+import '../../../shared/components/app.field.dart';
+import '../../../shared/components/university_dropdown.dart';
+import '../../../shared/components/user_type_selector.dart';
 import '../../../student/presentation/utils/screens.strings.dart';
 import '../../infrastructure/theme/app_theme.dart';
-import '../components/app.button.dart';
-import '../components/app.field.dart';
+import '../../../shared/components/app.button.dart';
 import 'controllers/signup.int.controller.dart';
 
 class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
@@ -15,7 +17,6 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure the controller is registered
     if (!Get.isRegistered<InterpreterSignupController>()) {
       Get.put(InterpreterSignupController());
     }
@@ -27,70 +28,79 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: SvgPicture.asset(
-                    "assets/icons/TravelIB.svg",
-                  ),
-                ),
+              const SignupLogo(),
+              const SizedBox(height: 20),
+              UserTypeSelector(
+                selectedType: 'interpreter',
+                onTypeChanged: (String value) {
+                  if (value == 'student') {
+                    Get.offNamed('/student/signup');
+                  }
+                },
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(children: [
-                    Radio<String>(
-                      value: 'student',
-                      groupValue: 'interpreter',
-                      onChanged: (_) {
-                        // Switch back to student sign up
-                        Get.offNamed('/student/signup');
-                      },
-                      activeColor: AppColors.primary,
-                    ),
-                    const Text('Student'),
-                  ]),
-                  const SizedBox(width: 24),
-                  Row(children: [
-                    Radio<String>(
-                      value: 'interpreter',
-                      groupValue: 'interpreter',
-                      onChanged: (_) {},
-                      activeColor: AppColors.primary,
-                    ),
-                    const Text('Interpreter'),
-                  ]),
-                ],
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               const Text(
                 ScreenStrings.signUpTitle,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontFamily: 'WorkSans',
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 30),
               Obx(() => CustomTextFormField(
-                    hintText: 'Enter your name',
-                    labelText: 'Full name',
+                    hintText: ScreenStrings.nameHint,
+                    labelText: ScreenStrings.nameLabel,
                     controller: controller.nameController,
                     isRequired: true,
                     errorText: controller.isNameValid.value
                         ? null
-                        : 'This field is required',
+                        : ScreenStrings.requiredFieldError,
                     onChanged: (_) => controller.validateName(),
                   )),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Obx(() => CustomTextFormField(
-                    hintText: 'Enter your email',
-                    labelText: 'Email',
+                    hintText: 'student@ttu.edu.gh',
+                    labelText: ScreenStrings.emailLabel,
                     controller: controller.emailController,
                     isRequired: true,
                     keyboardType: TextInputType.emailAddress,
                     errorText: controller.isEmailValid.value
                         ? null
-                        : 'Enter a valid email',
+                        : ScreenStrings.emailValidationError,
                     onChanged: (_) => controller.validateEmail(),
                   )),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
+              Obx(() => CustomTextFormField(
+                    hintText: ScreenStrings.passwordHint,
+                    labelText: ScreenStrings.passwordLabel,
+                    controller: controller.passwordController,
+                    isRequired: true,
+                    obscureText: !controller.isPasswordVisible.value,
+                    errorText: controller.isPasswordValid.value
+                        ? null
+                        : ScreenStrings.passwordValidationError,
+                    onChanged: (_) => controller.validatePassword(),
+                    suffix: GestureDetector(
+                      onTap: () => controller.isPasswordVisible.value =
+                          !controller.isPasswordVisible.value,
+                      child: Icon(
+                        controller.isPasswordVisible.value
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  )),
+              const SizedBox(height: 10),
+              UniversityDropdown(
+                selectedUniversity: controller.selectedUniversity,
+                isUniversityValid: controller.isUniversityValid,
+                universities: controller.universities,
+                onUniversitySelected: controller.selectUniversity,
+                placeholder: ScreenStrings.universityHint,
+              ),
+              const SizedBox(height: 10),
               Obx(() => Row(
                     children: [
                       Checkbox(
@@ -102,32 +112,36 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      const Expanded(
-                        child: Text(
-                          'By signing up, you agree to LinkSigna Terms of Service and Privacy policy',
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 18.0),
+                          child: Text(
+                            ScreenStrings.termsAndPrivacy,
+                          ),
                         ),
                       )
                     ],
                   )),
-              const SizedBox(height: 16),
-              Center(
-                child: Obx(() => CustomButton(
-                      text: 'Sign Up',
-                      isLoading: controller.isSubmitting.value,
-                      onPressed: controller.isSubmitting.value
-                          ? () {}
-                          : () => controller.submit(),
-                    )),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+              Obx(() => CustomButton(
+                    text: ScreenStrings.signUpButton,
+                    isLoading: controller.isSubmitting.value,
+                    onPressed: controller.isSubmitting.value
+                        ? () {}
+                        : () => controller.submit(),
+                  )),
+              const SizedBox(height: 30),
               Center(
                 child: RichText(
                   text: TextSpan(
-                    text: 'Already have an account? ',
-                    style: const TextStyle(color: Colors.black),
+                    text: ScreenStrings.alreadyHaveAccount,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w400,
+                    ),
                     children: [
                       TextSpan(
-                        text: 'Login',
+                        text: ScreenStrings.loginText,
                         style: TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
@@ -140,6 +154,7 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
                   ),
                 ),
               ),
+              const SizedBox(height: 70),
             ],
           ),
         ),
