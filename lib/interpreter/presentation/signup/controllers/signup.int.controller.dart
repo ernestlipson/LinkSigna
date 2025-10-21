@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
+import '../../../../shared/utils/validation_utils.dart';
 
 class InterpreterSignupController extends GetxController {
   final nameController = TextEditingController();
@@ -27,18 +28,16 @@ class InterpreterSignupController extends GetxController {
   final RxString selectedUniversity = ''.obs;
 
   void validateName() {
-    isNameValid.value = nameController.text.trim().isNotEmpty;
+    isNameValid.value = ValidationUtils.isNotEmpty(nameController.text);
   }
 
   void validateEmail() {
-    final email = emailController.text.trim();
-    isEmailValid.value =
-        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.gh$').hasMatch(email);
+    isEmailValid.value = ValidationUtils.isValidEmail(emailController.text);
   }
 
   void validatePassword() {
-    final value = passwordController.text.trim();
-    isPasswordValid.value = value.length >= 6;
+    isPasswordValid.value =
+        ValidationUtils.isValidPassword(passwordController.text);
   }
 
   void validateUniversity() {

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 import 'package:sign_language_app/infrastructure/dal/services/student_user.firestore.service.dart';
 import 'package:sign_language_app/student/presentation/shared/controllers/student_user.controller.dart';
+import 'package:sign_language_app/shared/utils/validation_utils.dart';
 
 import '../../shared/controllers/country.controller.dart';
 
@@ -64,9 +65,7 @@ class LoginController extends GetxController {
 
   // Validation logic
   void validateEmail() {
-    final value = emailController.text.trim();
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.gh$');
-    isEmailValid.value = emailRegex.hasMatch(value);
+    isEmailValid.value = ValidationUtils.isValidEmail(emailController.text);
   }
 
   void validatePassword() {

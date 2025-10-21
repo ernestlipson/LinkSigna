@@ -56,8 +56,7 @@ class CustomButton extends StatelessWidget {
           onTap: isLoading ? null : onPressed,
           child: Center(
             child: isLoading
-                ? Container(
-                    // padding: const EdgeInsets.all(12.0),
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(

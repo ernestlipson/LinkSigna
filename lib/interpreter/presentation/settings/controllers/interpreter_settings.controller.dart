@@ -10,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../infrastructure/dal/services/cloudinary.service.dart';
 import '../../../../config/cloudinary.config.dart';
+import '../../../../infrastructure/navigation/routes.dart';
 import '../../../presentation/shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterSettingsController extends GetxController {
@@ -503,7 +504,7 @@ class InterpreterSettingsController extends GetxController {
   Future<void> logout() async {
     try {
       await FirebaseAuth.instance.signOut();
-      Get.offAllNamed('/interpreter/signup');
+      Get.offAllNamed(Routes.INTERPRETER_SIGNUP);
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -542,7 +543,7 @@ class InterpreterSettingsController extends GetxController {
       );
 
       // Navigate to login/signup screen
-      Get.offAllNamed('/initial');
+      Get.offAllNamed(Routes.initialRoute);
     } catch (e) {
       Get.snackbar(
         'Error',

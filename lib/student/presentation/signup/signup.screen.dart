@@ -102,7 +102,6 @@ class StudentSignupScreen extends GetView<SignupController> {
                   placeholder: ScreenStrings.universityHint,
                 ),
                 SizedBox(height: 10),
-                SizedBox(height: 10),
                 Row(
                   children: [
                     Obx(() => Checkbox(
