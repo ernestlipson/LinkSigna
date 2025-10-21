@@ -1,11 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
 import '../../../shared/components/app.button.dart';
 import '../../../shared/components/app.field.dart';
+import '../../../shared/components/signup_logo.dart';
+import '../../../shared/components/university_dropdown.dart';
+import '../../../shared/components/user_type_selector.dart';
 import '../../infrastructure/theme/app_theme.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/signup.controller.dart';
@@ -22,55 +24,19 @@ class StudentSignupScreen extends GetView<SignupController> {
         padding: const EdgeInsets.all(16),
         child: SafeArea(
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            SvgPicture.asset(
-              "assets/icons/TravelIB.svg",
-            ),
+            const SignupLogo(),
             SizedBox(height: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Obx(() => Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Radio<String>(
-                          value: 'student',
-                          groupValue: controller.selectedUserType.value,
-                          onChanged: (String? value) {
-                            controller.selectedUserType.value = value!;
-                          },
-                          activeColor: AppColors.primary,
-                        ),
-                        Text(
-                          'Student',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight:
-                                controller.selectedUserType.value == 'student'
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                          ),
-                        ),
-                        SizedBox(width: 30),
-                        Radio<String>(
-                          value: 'interpreter',
-                          groupValue: controller.selectedUserType.value,
-                          onChanged: (String? value) {
-                            controller.selectedUserType.value = value!;
-                            Get.offAllNamed('/interpreter/signup');
-                          },
-                          activeColor: AppColors.primary,
-                        ),
-                        Text(
-                          'Interpreter',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: controller.selectedUserType.value ==
-                                    'interpreter'
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                          ),
-                        ),
-                      ],
+                Obx(() => UserTypeSelector(
+                      selectedType: controller.selectedUserType.value,
+                      onTypeChanged: (String value) {
+                        controller.selectedUserType.value = value;
+                        if (value == 'interpreter') {
+                          Get.offAllNamed('/interpreter/signup');
+                        }
+                      },
                     )),
                 SizedBox(height: 20),
                 Text(
@@ -112,53 +78,30 @@ class StudentSignupScreen extends GetView<SignupController> {
                       labelText: ScreenStrings.passwordLabel,
                       controller: controller.passwordController,
                       isRequired: true,
-                      obscureText: true,
+                      obscureText: !controller.isPasswordVisible.value,
                       errorText: controller.isPasswordValid.value
                           ? null
                           : ScreenStrings.requiredFieldError,
                       onChanged: (value) => controller.validatePassword(),
+                      suffix: GestureDetector(
+                        onTap: () => controller.togglePasswordVisibility(),
+                        child: Icon(
+                          controller.isPasswordVisible.value
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                     )),
                 SizedBox(height: 10),
-                Obx(() => _buildUniversityField()),
+                UniversityDropdown(
+                  selectedUniversity: controller.selectedUniversity,
+                  isUniversityValid: controller.isUniversityValid,
+                  universities: controller.universities,
+                  onUniversitySelected: controller.selectUniversity,
+                  placeholder: ScreenStrings.universityHint,
+                ),
                 SizedBox(height: 10),
-
-                // Obx(() => CustomTextFormField(
-                //       hintText: ScreenStrings.phoneHint,
-                //       labelText: ScreenStrings.phoneLabel,
-                //       controller: controller.phoneController,
-                //       isRequired: true,
-                //       keyboardType: TextInputType.phone,
-                //       errorText: controller.isPhoneValid.value
-                //           ? null
-                //           : controller.phoneController.text.trim().isEmpty
-                //               ? ScreenStrings.requiredFieldError
-                //               : ScreenStrings.phoneValidationError,
-                //       onChanged: (_) => controller.validatePhone(),
-                //       prefix: Obx(() => controller.isLoadingFlag.value
-                //           ? Container(
-                //               padding: const EdgeInsets.all(12.0),
-                //               width: 10,
-                //               height: 10,
-                //               child: CircularProgressIndicator(
-                //                 strokeWidth: 2,
-                //                 valueColor: AlwaysStoppedAnimation<Color>(
-                //                     const Color.fromARGB(255, 206, 186, 198)),
-                //               ),
-                //             )
-                //           : controller.countryFlagUrl.value.isNotEmpty
-                //               ? Padding(
-                //                   padding: const EdgeInsets.all(10.0),
-                //                   child: Image.network(
-                //                     controller.countryFlagUrl.value,
-                //                     width: 16,
-                //                     height: 16,
-                //                     errorBuilder: (context, error, stackTrace) {
-                //                       return Text('🇬🇭');
-                //                     },
-                //                   ),
-                //                 )
-                //               : Text('🇬🇭')),
-                //     )),
                 SizedBox(height: 10),
                 Row(
                   children: [
@@ -220,163 +163,6 @@ class StudentSignupScreen extends GetView<SignupController> {
             ),
           ]),
         ),
-      ),
-    );
-  }
-
-  Widget _buildUniversityField() {
-    return SizedBox(
-      height: 90,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: 'University ',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                TextSpan(
-                  text: '*',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 4),
-          GestureDetector(
-            onTap: () => _showUniversityBottomSheet(),
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: controller.isUniversityValid.value
-                      ? Colors.grey[300]!
-                      : Colors.red,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        controller.selectedUniversity.value.isEmpty
-                            ? ScreenStrings.universityHint
-                            : controller.selectedUniversity.value,
-                        style: TextStyle(
-                          color: controller.selectedUniversity.value.isEmpty
-                              ? Colors.grey[600]
-                              : Colors.black,
-                          fontSize: 16,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      color: Colors.grey[600],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showUniversityBottomSheet() {
-    Get.bottomSheet(
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            SizedBox(height: 20),
-            // Title
-            Text(
-              'Select University',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 20),
-            ...controller.universities.map((university) => Obx(
-                  () => _buildUniversityListItem(university),
-                )),
-            SizedBox(height: 20),
-          ],
-        ),
-      ),
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-    );
-  }
-
-  Widget _buildUniversityListItem(String university) {
-    final isSelected = controller.selectedUniversity.value == university;
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: isSelected ? Color(0xFFFFF0F5) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isSelected ? AppColors.primary : Colors.grey[200]!,
-          width: isSelected ? 1 : 0.5,
-        ),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 4,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        title: Text(
-          university,
-          style: TextStyle(
-            color: isSelected ? AppColors.primary : Colors.grey[800],
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 14,
-          ),
-        ),
-        onTap: () {
-          controller.selectUniversity(university);
-          Get.back();
-        },
       ),
     );
   }

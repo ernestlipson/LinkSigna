@@ -3,7 +3,7 @@ class ScreenStrings {
   static const String nameHint = "Enter your name";
   static const String nameLabel = "Full Name";
   static const String emailHint = "Enter your email";
-  static const String emailLabel = "Email";
+  static const String emailLabel = "University Email (.gh only)";
   static const String phoneHint = "Eg.+233244000000";
   static const String phoneLabel = "Phone Number";
   static const String ghanaFlagEmoji = '🇬🇭';

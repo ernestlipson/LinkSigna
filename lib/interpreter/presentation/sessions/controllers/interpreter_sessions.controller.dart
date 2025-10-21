@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:sign_language_app/call/video_call.screen.dart';
+import 'package:sign_language_app/shared/call/video_call.screen.dart';
 import '../../../../domain/sessions/session.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 import '../../shared/controllers/interpreter_profile.controller.dart';

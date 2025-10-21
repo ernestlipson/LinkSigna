@@ -1,18 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class StudentUser {
-  final String uid; // Firestore document id (auto generated)
-  final String? authUid; // Firebase Auth UID reference
-  final String role; // always 'student'
+  final String uid;
+  final String? authUid;
+  final String role;
   final String? displayName;
   final String? email;
   final String? phone;
   final String? avatarUrl;
   final String? bio;
-  final String?
-      university; // University name (e.g. "University of Ghana, Legon")
-  final String? universityLevel; // e.g. Level 400
-  final String? language; // e.g. Ghanaian Sign Language
+  final String? university;
+  final String? universityLevel;
+  final String? language;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -35,7 +34,6 @@ class StudentUser {
   factory StudentUser.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
 
-    // Combine firstname and lastname into displayName
     final firstName = data['firstname'] ?? '';
     final lastName = data['lastname'] ?? '';
     final combinedName = '$firstName $lastName'.trim();
@@ -58,7 +56,6 @@ class StudentUser {
   }
 
   Map<String, dynamic> toMap({bool isUpdate = false}) {
-    // Split displayName into firstname and lastname for Firestore
     final nameParts = displayName?.split(' ') ?? [];
     final firstName = nameParts.isNotEmpty ? nameParts.first : '';
     final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';

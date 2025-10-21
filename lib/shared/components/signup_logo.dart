@@ -7,11 +7,8 @@ class SignupLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: SvgPicture.asset(
-          "assets/icons/TravelIB.svg",
-        ),
+      child: SvgPicture.asset(
+        "assets/icons/TravelIB.svg",
       ),
     );
   }

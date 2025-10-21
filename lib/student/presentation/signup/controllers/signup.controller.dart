@@ -20,6 +20,7 @@ class SignupController extends GetxController {
   // Loading states
   final RxBool isPhoneOtpLoading = false.obs;
   final RxBool isGoogleSignInLoading = false.obs;
+  final RxBool isPasswordVisible = false.obs;
 
   // OTP related
   final RxString otpUserId = ''.obs;
@@ -64,6 +65,10 @@ class SignupController extends GetxController {
 
   void validateUniversity() {
     isUniversityValid.value = selectedUniversity.value.isNotEmpty;
+  }
+
+  void togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
   }
 
   bool validateAll() {
