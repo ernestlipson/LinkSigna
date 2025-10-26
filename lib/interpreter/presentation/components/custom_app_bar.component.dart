@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../infrastructure/utils/app_icons.dart';
+import 'package:sign_language_app/infrastructure/utils/app_icons.dart';
 import '../shared/controllers/interpreter_profile.controller.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {

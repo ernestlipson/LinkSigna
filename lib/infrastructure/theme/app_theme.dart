@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// Centralized color definitions
 class AppColors {
   static const Color primary = Color(0xFF9E1068);
   static const Color secondary = Color(0xFFFCF8F8);

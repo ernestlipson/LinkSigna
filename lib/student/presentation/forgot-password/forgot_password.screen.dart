@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../shared/components/app.button.dart';
 import '../../../shared/components/app.field.dart';
-import '../../infrastructure/utils/app.constants.dart';
+import 'package:sign_language_app/infrastructure/utils/app.constants.dart';
 import '../utils/screens.strings.dart';
 import 'controllers/forgot_password.controller.dart';
 
