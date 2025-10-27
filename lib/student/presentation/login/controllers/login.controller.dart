@@ -6,6 +6,7 @@ import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 import 'package:sign_language_app/infrastructure/dal/services/student_user.firestore.service.dart';
 import 'package:sign_language_app/student/presentation/shared/controllers/student_user.controller.dart';
 import 'package:sign_language_app/infrastructure/utils/validation_utils.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 import '../../shared/controllers/country.controller.dart';
 
@@ -82,26 +83,31 @@ class LoginController extends GetxController {
   Future<void> sendPasswordReset() async {
     final email = emailController.text.trim();
     if (email.isEmpty) {
-      Get.snackbar('Email Required', 'Enter your university email',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Email Required',
+        message: 'Enter your university email',
+      );
       return;
     }
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      Get.snackbar('Email Sent', 'Check your inbox to reset your password',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900]);
+      AppSnackbar.success(
+        title: 'Email Sent',
+        message: 'Check your inbox to reset your password',
+      );
     } on FirebaseAuthException catch (e) {
       String msg = 'Failed to send reset email';
       if (e.code == 'user-not-found') msg = 'No account found with this email';
       if (e.code == 'invalid-email') msg = 'Invalid email format';
-      Get.snackbar('Error', msg,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
+      AppSnackbar.error(
+        title: 'Error',
+        message: msg,
+      );
     } catch (e) {
-      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Error',
+        message: e.toString(),
+      );
     }
   }
 
@@ -110,13 +116,17 @@ class LoginController extends GetxController {
     if (!validateAll()) {
       if (emailController.text.trim().isEmpty) {
         isEmailValid.value = false;
-        Get.snackbar('Email Required', 'Enter your university email',
-            snackPosition: SnackPosition.BOTTOM);
+        AppSnackbar.error(
+          title: 'Email Required',
+          message: 'Enter your university email',
+        );
       }
       if (passwordController.text.trim().isEmpty) {
         isPasswordValid.value = false;
-        Get.snackbar('Password Required', 'Enter your password',
-            snackPosition: SnackPosition.BOTTOM);
+        AppSnackbar.error(
+          title: 'Password Required',
+          message: 'Enter your password',
+        );
       }
       return;
     }
@@ -157,10 +167,10 @@ class LoginController extends GetxController {
         await prefs.remove('remembered_email');
       }
 
-      Get.snackbar('Success', 'Login successful!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900]);
+      AppSnackbar.success(
+        title: 'Success',
+        message: 'Login successful!',
+      );
 
       // Navigate to home screen
       Get.offAllNamed(Routes.STUDENT_HOME);
@@ -176,13 +186,15 @@ class LoginController extends GetxController {
         errorMessage = 'This account has been disabled';
       }
 
-      Get.snackbar('Login Failed', errorMessage,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
+      AppSnackbar.error(
+        title: 'Login Failed',
+        message: errorMessage,
+      );
     } catch (e) {
-      Get.snackbar('Error', 'Login failed: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Login failed: ${e.toString()}',
+      );
     } finally {
       isLoading.value = false;
     }

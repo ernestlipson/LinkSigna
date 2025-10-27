@@ -7,6 +7,7 @@ import '../../../../infrastructure/navigation/routes.dart';
 import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
 import '../../../../infrastructure/utils/validation_utils.dart';
 import '../../shared/controllers/country.controller.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class SignupController extends GetxController {
   final nameController = TextEditingController();
@@ -85,12 +86,9 @@ class SignupController extends GetxController {
   Future<void> signUp() async {
     if (!validateAll()) {
       if (!isTermsAccepted.value) {
-        Get.snackbar(
-          'Terms Required',
-          'Please accept the terms to continue',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900],
+        AppSnackbar.warning(
+          title: 'Terms Required',
+          message: 'Please accept the terms to continue',
         );
       }
       return;
@@ -126,10 +124,10 @@ class SignupController extends GetxController {
       // Navigate to home
       Get.offAllNamed(Routes.STUDENT_HOME);
 
-      Get.snackbar('Success', 'Account created successfully!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900]);
+      AppSnackbar.success(
+        title: 'Success',
+        message: 'Account created successfully!',
+      );
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'Signup failed';
       if (e.code == 'weak-password') {
@@ -140,13 +138,15 @@ class SignupController extends GetxController {
         errorMessage = 'Invalid email format';
       }
 
-      Get.snackbar('Signup Failed', errorMessage,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
+      AppSnackbar.error(
+        title: 'Signup Failed',
+        message: errorMessage,
+      );
     } catch (e) {
-      Get.snackbar('Error', 'Signup failed: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Signup failed: ${e.toString()}',
+      );
     } finally {
       isPhoneOtpLoading.value = false;
     }

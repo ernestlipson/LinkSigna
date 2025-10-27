@@ -6,6 +6,7 @@ import '../../../infrastructure/dal/services/interpreter.service.dart';
 import '../../../../infrastructure/dal/models/interpreter.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 import '../../shared/controllers/student_user.controller.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class InterpretersController extends GetxController {
   final RxList<InterpreterData> interpreters = <InterpreterData>[].obs;
@@ -89,13 +90,6 @@ class InterpretersController extends GetxController {
     );
   }
 
-  int _inferExperience(String description) {
-    final d = description.toLowerCase();
-    if (d.contains('senior')) return 7;
-    if (d.contains('intermediate')) return 4;
-    return 2; // default
-  }
-
   String _fullName(String first, String last) {
     if (first.isEmpty && last.isEmpty) return 'Unknown Interpreter';
     if (first.isEmpty) return last;
@@ -124,12 +118,9 @@ class InterpretersController extends GetxController {
   }
 
   void applyFilters() {
-    Get.snackbar(
-      'Filters Applied',
-      'Filters have been applied successfully!',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green[100],
-      colorText: Colors.green[900],
+    AppSnackbar.success(
+      title: 'Filters Applied',
+      message: 'Filters have been applied successfully!',
     );
     closeFilterModal();
   }
@@ -173,12 +164,9 @@ class InterpretersController extends GetxController {
     if (_bookingInProgress.value) return; // prevent double tap
 
     if (!interpreter.isAvailable) {
-      Get.snackbar(
-        'Unavailable',
-        'This interpreter is currently unavailable.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange[100],
-        colorText: Colors.orange[900],
+      AppSnackbar.warning(
+        title: 'Unavailable',
+        message: 'This interpreter is currently unavailable.',
       );
       return;
     }
@@ -198,20 +186,15 @@ class InterpretersController extends GetxController {
       await _service.setBookingStatus(
           interpreterId: interpreter.id, isBooked: true);
 
-      Get.snackbar(
-        'Session Created',
-        'Session booked with ${interpreter.name}. Waiting for interpreter confirmation.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green[100],
-        colorText: Colors.green[900],
+      AppSnackbar.success(
+        title: 'Session Created',
+        message:
+            'Session booked with ${interpreter.name}. Waiting for interpreter confirmation.',
       );
     } catch (e) {
-      Get.snackbar(
-        'Booking Failed',
-        'Could not create session: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[900],
+      AppSnackbar.error(
+        title: 'Booking Failed',
+        message: 'Could not create session: $e',
       );
       Get.log('Error booking interpreter: $e');
     } finally {

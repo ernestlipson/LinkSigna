@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../shared/controllers/country.controller.dart';
 import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class ForgotPasswordController extends GetxController {
   final phoneController = TextEditingController();
@@ -66,15 +67,18 @@ class ForgotPasswordController extends GetxController {
     try {
       // Simulate API call to send verification code
       await Future.delayed(const Duration(seconds: 2));
-      Get.snackbar(
-          'Success', 'A 6-digit code has been sent to ${phoneController.text}',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.success(
+        title: 'Success',
+        message: 'A 6-digit code has been sent to ${phoneController.text}',
+      );
 
       // Navigate to verification code screen (You'll need to create this later)
       // Get.toNamed(Routes.VERIFICATION_CODE);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to send verification code',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to send verification code',
+      );
     } finally {
       isLoading.value = false;
     }

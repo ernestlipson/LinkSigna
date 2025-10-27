@@ -5,6 +5,7 @@ import '../../../../domain/sessions/session.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 import 'package:sign_language_app/shared/call/video_call.screen.dart';
 import '../../shared/controllers/student_user.controller.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class SessionsController extends GetxController {
   final sessions = <SessionModel>[].obs;
@@ -40,8 +41,10 @@ class SessionsController extends GetxController {
       sessions.assignAll(data);
     }, onError: (e) {
       Get.log('Sessions stream error: $e');
-      Get.snackbar('Error', 'Failed to load sessions',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to load sessions',
+      );
     });
   }
 
@@ -97,8 +100,10 @@ class SessionsController extends GetxController {
 
   void joinVideoCall(SessionModel session) {
     if (!isSessionActive(session)) {
-      Get.snackbar('Cannot Join', 'Session not active yet',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.warning(
+        title: 'Cannot Join',
+        message: 'Session not active yet',
+      );
       return;
     }
     Get.to(() => VideoCallScreen(channelId: session.channelId));
