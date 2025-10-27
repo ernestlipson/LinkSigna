@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
-import '../../../../shared/utils/validation_utils.dart';
+import '../../../../infrastructure/utils/validation_utils.dart';
 
 class InterpreterSignupController extends GetxController {
   final nameController = TextEditingController();

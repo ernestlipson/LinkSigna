@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../../infrastructure/dal/services/country.service.dart';
+import 'package:sign_language_app/infrastructure/dal/services/country.service.dart';
 
 import '../entities/flag.entity.dart';
 

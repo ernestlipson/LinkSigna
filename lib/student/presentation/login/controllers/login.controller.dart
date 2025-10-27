@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 import 'package:sign_language_app/infrastructure/dal/services/student_user.firestore.service.dart';
 import 'package:sign_language_app/student/presentation/shared/controllers/student_user.controller.dart';
-import 'package:sign_language_app/shared/utils/validation_utils.dart';
+import 'package:sign_language_app/infrastructure/utils/validation_utils.dart';
 
 import '../../shared/controllers/country.controller.dart';
 

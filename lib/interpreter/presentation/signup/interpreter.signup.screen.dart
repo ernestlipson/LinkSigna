@@ -4,11 +4,11 @@ import 'package:get/get.dart';
 import 'package:sign_language_app/shared/components/signup_logo.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
+import '../../../infrastructure/theme/app_theme.dart';
 import '../../../shared/components/app.field.dart';
 import '../../../shared/components/university_dropdown.dart';
 import '../../../shared/components/user_type_selector.dart';
-import '../../../student/presentation/utils/screens.strings.dart';
-import '../../infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
 import '../../../shared/components/app.button.dart';
 import 'controllers/signup.int.controller.dart';
 

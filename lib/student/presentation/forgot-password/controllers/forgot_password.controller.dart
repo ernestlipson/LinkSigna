@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../shared/controllers/country.controller.dart';
-import '../../utils/screens.strings.dart';
+import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
 
 class ForgotPasswordController extends GetxController {
   final phoneController = TextEditingController();
@@ -33,7 +33,7 @@ class ForgotPasswordController extends GetxController {
 
   void validatePhone() {
     final phone = phoneController.text.trim();
-    
+
     if (phone.isEmpty) {
       isPhoneValid.value = false;
       phoneErrorMessage.value = ScreenStrings.requiredFieldError;

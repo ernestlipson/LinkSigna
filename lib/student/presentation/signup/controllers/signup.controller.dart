@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
-import '../../../../shared/utils/validation_utils.dart';
+import '../../../../infrastructure/utils/validation_utils.dart';
 import '../../shared/controllers/country.controller.dart';
 
 class SignupController extends GetxController {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../interpreter_profile.screen.dart';
 import '../../../infrastructure/dal/services/interpreter.service.dart';
-import '../../../infrastructure/dal/daos/models/Interpreter.model.dart';
+import '../../../../infrastructure/dal/models/interpreter.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 import '../../shared/controllers/student_user.controller.dart';
 

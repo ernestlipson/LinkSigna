@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../infrastructure/theme/app_theme.dart';
+import '../../../infrastructure/theme/app_theme.dart';
 import 'controllers/settings.controller.dart';
 
 class SettingsScreen extends GetView<SettingsController> {

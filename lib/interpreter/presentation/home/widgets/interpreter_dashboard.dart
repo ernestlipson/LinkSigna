@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/infrastructure/dal/models/session.dart';
 
 import '../../../../infrastructure/theme/app_theme.dart';
-import '../../../domain/models/session.dart';
 import '../controllers/interpreter_home.controller.dart';
 import '../../shared/controllers/interpreter_profile.controller.dart';
 

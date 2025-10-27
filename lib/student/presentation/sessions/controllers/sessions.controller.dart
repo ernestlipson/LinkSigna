@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../domain/sessions/session.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
-import '../../call/video_call.screen.dart';
+import 'package:sign_language_app/shared/call/video_call.screen.dart';
 import '../../shared/controllers/student_user.controller.dart';
 
 class SessionsController extends GetxController {

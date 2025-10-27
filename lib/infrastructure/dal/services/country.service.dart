@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart' hide Response;
-import '../daos/models/location.model.dart';
-import '../daos/models/flags.model.dart';
+import '../models/location.model.dart';
+import '../models/flags.model.dart';
 
 class CountryService {
   static CountryService get instance => Get.find();

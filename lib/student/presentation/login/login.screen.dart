@@ -4,10 +4,10 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
+import '../../../infrastructure/theme/app_theme.dart';
 import '../../../shared/components/app.button.dart';
 import '../../../shared/components/app.field.dart';
-import '../../infrastructure/theme/app_theme.dart';
-import '../utils/screens.strings.dart';
+import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
 import 'controllers/login.controller.dart';
 
 class LoginScreen extends GetView<LoginController> {

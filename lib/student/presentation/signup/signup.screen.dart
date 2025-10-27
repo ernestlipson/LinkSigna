@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../infrastructure/navigation/routes.dart';
+import '../../../infrastructure/theme/app_theme.dart';
 import '../../../shared/components/app.button.dart';
 import '../../../shared/components/app.field.dart';
 import '../../../shared/components/signup_logo.dart';
 import '../../../shared/components/university_dropdown.dart';
 import '../../../shared/components/user_type_selector.dart';
-import '../../infrastructure/theme/app_theme.dart';
-import '../utils/screens.strings.dart';
+import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
 import 'controllers/signup.controller.dart';
 
 class StudentSignupScreen extends GetView<SignupController> {
