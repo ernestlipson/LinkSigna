@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../deaf_history.screen.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class DeafHistoryController extends GetxController {
   final RxList<SessionData> sessions = <SessionData>[].obs;
@@ -59,20 +60,9 @@ class DeafHistoryController extends GetxController {
   }
 
   void messageInterpreter(SessionData session) {
-    Get.snackbar(
-      'Pending Feature',
-      'This Feature is Coming Soon',
-      snackPosition: SnackPosition.BOTTOM,
+    AppSnackbar.info(
+      title: 'Pending Feature',
+      message: 'This Feature is Coming Soon',
     );
-  }
-
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
   }
 }

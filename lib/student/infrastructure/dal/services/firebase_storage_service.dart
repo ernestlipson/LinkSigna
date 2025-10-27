@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class FirebaseStorageService extends GetxService {
   // Storage reference for student profile images
@@ -42,12 +43,9 @@ class FirebaseStorageService extends GetxService {
       return downloadUrl;
     } catch (e) {
       Get.log('Error uploading profile image: $e');
-      Get.snackbar(
-        'Upload Failed',
-        'Failed to upload profile image: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
-        colorText: Get.theme.colorScheme.error,
+      AppSnackbar.error(
+        title: 'Upload Failed',
+        message: 'Failed to upload profile image: ${e.toString()}',
       );
       return null;
     }

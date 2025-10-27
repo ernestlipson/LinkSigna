@@ -13,6 +13,7 @@ import '../../../../config/cloudinary.config.dart';
 import '../../../../infrastructure/dal/services/cloudinary.service.dart';
 import '../../shared/controllers/user.controller.dart';
 import '../../shared/controllers/student_user.controller.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class SettingsController extends GetxController {
   // Tab selection
@@ -208,24 +209,18 @@ class SettingsController extends GetxController {
         }
 
         // Show success message
-        Get.snackbar(
-          'Image Selected',
-          'Profile image selected successfully! Uploading to cloud...',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.blue[100],
-          colorText: Colors.blue[900],
+        AppSnackbar.info(
+          title: 'Image Selected',
+          message: 'Profile image selected successfully! Uploading to cloud...',
         );
 
         // Upload to Cloudinary
         await _uploadProfileImageToCloudinary(File(image.path));
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to pick image: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[900],
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to pick image: ${e.toString()}',
       );
     }
   }
@@ -263,33 +258,24 @@ class SettingsController extends GetxController {
         // Clear the local file since we now have a cloud URL
         profileImage.value = null;
 
-        Get.snackbar(
-          'Success',
-          'Profile image updated successfully!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green[100],
-          colorText: Colors.green[900],
+        AppSnackbar.success(
+          title: 'Success',
+          message: 'Profile image updated successfully!',
         );
 
         Get.log('Cloudinary upload success: $downloadUrl');
       } else {
         // Keep the local file if upload failed
-        Get.snackbar(
-          'Upload Failed',
-          'Failed to upload image to cloud. Please try again.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange[100],
-          colorText: Colors.orange[900],
+        AppSnackbar.warning(
+          title: 'Upload Failed',
+          message: 'Failed to upload image to cloud. Please try again.',
         );
       }
     } catch (e) {
       Get.log('Error uploading profile image: $e');
-      Get.snackbar(
-        'Error',
-        'Failed to upload profile image: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[900],
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to upload profile image: ${e.toString()}',
       );
 
       // Ensure loader stops even on error
@@ -348,10 +334,9 @@ class SettingsController extends GetxController {
   }
 
   void editProfile() {
-    Get.snackbar(
-      'Edit Profile',
-      'Edit profile functionality will be implemented',
-      snackPosition: SnackPosition.BOTTOM,
+    AppSnackbar.info(
+      title: 'Edit Profile',
+      message: 'Edit profile functionality will be implemented',
     );
   }
 
@@ -549,12 +534,9 @@ class SettingsController extends GetxController {
     universityLevel.value = '$universityName - Level $level';
     universityController.text = '$universityName - Level $level';
 
-    Get.snackbar(
-      'Level Updated',
-      'University level updated to Level $level',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green[100],
-      colorText: Colors.green[900],
+    AppSnackbar.success(
+      title: 'Level Updated',
+      message: 'University level updated to Level $level',
     );
   }
 
@@ -573,12 +555,9 @@ class SettingsController extends GetxController {
       languagesController.text = '$currentLanguages, $language';
     }
 
-    Get.snackbar(
-      'Language Updated',
-      'Language selection updated successfully',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green[100],
-      colorText: Colors.green[900],
+    AppSnackbar.success(
+      title: 'Language Updated',
+      message: 'Language selection updated successfully',
     );
   }
 
@@ -673,20 +652,14 @@ class SettingsController extends GetxController {
         );
       }
 
-      Get.snackbar(
-        'Saved',
-        'Profile updated successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green[100],
-        colorText: Colors.green[900],
+      AppSnackbar.success(
+        title: 'Saved',
+        message: 'Profile updated successfully',
       );
     } catch (e) {
-      Get.snackbar(
-        'Update Failed',
-        'Could not save changes: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[900],
+      AppSnackbar.error(
+        title: 'Update Failed',
+        message: 'Could not save changes: $e',
       );
     } finally {
       isSaving.value = false;
@@ -694,10 +667,9 @@ class SettingsController extends GetxController {
   }
 
   void changePassword() {
-    Get.snackbar(
-      'Change Password',
-      'Change password functionality will be implemented',
-      snackPosition: SnackPosition.BOTTOM,
+    AppSnackbar.info(
+      title: 'Change Password',
+      message: 'Change password functionality will be implemented',
     );
   }
 
@@ -715,12 +687,9 @@ class SettingsController extends GetxController {
           TextButton(
             onPressed: () {
               Get.back();
-              Get.snackbar(
-                'Account Deleted',
-                'Your account has been deleted successfully',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.red[100],
-                colorText: Colors.red[900],
+              AppSnackbar.warning(
+                title: 'Account Deleted',
+                message: 'Your account has been deleted successfully',
               );
             },
             child: Text(

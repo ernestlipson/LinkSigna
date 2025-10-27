@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 
-import '../../infrastructure/utils/app_icons.dart';
+import 'package:sign_language_app/infrastructure/utils/app_icons.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? profileImageUrl;

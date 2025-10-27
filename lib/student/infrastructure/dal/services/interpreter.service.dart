@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 
-import '../daos/models/Interpreter.model.dart';
+import '../../../../infrastructure/dal/models/interpreter.model.dart';
 
 class InterpreterService {
   // --- Firebase Interaction Examples ---
@@ -23,7 +23,8 @@ class InterpreterService {
 
   Future<List<Interpreter>> getAllInterpreters() async {
     try {
-      QuerySnapshot querySnapshot = await _db.collection('interpreter_user').get();
+      QuerySnapshot querySnapshot =
+          await _db.collection('interpreter_user').get();
       return querySnapshot.docs
           .map((doc) => Interpreter.fromFirestore(doc))
           .toList();
@@ -56,7 +57,8 @@ class InterpreterService {
         snapshot.docs.map((doc) => Interpreter.fromFirestore(doc)).toList());
   }
 
-  Future<void> setBookingStatus({required String interpreterId, required bool isBooked}) async {
+  Future<void> setBookingStatus(
+      {required String interpreterId, required bool isBooked}) async {
     try {
       await _db.collection('interpreter_user').doc(interpreterId).update({
         'isBooked': isBooked,

@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../../domain/entities/flag.entity.dart';
 import '../../../domain/repositories/country.repo.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class CountryController extends GetxController {
   static CountryController get instance => Get.find();
@@ -24,8 +25,10 @@ class CountryController extends GetxController {
       countryFlag.value = flag;
     } catch (e, s) {
       Get.log("Fetch Flag: $e $s");
-      Get.snackbar('Error', 'Failed to fetch country flag',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to fetch country flag',
+      );
     } finally {
       countryLoading.value = false;
     }

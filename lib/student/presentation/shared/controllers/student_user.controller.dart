@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../domain/users/student_user.model.dart';
 import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class StudentUserController extends GetxController {
   final current = Rxn<StudentUser>();
@@ -104,8 +105,10 @@ class StudentUserController extends GetxController {
       await prefs.setString(_prefsDocKey, _docId!);
       _subscribe(_docId!);
     } catch (e) {
-      Get.snackbar('Profile Error', e.toString(),
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Profile Error',
+        message: e.toString(),
+      );
     } finally {
       loading.value = false;
     }
@@ -116,8 +119,10 @@ class StudentUserController extends GetxController {
     try {
       await _service.updateFields(_docId!, data);
     } catch (e) {
-      Get.snackbar('Update Failed', e.toString(),
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Update Failed',
+        message: e.toString(),
+      );
     }
   }
 

@@ -5,7 +5,7 @@ import 'package:sign_language_app/student/presentation/components/custom_app_bar
 import 'package:sign_language_app/student/presentation/deaf-history/deaf_history.screen.dart';
 import 'package:sign_language_app/student/presentation/home/home.dashboard.dart';
 
-import '../../infrastructure/utils/app_icons.dart';
+import 'package:sign_language_app/infrastructure/utils/app_icons.dart';
 import '../deaf-history/controllers/deaf_history.controller.dart';
 import '../interpreters/interpreters.screen.dart';
 import '../sessions/controllers/sessions.controller.dart';

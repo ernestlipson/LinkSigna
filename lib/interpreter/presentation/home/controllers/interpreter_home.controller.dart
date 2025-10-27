@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_language_app/infrastructure/dal/models/session.dart';
 import '../../../../infrastructure/navigation/routes.dart';
-import '../../../domain/models/session.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 import '../../shared/controllers/interpreter_profile.controller.dart';
 import '../../../../domain/sessions/session.model.dart';

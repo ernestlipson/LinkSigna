@@ -8,6 +8,7 @@ import '../../../../infrastructure/navigation/routes.dart';
 import '../../shared/controllers/user.controller.dart';
 import '../../shared/controllers/student_user.controller.dart';
 import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class OtpController extends GetxController {
   // OTP Controllers for 6 separate boxes
@@ -101,8 +102,10 @@ class OtpController extends GetxController {
   Future<void> verifyOTP() async {
     final otpCode = getOtpCode();
     if (otpCode.isEmpty || otpCode.length != 6) {
-      Get.snackbar('Error', 'Please enter a valid 6-digit OTP',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Please enter a valid 6-digit OTP',
+      );
       return;
     }
 
@@ -161,11 +164,10 @@ class OtpController extends GetxController {
             // User found - this is a successful login
             stuCtrl.current.value = existingUser;
 
-            Get.snackbar('Welcome Back',
-                'Successfully signed in, ${existingUser.displayName}!',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green[100],
-                colorText: Colors.green[900]);
+            AppSnackbar.success(
+              title: 'Welcome Back',
+              message: 'Successfully signed in, ${existingUser.displayName}!',
+            );
           } else {
             // User ID was cached but user not found - treat as new signup
             await stuCtrl.ensureProfileExists(
@@ -175,10 +177,10 @@ class OtpController extends GetxController {
               universityLevel: 'Level 100',
             );
 
-            Get.snackbar('Welcome', 'Account created successfully!',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green[100],
-                colorText: Colors.green[900]);
+            AppSnackbar.success(
+              title: 'Welcome',
+              message: 'Account created successfully!',
+            );
           }
         } else {
           // This is a signup flow - create new profile
@@ -189,10 +191,10 @@ class OtpController extends GetxController {
             universityLevel: 'Level 100', // Updated to Level 100 as requested
           );
 
-          Get.snackbar('Success', 'Account created successfully!',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: Colors.green[100],
-              colorText: Colors.green[900]);
+          AppSnackbar.success(
+            title: 'Success',
+            message: 'Account created successfully!',
+          );
         }
 
         // Clear existing user ID from preferences after successful processing
@@ -202,11 +204,10 @@ class OtpController extends GetxController {
         Get.offAllNamed(Routes.STUDENT_HOME);
       } catch (firestoreError) {
         // If Firestore fails, show error and keep user on current page
-        Get.snackbar(
-            'Error', 'Failed to load profile: ${firestoreError.toString()}',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red[100],
-            colorText: Colors.red[900]);
+        AppSnackbar.error(
+          title: 'Error',
+          message: 'Failed to load profile: ${firestoreError.toString()}',
+        );
 
         // Clear Firebase Auth state if Firestore fails
         await FirebaseAuth.instance.signOut();
@@ -219,10 +220,10 @@ class OtpController extends GetxController {
       // Clear OTP fields on error
       clearOtpFields();
 
-      Get.snackbar('Error', 'Failed to verify OTP: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red[100],
-          colorText: Colors.red[900]);
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to verify OTP: ${e.toString()}',
+      );
     } finally {
       isVerifyingOtp.value = false;
     }
@@ -236,8 +237,10 @@ class OtpController extends GetxController {
       if (isEmailFlow.value) {
         // Resend email OTP
         await EmailOTP.sendOTP(email: destination.value);
-        Get.snackbar('Success', 'OTP sent again to your email',
-            snackPosition: SnackPosition.BOTTOM);
+        AppSnackbar.success(
+          title: 'Success',
+          message: 'OTP sent again to your email',
+        );
       } else {
         // Resend phone OTP using Firebase
         await FirebaseAuth.instance.verifyPhoneNumber(
@@ -246,13 +249,17 @@ class OtpController extends GetxController {
             await FirebaseAuth.instance.signInWithCredential(credential);
           },
           verificationFailed: (FirebaseAuthException e) {
-            Get.snackbar('Error', 'Failed to resend OTP: ${e.message}',
-                snackPosition: SnackPosition.BOTTOM);
+            AppSnackbar.error(
+              title: 'Error',
+              message: 'Failed to resend OTP: ${e.message}',
+            );
           },
           codeSent: (String newVerificationId, int? resendToken) {
             verificationId.value = newVerificationId;
-            Get.snackbar('Success', 'OTP sent again to your phone',
-                snackPosition: SnackPosition.BOTTOM);
+            AppSnackbar.success(
+              title: 'Success',
+              message: 'OTP sent again to your phone',
+            );
           },
           codeAutoRetrievalTimeout: (String newVerificationId) {
             verificationId.value = newVerificationId;
@@ -266,8 +273,10 @@ class OtpController extends GetxController {
       clearOtpFields();
       startResendTimer();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to resend OTP: ${e.toString()}',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to resend OTP: ${e.toString()}',
+      );
     } finally {
       isResendingOtp.value = false;
     }
