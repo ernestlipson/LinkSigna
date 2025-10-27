@@ -6,10 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
 import '../../../../infrastructure/utils/validation_utils.dart';
-import '../../shared/controllers/country.controller.dart';
+import '../../../../shared/mixins/country_flag_loader.mixin.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
-class SignupController extends GetxController {
+class SignupController extends GetxController with CountryFlagLoader {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -28,7 +28,6 @@ class SignupController extends GetxController {
   final RxString otpUserId = ''.obs;
 
   final RxBool isTermsAccepted = false.obs;
-  CountryController get countryController => Get.find<CountryController>();
 
   final isNameValid = true.obs;
   final isEmailValid = true.obs;
@@ -40,9 +39,6 @@ class SignupController extends GetxController {
   final RxString selectedUniversity = ''.obs;
 
   // Country flag for phone field
-  final RxString countryFlagUrl = ''.obs;
-  final RxBool isLoadingFlag = false.obs;
-
   void validateName() {
     isNameValid.value = ValidationUtils.isNotEmpty(nameController.text);
   }
@@ -169,25 +165,6 @@ class SignupController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchCountryFlag();
-  }
-
-  Future<void> fetchCountryFlag() async {
-    try {
-      isLoadingFlag.value = true;
-      final countryController = Get.find<CountryController>();
-      await countryController.fetchCountryFlag();
-
-      if (countryController.countryFlag.value != null) {
-        countryFlagUrl.value = countryController.countryFlag.value!.png;
-      } else {
-        countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
-      }
-    } catch (e) {
-      Get.log('Error fetching country flag: $e');
-      countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
-    } finally {
-      isLoadingFlag.value = false;
-    }
+    loadCountryFlag();
   }
 }

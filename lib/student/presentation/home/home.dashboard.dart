@@ -112,7 +112,6 @@ class HomeDashboard extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final session = sessions[index];
                           final isPending = session['status'] == 'Pending';
-                          final isConfirmed = session['status'] == 'Confirmed';
                           return Container(
                             decoration: BoxDecoration(
                               color: Colors.white,

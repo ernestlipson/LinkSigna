@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../infrastructure/theme/app_theme.dart';
+import '../../../../shared/components/settings/settings_screen_layout.component.dart';
 import 'controllers/interpreter_settings.controller.dart';
 
 class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
@@ -17,96 +18,43 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
   Widget build(BuildContext context) {
     Get.lazyPut(() => InterpreterSettingsController());
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: showBackButton
-          ? AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              leading: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.arrow_back,
-                    color: Colors.grey[700],
-                    size: 20,
-                  ),
-                ),
-                onPressed: () => Get.back(),
-              ),
-              title: const Text(
-                'Settings',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              centerTitle: true,
-            )
-          : null,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Obx(() => _buildTab(
-                          'Profile',
-                          controller.selectedTab.value == 0,
-                          () => controller.selectedTab.value = 0,
-                        )),
-                  ),
-                  Expanded(
-                    child: Obx(() => _buildTab(
-                          'Notifications',
-                          controller.selectedTab.value == 1,
-                          () => controller.selectedTab.value = 1,
-                        )),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Obx(() => controller.selectedTab.value == 0
-                  ? _buildProfileTab()
-                  : _buildNotificationsTab()),
-            ),
-          ],
-        ),
-      ),
+    return SettingsScreenLayout(
+      selectedTab: controller.selectedTab,
+      buildProfileTab: _buildProfileTab,
+      buildNotificationsTab: _buildNotificationsTab,
+      useSafeArea: true,
+      appBar: showBackButton ? _buildBackAppBar() : null,
     );
   }
 
-  Widget _buildTab(String title, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isSelected ? AppColors.primary : Colors.transparent,
-              width: 2,
-            ),
+  PreferredSizeWidget _buildBackAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      leading: IconButton(
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.arrow_back,
+            color: Colors.grey[700],
+            size: 20,
           ),
         ),
-        child: Text(
-          title,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? AppColors.primary : Colors.grey[600],
-          ),
+        onPressed: () => Get.back(),
+      ),
+      title: const Text(
+        'Settings',
+        style: TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
         ),
       ),
+      centerTitle: true,
     );
   }
 

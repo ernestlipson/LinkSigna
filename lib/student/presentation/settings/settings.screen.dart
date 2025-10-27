@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../infrastructure/theme/app_theme.dart';
+import '../../../shared/components/settings/settings_screen_layout.component.dart';
 import 'controllers/settings.controller.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
@@ -9,64 +10,10 @@ class SettingsScreen extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Obx(() => _buildTab(
-                        'Profile',
-                        controller.selectedTab.value == 0,
-                        () => controller.selectedTab.value = 0,
-                      )),
-                ),
-                Expanded(
-                  child: Obx(() => _buildTab(
-                        'Notifications',
-                        controller.selectedTab.value == 1,
-                        () => controller.selectedTab.value = 1,
-                      )),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Obx(() => controller.selectedTab.value == 0
-                ? _buildProfileTab()
-                : _buildNotificationsTab()),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTab(String title, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isSelected ? AppColors.primary : Colors.transparent,
-              width: 2,
-            ),
-          ),
-        ),
-        child: Text(
-          title,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? AppColors.primary : Colors.grey[600],
-          ),
-        ),
-      ),
+    return SettingsScreenLayout(
+      selectedTab: controller.selectedTab,
+      buildProfileTab: _buildProfileTab,
+      buildNotificationsTab: _buildNotificationsTab,
     );
   }
 

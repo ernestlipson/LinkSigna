@@ -7,10 +7,9 @@ import 'package:sign_language_app/infrastructure/dal/services/student_user.fires
 import 'package:sign_language_app/student/presentation/shared/controllers/student_user.controller.dart';
 import 'package:sign_language_app/infrastructure/utils/validation_utils.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
+import '../../../../shared/mixins/country_flag_loader.mixin.dart';
 
-import '../../shared/controllers/country.controller.dart';
-
-class LoginController extends GetxController {
+class LoginController extends GetxController with CountryFlagLoader {
   // Firebase removed
 
   // Controllers to read the text values
@@ -26,34 +25,6 @@ class LoginController extends GetxController {
   // Loading states
   final RxBool isLoading = false.obs;
   final RxBool isGoogleSignInLoading = false.obs;
-
-  // Get the shared country controller
-  CountryController get countryController => Get.find<CountryController>();
-
-  // Flag loading state (mirrors signup controller behavior)
-  final RxBool isLoadingFlag = false.obs;
-  final RxString countryFlagUrl = ''.obs;
-
-  Future<void> fetchCountryFlag() async {
-    try {
-      isLoadingFlag.value = true;
-      await countryController.fetchCountryFlag();
-      if (countryController.countryFlag.value != null) {
-        countryFlagUrl.value = countryController.countryFlag.value!.png;
-      } else {
-        countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
-      }
-      // Log flag URL
-      // ignore: avoid_print
-      print('Login flag URL => ${countryFlagUrl.value}');
-    } catch (e) {
-      countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
-      // ignore: avoid_print
-      print('Flag fetch error (login): $e');
-    } finally {
-      isLoadingFlag.value = false;
-    }
-  }
 
   // Add this method to toggle password visibility
   void togglePasswordVisibility() {
@@ -225,7 +196,7 @@ class LoginController extends GetxController {
   void onInit() {
     super.onInit();
     checkAuthStatus();
-    fetchCountryFlag();
+    loadCountryFlag();
   }
 
   @override
