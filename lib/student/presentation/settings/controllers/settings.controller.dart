@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
+import 'package:sign_language_app/shared/components/app_bottom_sheet.component.dart';
+import 'package:sign_language_app/shared/components/app_dialog.component.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
@@ -13,7 +16,6 @@ import '../../../../config/cloudinary.config.dart';
 import '../../../../infrastructure/dal/services/cloudinary.service.dart';
 import '../../shared/controllers/user.controller.dart';
 import '../../shared/controllers/student_user.controller.dart';
-import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class SettingsController extends GetxController {
   // Tab selection
@@ -341,166 +343,62 @@ class SettingsController extends GetxController {
   }
 
   void addLanguage() {
-    Get.bottomSheet(
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+    AppBottomSheet.showList(
+      title: 'Select Language',
+      maxHeight: 160,
+      items: availableLanguages.map((language) {
+        final isSelected = languagesController.text.contains(language);
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 4),
+          title: Text(
+            language,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
             ),
-            // Title
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  Text(
-                    'Select Language',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Spacer(),
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: Icon(Icons.close, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-            // Language list
-            SizedBox(
-              height: 100, // Fixed height for the list
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                itemCount: availableLanguages.length,
-                itemBuilder: (context, index) {
-                  final language = availableLanguages[index];
-                  return ListTile(
-                    contentPadding: EdgeInsets.symmetric(vertical: 4),
-                    title: Text(
-                      language,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    trailing: languagesController.text.contains(language)
-                        ? Icon(Icons.check, color: Colors.green)
-                        : null,
-                    onTap: () {
-                      _selectLanguage(language);
-                      Get.back();
-                    },
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 20),
-          ],
-        ),
-      ),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+          ),
+          trailing:
+              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+          onTap: () {
+            _selectLanguage(language);
+            Get.back();
+          },
+        );
+      }).toList(),
     );
   }
 
   void selectUniversityLevel() {
-    Get.bottomSheet(
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+    AppBottomSheet.showList(
+      title: 'Select University Level',
+      maxHeight: 360,
+      items: availableLevels.map((level) {
+        final isSelected = universityLevel.value.contains('Level $level');
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          title: Text(
+            'Level $level',
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
             ),
-            // Title
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  Text(
-                    'Select University Level',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Spacer(),
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: Icon(Icons.close, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
+          ),
+          subtitle: Text(
+            _getLevelDescription(level),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
             ),
-            // Level list
-            SizedBox(
-              height: 300, // Fixed height for the list
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                itemCount: availableLevels.length,
-                itemBuilder: (context, index) {
-                  final level = availableLevels[index];
-                  return ListTile(
-                    contentPadding: EdgeInsets.symmetric(vertical: 8),
-                    title: Text(
-                      'Level $level',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    subtitle: Text(
-                      _getLevelDescription(level),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    trailing: universityLevel.value.contains('Level $level')
-                        ? Icon(Icons.check, color: Colors.green)
-                        : null,
-                    onTap: () {
-                      _selectUniversityLevel(level);
-                      Get.back();
-                    },
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 20),
-          ],
-        ),
-      ),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+          ),
+          trailing:
+              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+          onTap: () {
+            _selectUniversityLevel(level);
+            Get.back();
+          },
+        );
+      }).toList(),
     );
   }
 
@@ -674,31 +572,20 @@ class SettingsController extends GetxController {
   }
 
   void deleteAccount() {
-    Get.dialog(
-      AlertDialog(
-        title: Text('Delete Account'),
-        content: Text(
-            'Are you sure you want to delete your account? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              AppSnackbar.warning(
-                title: 'Account Deleted',
-                message: 'Your account has been deleted successfully',
-              );
-            },
-            child: Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+    AppDialog.showConfirmation(
+      title: 'Delete Account',
+      message:
+          'Are you sure you want to delete your account? This action cannot be undone.',
+      cancelLabel: 'Cancel',
+      confirmLabel: 'Delete',
+      confirmColor: Colors.red,
+      barrierDismissible: false,
+      onConfirm: () {
+        AppSnackbar.warning(
+          title: 'Account Deleted',
+          message: 'Your account has been deleted successfully',
+        );
+      },
     );
   }
 

@@ -20,12 +20,13 @@ class InterpreterSignInScreen extends StatelessWidget {
       isPasswordVisible: controller.isPasswordVisible,
       isRememberMe: controller.isRememberMe,
       isSubmitting: controller.isSubmitting,
-      onSubmit: () => controller.submit(),
+      onSubmit: () => controller.login(),
       onTogglePasswordVisibility: () => controller.togglePasswordVisibility(),
       onForgotPassword: () => controller.sendPasswordReset(),
       onEmailChanged: () => controller.validateEmail(),
       onPasswordChanged: () => controller.validatePassword(),
       signUpRoute: Routes.INTERPRETER_SIGNUP,
+      loadingButtonText: 'Signing In...',
       showPasswordField: true,
     );
   }

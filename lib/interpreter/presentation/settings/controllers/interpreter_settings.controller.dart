@@ -1,12 +1,15 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sign_language_app/shared/components/app.snackbar.dart';
+import 'package:sign_language_app/shared/components/app_bottom_sheet.component.dart';
+import 'package:sign_language_app/shared/components/app_dialog.component.dart';
 
 import '../../../../infrastructure/dal/services/cloudinary.service.dart';
 import '../../../../config/cloudinary.config.dart';
@@ -169,7 +172,10 @@ class InterpreterSettingsController extends GetxController {
       // Load existing stored Firestore doc id if any
       userDocId.value = prefs.getString('interpreter_id') ?? '';
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load user data: ${e.toString()}');
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to load user data: ${e.toString()}',
+      );
     }
   }
 
@@ -229,7 +235,10 @@ class InterpreterSettingsController extends GetxController {
         await _uploadProfileImage();
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to pick image: ${e.toString()}');
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to pick image: ${e.toString()}',
+      );
     }
   }
 
@@ -280,128 +289,85 @@ class InterpreterSettingsController extends GetxController {
         // Clear local file after success
         profileImage.value = null;
 
-        Get.snackbar(
-          'Success',
-          'Profile image updated successfully',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
+        AppSnackbar.success(
+          title: 'Success',
+          message: 'Profile image updated successfully',
         );
       } else {
-        Get.snackbar(
-          'Upload Failed',
-          'Failed to upload image to cloud. Please try again.',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
+        AppSnackbar.warning(
+          title: 'Upload Failed',
+          message: 'Failed to upload image to cloud. Please try again.',
         );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to upload image: ${e.toString()}');
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to upload image: ${e.toString()}',
+      );
     } finally {
       isUploadingImage.value = false;
     }
   }
 
   void selectExperienceLevel() {
-    Get.bottomSheet(
-      Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: const Text(
-                'Select Experience Level',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            ...experienceLevels.map((level) => ListTile(
-                  title: Text(level),
-                  onTap: () {
-                    experience.value = level;
-                    experienceController.text = level;
-                    Get.back();
-                  },
-                )),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
+    AppBottomSheet.showList(
+      title: 'Select Experience Level',
+      items: experienceLevels.map((level) {
+        final isSelected = experience.value == level;
+        return ListTile(
+          title: Text(level),
+          trailing:
+              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+          onTap: () {
+            experience.value = level;
+            experienceController.text = level;
+            Get.back();
+          },
+        );
+      }).toList(),
     );
   }
 
   void selectCertification() {
-    Get.bottomSheet(
-      Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: const Text(
-                'Select Certification',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            ...certifications.map((cert) => ListTile(
-                  title: Text(cert),
-                  onTap: () {
-                    certification.value = cert;
-                    certificationController.text = cert;
-                    Get.back();
-                  },
-                )),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
+    AppBottomSheet.showList(
+      title: 'Select Certification',
+      items: certifications.map((cert) {
+        final isSelected = certification.value == cert;
+        return ListTile(
+          title: Text(cert),
+          trailing:
+              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+          onTap: () {
+            certification.value = cert;
+            certificationController.text = cert;
+            Get.back();
+          },
+        );
+      }).toList(),
     );
   }
 
   void addLanguage() {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Add Language'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: availableLanguages
-              .map((language) => ListTile(
-                    title: Text(language),
-                    onTap: () {
-                      String currentLanguages = languagesController.text;
-                      if (!currentLanguages.contains(language)) {
-                        if (currentLanguages.isNotEmpty) {
-                          languagesController.text =
-                              '$currentLanguages, $language';
-                        } else {
-                          languagesController.text = language;
-                        }
-                      }
-                      Get.back();
-                    },
-                  ))
-              .toList(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
+    AppBottomSheet.showList(
+      title: 'Add Language',
+      maxHeight: 260,
+      items: availableLanguages.map((language) {
+        final isSelected = languagesController.text.contains(language);
+        return ListTile(
+          title: Text(language),
+          trailing:
+              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
+          onTap: () {
+            final currentLanguages = languagesController.text;
+            if (!currentLanguages.contains(language)) {
+              languagesController.text = currentLanguages.isNotEmpty
+                  ? '$currentLanguages, $language'
+                  : language;
+            }
+            Get.back();
+          },
+        );
+      }).toList(),
     );
   }
 
@@ -457,18 +423,14 @@ class InterpreterSettingsController extends GetxController {
       // Update via profile controller
       await profileController.updateProfile(updateData);
 
-      Get.snackbar(
-        'Success',
-        'Profile updated successfully',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+      AppSnackbar.success(
+        title: 'Success',
+        message: 'Profile updated successfully',
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to save changes: ${e.toString()}',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to save changes: ${e.toString()}',
       );
     } finally {
       isSaving.value = false;
@@ -476,27 +438,17 @@ class InterpreterSettingsController extends GetxController {
   }
 
   Future<void> deleteAccount() async {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text(
+    AppDialog.showConfirmation(
+      title: 'Delete Account',
+      message:
           'Are you sure you want to delete your account? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Get.back();
-              await _performAccountDeletion();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      cancelLabel: 'Cancel',
+      confirmLabel: 'Delete',
+      confirmColor: Colors.red,
+      barrierDismissible: false,
+      onConfirm: () async {
+        await _performAccountDeletion();
+      },
     );
   }
 
@@ -504,13 +456,11 @@ class InterpreterSettingsController extends GetxController {
   Future<void> logout() async {
     try {
       await FirebaseAuth.instance.signOut();
-      Get.offAllNamed(Routes.INTERPRETER_SIGNUP);
+      Get.offAllNamed(Routes.INTERPRETER_SIGNIN);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to logout: ${e.toString()}',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to logout: ${e.toString()}',
       );
     }
   }
@@ -535,21 +485,17 @@ class InterpreterSettingsController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
-      Get.snackbar(
-        'Account Deleted',
-        'Your account has been successfully deleted',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+      AppSnackbar.success(
+        title: 'Account Deleted',
+        message: 'Your account has been successfully deleted',
       );
 
       // Navigate to login/signup screen
       Get.offAllNamed(Routes.initialRoute);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to delete account: ${e.toString()}',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to delete account: ${e.toString()}',
       );
     }
   }

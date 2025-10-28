@@ -1,9 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:email_otp/email_otp.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
+import '../../../../domain/users/interpreter_user.model.dart';
+import '../../shared/controllers/interpreter_profile.controller.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class InterpreterSigninController extends GetxController {
@@ -21,7 +24,8 @@ class InterpreterSigninController extends GetxController {
   final isRememberMe = false.obs;
 
   final isSubmitting = false.obs;
-  final isSendingOtp = false.obs;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Services
   final InterpreterUserFirestoreService _firestoreService =
@@ -40,6 +44,12 @@ class InterpreterSigninController extends GetxController {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
 
+  bool validateAll() {
+    validateEmail();
+    validatePassword();
+    return isEmailValid.value && isPasswordValid.value;
+  }
+
   Future<void> sendPasswordReset() async {
     final email = emailController.text.trim();
     if (email.isEmpty) {
@@ -49,111 +59,198 @@ class InterpreterSigninController extends GetxController {
       );
       return;
     }
-    AppSnackbar.info(
-      title: 'Password Reset',
-      message: 'Please contact support for password assistance',
-    );
-  }
 
-  bool validateAll() {
-    validateEmail();
-    validatePassword();
-    return isEmailValid.value && isPasswordValid.value;
-  }
-
-  Future<bool> _sendOtp(String email) async {
     try {
-      final result = await EmailOTP.sendOTP(email: email);
-      if (result == true) {
-        return true;
-      } else {
-        throw Exception('Failed to send OTP');
-      }
-    } catch (e) {
-      Get.log('Error sending OTP: $e');
-      return false;
-    }
-  }
-
-  Future<void> resendOtp() async {
-    validateEmail();
-    if (!isEmailValid.value) {
-      AppSnackbar.error(
-        title: 'Invalid Email',
-        message: 'Please enter a valid email address',
-      );
-      return;
-    }
-
-    isSendingOtp.value = true;
-    final success = await _sendOtp(emailController.text.trim());
-
-    if (success) {
+      await _auth.sendPasswordResetEmail(email: email);
       AppSnackbar.success(
-        title: 'OTP Resent',
-        message: 'New verification code sent to your email',
+        title: 'Email Sent',
+        message: 'Check your inbox to reset your password',
       );
-    } else {
+    } on FirebaseAuthException catch (e) {
+      String msg = 'Failed to send reset email';
+      if (e.code == 'user-not-found') msg = 'No account found with this email';
+      if (e.code == 'invalid-email') msg = 'Invalid email format';
       AppSnackbar.error(
         title: 'Error',
-        message: 'Failed to resend OTP',
+        message: msg,
+      );
+    } catch (e) {
+      AppSnackbar.error(
+        title: 'Error',
+        message: e.toString(),
       );
     }
-
-    isSendingOtp.value = false;
   }
 
-  Future<void> submit() async {
+  Future<void> login() async {
     if (!validateAll()) {
-      AppSnackbar.error(
-        title: 'Invalid Email',
-        message: 'Please enter a valid email address',
-      );
+      if (emailController.text.trim().isEmpty) {
+        isEmailValid.value = false;
+        AppSnackbar.error(
+          title: 'Email Required',
+          message: 'Enter your university email',
+        );
+      }
+      if (passwordController.text.trim().isEmpty) {
+        isPasswordValid.value = false;
+        AppSnackbar.error(
+          title: 'Password Required',
+          message: 'Enter your password',
+        );
+      }
       return;
     }
 
     isSubmitting.value = true;
+    final email = emailController.text.trim();
 
     try {
-      // Check if user exists in Firestore
-      final existingUser =
-          await _firestoreService.findByEmail(emailController.text.trim());
-      if (existingUser == null) {
-        AppSnackbar.warning(
-          title: 'Account Not Found',
-          message: 'No account found with this email. Please sign up first.',
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: passwordController.text.trim(),
+      );
+
+      final profile = await _loadInterpreterProfile(credential.user);
+
+      if (profile == null) {
+        await _auth.signOut();
+        AppSnackbar.error(
+          title: 'Profile Missing',
+          message: 'Interpreter profile not found for this account.',
         );
-        isSubmitting.value = false;
         return;
       }
 
-      // User exists, proceed with OTP
-      final success = await _sendOtp(emailController.text.trim());
+      await _cacheSession(profile, rememberEmail: isRememberMe.value);
 
-      if (success) {
-        AppSnackbar.success(
-          title: 'OTP Sent',
-          message: 'Verification code sent to your email',
-        );
-
-        Get.toNamed(Routes.INTERPRETER_OTP, arguments: {
-          'email': emailController.text.trim(),
-          'isSignin': true, // Flag to indicate this is signin flow
-          'interpreterUser': existingUser.toMap(),
-        });
-      } else {
-        AppSnackbar.error(
-          title: 'Error',
-          message: 'Failed to send OTP',
-        );
+      if (Get.isRegistered<InterpreterProfileController>()) {
+        Get.find<InterpreterProfileController>().setProfile(profile);
       }
+
+      AppSnackbar.success(
+        title: 'Success',
+        message: 'Login successful!',
+      );
+
+      Get.offAllNamed(Routes.INTERPRETER_HOME);
+    } on FirebaseAuthException catch (e) {
+      AppSnackbar.error(
+        title: 'Login Failed',
+        message: _mapAuthError(e),
+      );
     } catch (e) {
       AppSnackbar.error(
         title: 'Error',
-        message: 'Failed to check account: ${e.toString()}',
+        message: 'Login failed: ${e.toString()}',
       );
     } finally {
       isSubmitting.value = false;
+    }
+  }
+
+  Future<void> _prefillRememberedEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rememberedEmail = prefs.getString('interpreter_remembered_email');
+      if (rememberedEmail != null && rememberedEmail.isNotEmpty) {
+        emailController.text = rememberedEmail;
+        isRememberMe.value = true;
+      }
+    } catch (e) {
+      Get.log('Error loading remembered email: $e');
+    }
+  }
+
+  Future<void> _checkAuthStatus() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final profile = await _loadInterpreterProfile(user);
+      if (profile == null) return;
+
+      await _cacheSession(profile, rememberEmail: isRememberMe.value);
+
+      if (Get.isRegistered<InterpreterProfileController>()) {
+        Get.find<InterpreterProfileController>().setProfile(profile);
+      }
+
+      Get.offAllNamed(Routes.INTERPRETER_HOME);
+    } catch (e) {
+      Get.log('Interpreter auto-login failed: $e');
+    }
+  }
+
+  Future<InterpreterUser?> _loadInterpreterProfile(User? user) async {
+    if (user == null) return null;
+
+    final byAuth = await _firestoreService.findByAuthUid(user.uid);
+    if (byAuth != null) return byAuth;
+
+    final email = user.email ?? emailController.text.trim();
+    if (email.isEmpty) return null;
+
+    final byEmail = await _firestoreService.findByEmail(email);
+    if (byEmail != null) {
+      await _firestoreService.updateFields(byEmail.interpreterID, {
+        'authUid': user.uid,
+      });
+      return byEmail.copyWith(authUid: user.uid);
+    }
+
+    if (user.displayName != null) {
+      final parts = user.displayName!.trim().split(' ');
+      final firstName = parts.isNotEmpty ? parts.first : '';
+      final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+      return _firestoreService.getOrCreateByAuthUid(
+        authUid: user.uid,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+      );
+    }
+
+    return _firestoreService.getOrCreateByAuthUid(
+      authUid: user.uid,
+      email: email,
+      firstName: '',
+      lastName: '',
+    );
+  }
+
+  Future<void> _cacheSession(InterpreterUser profile,
+      {required bool rememberEmail}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('interpreter_logged_in', true);
+    await prefs.setString('interpreter_email', profile.email);
+    await prefs.setString('interpreter_name', profile.displayName.trim());
+    await prefs.setString('interpreter_id', profile.interpreterID);
+    if (profile.university != null && profile.university!.isNotEmpty) {
+      await prefs.setString('university', profile.university!);
+    }
+
+    if (rememberEmail) {
+      await prefs.setString('interpreter_remembered_email', profile.email);
+      emailController.text = profile.email;
+      isRememberMe.value = true;
+    } else {
+      await prefs.remove('interpreter_remembered_email');
+      isRememberMe.value = false;
+    }
+  }
+
+  String _mapAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'user-not-found':
+        return 'No account found with this email';
+      case 'wrong-password':
+        return 'Incorrect password';
+      case 'invalid-email':
+        return 'Invalid email format';
+      case 'user-disabled':
+        return 'This account has been disabled';
+      default:
+        return 'Authentication failed. Please try again.';
     }
   }
 
@@ -162,5 +259,16 @@ class InterpreterSigninController extends GetxController {
     emailController.dispose();
     passwordController.dispose();
     super.onClose();
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _prefillRememberedEmail();
+    await _checkAuthStatus();
   }
 }
