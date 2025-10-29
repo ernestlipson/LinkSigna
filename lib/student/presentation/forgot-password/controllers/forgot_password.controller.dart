@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../shared/controllers/country.controller.dart';
+import '../../../../../infrastructure/presentation/controllers/country.controller.dart';
 import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 

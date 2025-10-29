@@ -5,7 +5,7 @@ import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 import 'package:sign_language_app/infrastructure/dal/services/student_user.firestore.service.dart';
 import 'package:sign_language_app/student/presentation/shared/controllers/student_user.controller.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
-import '../../../../shared/mixins/country_flag_loader.mixin.dart';
+import '../../../../../infrastructure/mixins/country_flag_loader.mixin.dart';
 import '../../../../shared/mixins/login.mixin.dart';
 
 class LoginController extends GetxController
