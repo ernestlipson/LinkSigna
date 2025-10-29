@@ -42,7 +42,7 @@ class SharedSignInScreen extends StatelessWidget {
     this.onPasswordChanged,
     required this.signUpRoute,
     this.submitButtonText = "Log in",
-    this.loadingButtonText = "Sending OTP...",
+    this.loadingButtonText = "Signing In...",
     this.showPasswordField = true,
   });
 

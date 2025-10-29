@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../shared/controllers/user.controller.dart';
+import '../interpreters/controllers/interpreters.controller.dart';
+import '../interpreters/interpreter_profile.screen.dart';
 
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
@@ -9,6 +11,7 @@ class HomeDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userController = Get.find<UserController>();
+    final interpretersController = Get.put(InterpretersController());
     final sessions = [
       {
         'name': 'Arlene McCoy',
@@ -69,6 +72,172 @@ class HomeDashboard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // Interpreters Section
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Color(0xFFE5E7EB)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Interpreters',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            'View All',
+                            style: TextStyle(
+                              color: Color(0xFF9B197D),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 140,
+                      child: Obx(() {
+                        if (interpretersController.isLoading.value) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        if (interpretersController.loadError.value != null) {
+                          return Center(
+                              child: Text(
+                                  interpretersController.loadError.value!));
+                        }
+                        final list = interpretersController.interpreters;
+                        if (list.isEmpty) {
+                          return const Center(
+                              child: Text('No interpreters yet'));
+                        }
+                        return ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: list.length.clamp(0, 10),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 12),
+                          itemBuilder: (context, index) {
+                            final i = list[index];
+                            return GestureDetector(
+                              onTap: () => Get.to(() =>
+                                  InterpreterProfileScreen(interpreter: i)),
+                              child: Container(
+                                width: 220,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Color(0xFFE5E7EB)),
+                                ),
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 28,
+                                      backgroundImage:
+                                          NetworkImage(i.profileImage),
+                                      backgroundColor: Colors.grey[200],
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            i.name,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            i.email,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.star,
+                                                size: 14,
+                                                color: Colors.amber,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                i.rating.toStringAsFixed(1),
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey[700],
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: i.isAvailable
+                                                      ? const Color(0xFFE6F9F0)
+                                                      : const Color(0xFFFDF2F2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  i.isAvailable
+                                                      ? 'Available'
+                                                      : 'Unavailable',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: i.isAvailable
+                                                        ? const Color(
+                                                            0xFF34C759)
+                                                        : const Color(
+                                                            0xFFEF4444),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -112,7 +281,6 @@ class HomeDashboard extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final session = sessions[index];
                           final isPending = session['status'] == 'Pending';
-                          final isConfirmed = session['status'] == 'Confirmed';
                           return Container(
                             decoration: BoxDecoration(
                               color: Colors.white,

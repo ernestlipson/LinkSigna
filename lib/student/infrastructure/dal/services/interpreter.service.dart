@@ -12,7 +12,7 @@ class InterpreterService {
 
   Future<void> addInterpreter(Interpreter interpreter) async {
     try {
-      await _db.collection('interpreter_user').add(interpreter.toFirestore());
+      await _db.collection('interpreters').add(interpreter.toFirestore());
       Get.log('Interpreter added successfully!');
     } catch (e) {
       Get.log('Error adding interpreter: $e');
@@ -24,7 +24,7 @@ class InterpreterService {
   Future<List<Interpreter>> getAllInterpreters() async {
     try {
       QuerySnapshot querySnapshot =
-          await _db.collection('interpreter_user').get();
+          await _db.collection('interpreters').get();
       return querySnapshot.docs
           .map((doc) => Interpreter.fromFirestore(doc))
           .toList();
@@ -39,7 +39,7 @@ class InterpreterService {
   Future<Interpreter?> getInterpreterById(String interpreterId) async {
     try {
       DocumentSnapshot doc =
-          await _db.collection('interpreter_user').doc(interpreterId).get();
+          await _db.collection('interpreters').doc(interpreterId).get();
       if (doc.exists) {
         return Interpreter.fromFirestore(doc);
       }
@@ -53,14 +53,14 @@ class InterpreterService {
 // 4. Listening to real-time changes for all interpreters (e.g., for a list screen)
 
   Stream<List<Interpreter>> streamAllInterpreters() {
-    return _db.collection('interpreter_user').snapshots().map((snapshot) =>
+    return _db.collection('interpreters').snapshots().map((snapshot) =>
         snapshot.docs.map((doc) => Interpreter.fromFirestore(doc)).toList());
   }
 
   Future<void> setBookingStatus(
       {required String interpreterId, required bool isBooked}) async {
     try {
-      await _db.collection('interpreter_user').doc(interpreterId).update({
+      await _db.collection('interpreters').doc(interpreterId).update({
         'isBooked': isBooked,
         'updatedAt': FieldValue.serverTimestamp(),
       });

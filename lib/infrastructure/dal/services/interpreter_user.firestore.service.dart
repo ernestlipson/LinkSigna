@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../domain/users/interpreter_user.model.dart';
 
 class InterpreterUserFirestoreService extends GetxService {
-  final _col = FirebaseFirestore.instance.collection('users');
+  final _col = FirebaseFirestore.instance.collection('interpreters');
 
   Future<InterpreterUser?> getById(String interpreterID) async {
     try {

@@ -6,6 +6,7 @@ import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class CountryController extends GetxController {
   static CountryController get instance => Get.find();
+  static const String defaultFlagUrl = 'https://flagcdn.com/w40/gh.png';
 
   final CountryRepository _countryRepository = CountryRepository.instance;
 
@@ -36,5 +37,14 @@ class CountryController extends GetxController {
 
   Future<void> refreshCountryFlag() async {
     await fetchCountryFlag();
+  }
+
+  String get currentFlagUrl => countryFlag.value?.png ?? defaultFlagUrl;
+
+  Future<String> loadFlagUrl({bool forceRefresh = false}) async {
+    if (forceRefresh || countryFlag.value == null) {
+      await fetchCountryFlag();
+    }
+    return currentFlagUrl;
   }
 }

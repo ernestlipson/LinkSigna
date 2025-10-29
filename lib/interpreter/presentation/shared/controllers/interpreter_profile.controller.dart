@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:get/get.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
 import '../../../../domain/users/interpreter_user.model.dart';
@@ -26,6 +27,12 @@ class InterpreterProfileController extends GetxController {
   /// Load profile from cached data on app startup
   Future<void> loadProfileFromCache() async {
     try {
+      // Ensure we are authenticated before attempting Firestore reads
+      final authUser = FirebaseAuth.instance.currentUser;
+      if (authUser == null) {
+        return;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       final cachedId = prefs.getString('interpreter_id');
       final cachedEmail = prefs.getString('interpreter_email');

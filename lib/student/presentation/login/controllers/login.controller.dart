@@ -1,143 +1,28 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 import 'package:sign_language_app/infrastructure/dal/services/student_user.firestore.service.dart';
 import 'package:sign_language_app/student/presentation/shared/controllers/student_user.controller.dart';
-import 'package:sign_language_app/infrastructure/utils/validation_utils.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
+import '../../../../shared/mixins/country_flag_loader.mixin.dart';
+import '../../../../shared/mixins/login.mixin.dart';
 
-import '../../shared/controllers/country.controller.dart';
-
-class LoginController extends GetxController {
-  // Firebase removed
-
-  // Controllers to read the text values
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-
-  // Add this to your LoginController class
-  final RxBool isPasswordVisible = false.obs;
-
-  // Remember me state
-  final RxBool isRememberMe = false.obs;
-
-  // Loading states
-  final RxBool isLoading = false.obs;
+class LoginController extends GetxController
+    with CountryFlagLoader, LoginMixin {
   final RxBool isGoogleSignInLoading = false.obs;
-
-  // Get the shared country controller
-  CountryController get countryController => Get.find<CountryController>();
-
-  // Flag loading state (mirrors signup controller behavior)
-  final RxBool isLoadingFlag = false.obs;
-  final RxString countryFlagUrl = ''.obs;
-
-  Future<void> fetchCountryFlag() async {
-    try {
-      isLoadingFlag.value = true;
-      await countryController.fetchCountryFlag();
-      if (countryController.countryFlag.value != null) {
-        countryFlagUrl.value = countryController.countryFlag.value!.png;
-      } else {
-        countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
-      }
-      // Log flag URL
-      // ignore: avoid_print
-      print('Login flag URL => ${countryFlagUrl.value}');
-    } catch (e) {
-      countryFlagUrl.value = 'https://flagcdn.com/w40/gh.png';
-      // ignore: avoid_print
-      print('Flag fetch error (login): $e');
-    } finally {
-      isLoadingFlag.value = false;
-    }
-  }
-
-  // Add this method to toggle password visibility
-  void togglePasswordVisibility() {
-    isPasswordVisible.value = !isPasswordVisible.value;
-  }
-
-  // Reactive validation states
-  final isEmailValid = true.obs;
-  final isPasswordValid = true.obs;
-
-  // Validation logic
-  void validateEmail() {
-    isEmailValid.value = ValidationUtils.isValidEmail(emailController.text);
-  }
-
-  void validatePassword() {
-    isPasswordValid.value = passwordController.text.trim().isNotEmpty;
-  }
-
-  // Validate all fields at once (e.g., on form submit)
-  bool validateAll() {
-    validateEmail();
-    validatePassword();
-    return isEmailValid.value && isPasswordValid.value;
-  }
-
-  Future<void> sendPasswordReset() async {
-    final email = emailController.text.trim();
-    if (email.isEmpty) {
-      AppSnackbar.error(
-        title: 'Email Required',
-        message: 'Enter your university email',
-      );
-      return;
-    }
-    try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-      AppSnackbar.success(
-        title: 'Email Sent',
-        message: 'Check your inbox to reset your password',
-      );
-    } on FirebaseAuthException catch (e) {
-      String msg = 'Failed to send reset email';
-      if (e.code == 'user-not-found') msg = 'No account found with this email';
-      if (e.code == 'invalid-email') msg = 'Invalid email format';
-      AppSnackbar.error(
-        title: 'Error',
-        message: msg,
-      );
-    } catch (e) {
-      AppSnackbar.error(
-        title: 'Error',
-        message: e.toString(),
-      );
-    }
-  }
 
   // Email/Password Authentication
   Future<void> login() async {
     if (!validateAll()) {
-      if (emailController.text.trim().isEmpty) {
-        isEmailValid.value = false;
-        AppSnackbar.error(
-          title: 'Email Required',
-          message: 'Enter your university email',
-        );
-      }
-      if (passwordController.text.trim().isEmpty) {
-        isPasswordValid.value = false;
-        AppSnackbar.error(
-          title: 'Password Required',
-          message: 'Enter your password',
-        );
-      }
+      showValidationErrors();
       return;
     }
 
     isLoading.value = true;
     try {
       // Sign in with email and password
-      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      final credential = await signInWithEmailPassword();
 
       // Load complete user profile from Firestore
       final studentService = Get.find<StudentUserFirestoreService>();
@@ -161,11 +46,11 @@ class LoginController extends GetxController {
       }
 
       // Save remember me preference (persist email only)
-      if (isRememberMe.value) {
-        await prefs.setString('remembered_email', emailController.text.trim());
-      } else {
-        await prefs.remove('remembered_email');
-      }
+      await saveRememberedEmail(
+        'remembered_email',
+        emailController.text.trim(),
+        remember: isRememberMe.value,
+      );
 
       AppSnackbar.success(
         title: 'Success',
@@ -175,20 +60,9 @@ class LoginController extends GetxController {
       // Navigate to home screen
       Get.offAllNamed(Routes.STUDENT_HOME);
     } on FirebaseAuthException catch (e) {
-      String errorMessage = 'Login failed';
-      if (e.code == 'user-not-found') {
-        errorMessage = 'No account found with this email';
-      } else if (e.code == 'wrong-password') {
-        errorMessage = 'Incorrect password';
-      } else if (e.code == 'invalid-email') {
-        errorMessage = 'Invalid email format';
-      } else if (e.code == 'user-disabled') {
-        errorMessage = 'This account has been disabled';
-      }
-
       AppSnackbar.error(
         title: 'Login Failed',
-        message: errorMessage,
+        message: mapAuthError(e),
       );
     } catch (e) {
       AppSnackbar.error(
@@ -204,15 +78,10 @@ class LoginController extends GetxController {
   Future<void> checkAuthStatus() async {
     try {
       // Prefill remembered email
-      final prefs = await SharedPreferences.getInstance();
-      final rememberedEmail = prefs.getString('remembered_email');
-      if (rememberedEmail != null && rememberedEmail.isNotEmpty) {
-        emailController.text = rememberedEmail;
-        isRememberMe.value = true;
-      }
+      await loadRememberedEmail('remembered_email');
 
       // Navigate if already signed in
-      if (FirebaseAuth.instance.currentUser != null) {
+      if (auth.currentUser != null) {
         Get.offAllNamed(Routes.STUDENT_HOME);
       }
     } catch (e) {
@@ -225,13 +94,12 @@ class LoginController extends GetxController {
   void onInit() {
     super.onInit();
     checkAuthStatus();
-    fetchCountryFlag();
+    loadCountryFlag();
   }
 
   @override
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
+    disposeControllers();
     super.onClose();
   }
 }

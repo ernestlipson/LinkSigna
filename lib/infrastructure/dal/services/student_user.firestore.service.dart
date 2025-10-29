@@ -4,9 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../domain/users/student_user.model.dart';
 
 class StudentUserFirestoreService extends GetxService {
-  final _col = FirebaseFirestore.instance.collection('users');
-  // NOTE: If you later need to query by createdAt or university_level add a composite index
-  // in Firestore console (Indexes). For simple .doc(id) access no index is required.
+  final _col = FirebaseFirestore.instance.collection('students');
 
   Future<StudentUser?> getById(String uid) async {
     try {
@@ -24,7 +22,6 @@ class StudentUserFirestoreService extends GetxService {
           .doc(user.uid)
           .set(user.toMap(isUpdate: isUpdate), SetOptions(merge: true));
     } catch (e) {
-      // Surface error upstream; controller will decide how to show snackbar
       rethrow;
     }
   }
@@ -109,7 +106,7 @@ class StudentUserFirestoreService extends GetxService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
-      rethrow; // Keep simple; calling layer wraps with UI feedback
+      rethrow;
     }
   }
 }
