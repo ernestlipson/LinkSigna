@@ -1,167 +1,134 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
-import 'package:sign_language_app/shared/components/app_bottom_sheet.component.dart';
-import 'package:sign_language_app/shared/components/app_dialog.component.dart';
+import 'package:sign_language_app/shared/components/settings_bottom_sheets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../config/cloudinary.config.dart';
-import '../../../../infrastructure/dal/services/cloudinary.service.dart';
 import '../../shared/controllers/user.controller.dart';
 import '../../shared/controllers/student_user.controller.dart';
+import '../../../../shared/mixins/settings.mixin.dart';
 
-class SettingsController extends GetxController {
-  // Tab selection
-  final RxInt selectedTab = 0.obs;
-
-  // Form controllers
-  final fullNameController = TextEditingController();
-  final phoneController = TextEditingController();
+class SettingsController extends GetxController with SettingsMixin {
   final universityController = TextEditingController();
-  final languagesController = TextEditingController();
-
-  // Observable variables for reactive UI
   final RxString universityLevel = 'TTU - Level 300'.obs;
-  final Rx<File?> profileImage = Rx<File?>(null);
-  final RxString profileImageUrl = ''.obs;
-  final RxString displayName = ''.obs;
-  final RxString displayPhone = ''.obs;
-  final RxBool isUploadingImage = false.obs;
-  final RxBool isSaving = false.obs;
-  final RxString userDocId = ''.obs;
-  final ImagePicker _picker = ImagePicker();
-
-  // Cloudinary Service
-  late CloudinaryService _cloudinary;
-
-  // Available languages list
-  final List<String> availableLanguages = [
-    'Ghanaian Sign Language',
-  ];
-
-  // Available university levels
   final List<int> availableLevels = [100, 200, 300, 400, 500];
 
   @override
   void onInit() {
     super.onInit();
-    _cloudinary = Get.put(CloudinaryService());
+    initializeCloudinaryService();
     _loadUserData();
-    _loadExistingProfileImage(); // Add this
+    _loadExistingProfileImage();
   }
 
   void _loadExistingProfileImage() {
-    // Load existing profile image if user has one
-    if (Get.isRegistered<UserController>()) {
-      final userController = Get.find<UserController>();
-      if (userController.localImagePath.value.isNotEmpty) {
-        final file = File(userController.localImagePath.value);
-        if (file.existsSync()) {
-          profileImage.value = file;
-        }
-      }
+    if (!Get.isRegistered<UserController>()) return;
+
+    final userController = Get.find<UserController>();
+    if (userController.localImagePath.value.isEmpty) return;
+
+    final file = File(userController.localImagePath.value);
+    if (file.existsSync()) {
+      profileImage.value = file;
     }
   }
 
   Future<void> _loadUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // Load user name from SharedPreferences (saved during signup)
-      final userName = prefs.getString('userName') ?? '';
-      fullNameController.text = userName;
-      displayName.value = userName;
-
-      // Try to get user data from UserController if available
-      if (Get.isRegistered<UserController>()) {
-        final userController = Get.find<UserController>();
-        if (userController.user.value?.name?.isNotEmpty == true) {
-          fullNameController.text = userController.user.value!.name!;
-          displayName.value = userController.user.value!.name!;
-        }
-        if (userController.user.value?.phone?.isNotEmpty == true) {
-          phoneController.text = userController.user.value!.phone!;
-          displayPhone.value = userController.user.value!.phone!;
-        }
-      }
-
-      // Load phone number from SharedPreferences if available
-      final userPhone = prefs.getString('userPhone') ?? '';
-      if (userPhone.isNotEmpty && phoneController.text.isEmpty) {
-        phoneController.text = userPhone;
-        displayPhone.value = userPhone;
-      }
-
-      // Set default values if no user data is found
-      if (fullNameController.text.isEmpty) {
-        fullNameController.text = 'User';
-        displayName.value = 'User';
-      }
-      if (phoneController.text.isEmpty) {
-        phoneController.text = '';
-        displayPhone.value = '';
-      }
-
-      // Keep existing default values for other fields
-      universityController.text = 'TTU- Level 300';
-      universityLevel.value = 'TTU - Level 300';
-      languagesController.text = 'Ghanaian Sign Language';
-
-      // Load existing stored Firestore doc id if any
-      userDocId.value = prefs.getString('user_doc_id') ?? '';
-
-      // Load profile image URL from Firebase Storage
+      await _loadBasicUserInfo(prefs);
+      _setDefaultValues();
+      await _loadUserDocId(prefs);
       await _loadProfileImageUrl();
-
-      // Attempt to discover Firestore doc if unknown and we have a phone
-      if (userDocId.value.isEmpty && phoneController.text.trim().isNotEmpty) {
-        try {
-          final q = await FirebaseFirestore.instance
-              .collection('users')
-              .where('phone', isEqualTo: phoneController.text.trim())
-              .limit(1)
-              .get();
-          if (q.docs.isNotEmpty) {
-            userDocId.value = q.docs.first.id;
-            await prefs.setString('user_doc_id', userDocId.value);
-          }
-        } catch (e) {
-          Get.log('Error locating user doc by phone: $e');
-        }
-      }
+      await _discoverFirestoreDoc(prefs);
     } catch (e) {
-      // Fallback to default values on error
-      fullNameController.text = 'User';
-      displayName.value = 'User';
-      phoneController.text = '';
-      displayPhone.value = '';
-      universityController.text = 'TTU- Level 300';
-      universityLevel.value = 'TTU - Level 300';
-      languagesController.text = 'Ghanaian Sign Language';
+      _setDefaultValues();
     }
   }
 
-  Future<String> _resolveUserIdentifier() async {
+  Future<void> _loadBasicUserInfo(SharedPreferences prefs) async {
+    final userName = prefs.getString('userName') ?? '';
+    fullNameController.text = userName;
+    displayName.value = userName;
+
+    if (Get.isRegistered<UserController>()) {
+      final userController = Get.find<UserController>();
+      final user = userController.user.value;
+
+      if (user?.name?.isNotEmpty == true) {
+        fullNameController.text = user!.name!;
+        displayName.value = user.name!;
+      }
+      if (user?.phone?.isNotEmpty == true) {
+        phoneController.text = user!.phone!;
+        displayPhone.value = user.phone!;
+      }
+    }
+
+    final userPhone = prefs.getString('userPhone') ?? '';
+    if (userPhone.isNotEmpty && phoneController.text.isEmpty) {
+      phoneController.text = userPhone;
+      displayPhone.value = userPhone;
+    }
+  }
+
+  void _setDefaultValues() {
+    if (fullNameController.text.isEmpty) {
+      fullNameController.text = 'User';
+      displayName.value = 'User';
+    }
+    if (phoneController.text.isEmpty) {
+      phoneController.text = '';
+      displayPhone.value = '';
+    }
+    universityController.text = 'TTU- Level 300';
+    universityLevel.value = 'TTU - Level 300';
+    languagesController.text = 'Ghanaian Sign Language';
+  }
+
+  Future<void> _loadUserDocId(SharedPreferences prefs) async {
+    userDocId.value = prefs.getString('user_doc_id') ?? '';
+  }
+
+  Future<void> _discoverFirestoreDoc(SharedPreferences prefs) async {
+    if (userDocId.value.isNotEmpty || phoneController.text.trim().isEmpty) {
+      return;
+    }
+
     try {
-      // Prefer cached Firestore student doc id
+      final q = await FirebaseFirestore.instance
+          .collection('users')
+          .where('phone', isEqualTo: phoneController.text.trim())
+          .limit(1)
+          .get();
+
+      if (q.docs.isNotEmpty) {
+        userDocId.value = q.docs.first.id;
+        await prefs.setString('user_doc_id', userDocId.value);
+      }
+    } catch (e) {
+      Get.log('Error locating user doc by phone: $e');
+    }
+  }
+
+  @override
+  Future<String> resolveUserIdentifier() async {
+    try {
       final prefs = await SharedPreferences.getInstance();
       final cachedDocId = prefs.getString('student_user_doc_id');
       if (cachedDocId != null && cachedDocId.isNotEmpty) {
         return cachedDocId;
       }
-      // Fallback to Firebase Auth UID
       final authUid = FirebaseAuth.instance.currentUser?.uid;
       if (authUid != null && authUid.isNotEmpty) {
         return authUid;
       }
-      // Last resort: userName from prefs (legacy), ensures consistent publicId
       final legacy = prefs.getString('userName') ?? 'User';
       return legacy;
     } catch (_) {
@@ -169,170 +136,98 @@ class SettingsController extends GetxController {
     }
   }
 
-  /// Load profile image URL from Cloudinary (via local cache)
   Future<void> _loadProfileImageUrl() async {
     try {
-      final userId = await _resolveUserIdentifier();
-
-      final imageUrl = await _cloudinary.getProfileImageUrl(userId);
-      if (imageUrl != null && imageUrl.isNotEmpty) {
-        profileImageUrl.value = imageUrl;
-
-        // Update UserController with loaded profile image URL
-        if (Get.isRegistered<UserController>()) {
-          final userController = Get.find<UserController>();
-          userController.setUser(photo: imageUrl);
-        }
-
-        Get.log('Profile image URL loaded: $imageUrl');
-      }
+      final userId = await resolveUserIdentifier();
+      await loadProfileImageUrl(userId, CloudinaryConfig.folderStudents);
+      _updateUserControllerPhoto();
     } catch (e) {
       Get.log('Error loading profile image URL: $e');
     }
   }
 
-  Future<void> pickProfileImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 85,
-      );
-
-      if (image != null) {
-        // Set the local file for immediate UI update
-        profileImage.value = File(image.path);
-
-        // Update UserController with new profile image path
-        if (Get.isRegistered<UserController>()) {
-          final userController = Get.find<UserController>();
-          userController.setLocalProfileImage(image.path);
-        }
-
-        // Show success message
-        AppSnackbar.info(
-          title: 'Image Selected',
-          message: 'Profile image selected successfully! Uploading to cloud...',
-        );
-
-        // Upload to Cloudinary
-        await _uploadProfileImageToCloudinary(File(image.path));
-      }
-    } catch (e) {
-      AppSnackbar.error(
-        title: 'Error',
-        message: 'Failed to pick image: ${e.toString()}',
-      );
+  void _updateUserControllerPhoto() {
+    if (profileImageUrl.value.isEmpty || !Get.isRegistered<UserController>()) {
+      return;
     }
+
+    final userController = Get.find<UserController>();
+    userController.setUser(photo: profileImageUrl.value);
   }
 
-  /// Upload profile image to Cloudinary and update Firestore
-  Future<void> _uploadProfileImageToCloudinary(File imageFile) async {
+  @override
+  Future<void> pickProfileImage() async {
+    await super.pickProfileImage();
+    _updateLocalProfileImage();
+  }
+
+  void _updateLocalProfileImage() {
+    if (profileImage.value == null || !Get.isRegistered<UserController>()) {
+      return;
+    }
+
+    final userController = Get.find<UserController>();
+    userController.setLocalProfileImage(profileImage.value!.path);
+  }
+
+  @override
+  Future<void> uploadProfileImageToCloudinary(File imageFile) async {
     try {
       isUploadingImage.value = true;
-
-      final userId = await _resolveUserIdentifier();
-
-      // Upload image to Cloudinary (overwrites by publicId)
-      final downloadUrl = await _cloudinary.uploadProfileImage(
+      final userId = await resolveUserIdentifier();
+      final downloadUrl = await cloudinary.uploadProfileImage(
         imageFile: imageFile,
         userId: userId,
         folder: CloudinaryConfig.folderStudents,
       );
 
       if (downloadUrl != null) {
-        // Update the profile image URL in UI
-        profileImageUrl.value = downloadUrl;
-
-        // Update UserController with new profile image URL
-        if (Get.isRegistered<UserController>()) {
-          final userController = Get.find<UserController>();
-          userController.setUser(photo: downloadUrl);
-        }
-
-        // Update Firestore student document via controller (avatarUrl)
-        if (Get.isRegistered<StudentUserController>()) {
-          final stuCtrl = Get.find<StudentUserController>();
-          await stuCtrl.updateProfile({'avatarUrl': downloadUrl});
-        }
-
-        // Clear the local file since we now have a cloud URL
-        profileImage.value = null;
-
-        AppSnackbar.success(
-          title: 'Success',
-          message: 'Profile image updated successfully!',
-        );
-
-        Get.log('Cloudinary upload success: $downloadUrl');
+        await _handleUploadSuccess(downloadUrl);
       } else {
-        // Keep the local file if upload failed
-        AppSnackbar.warning(
-          title: 'Upload Failed',
-          message: 'Failed to upload image to cloud. Please try again.',
-        );
+        _handleUploadFailure();
       }
     } catch (e) {
-      Get.log('Error uploading profile image: $e');
-      AppSnackbar.error(
-        title: 'Error',
-        message: 'Failed to upload profile image: ${e.toString()}',
-      );
-
-      // Ensure loader stops even on error
-      profileImage.value = null;
+      _handleUploadError(e);
     } finally {
-      // Always stop the loader
       isUploadingImage.value = false;
     }
   }
 
-  /// Get the current profile image widget
-  Widget getProfileImageWidget() {
-    if (profileImageUrl.value.isNotEmpty) {
-      // Show cached network image from Firebase Storage
-      return CachedNetworkImage(
-        imageUrl: profileImageUrl.value,
-        imageBuilder: (context, imageProvider) => CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.pink[100],
-          backgroundImage: imageProvider,
-        ),
-        placeholder: (context, url) => CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.pink[100],
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
-        ),
-        errorWidget: (context, url, error) => CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.pink[100],
-          child: Icon(Icons.person, size: 50, color: Colors.white),
-        ),
-      );
-    } else if (profileImage.value != null) {
-      // Show local file image
-      return CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.pink[100],
-        backgroundImage: FileImage(profileImage.value!),
-      );
-    } else {
-      // Show default avatar
-      return CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.pink[100],
-        child: Icon(Icons.person, size: 50, color: Colors.white),
-      );
+  Future<void> _handleUploadSuccess(String downloadUrl) async {
+    profileImageUrl.value = downloadUrl;
+
+    if (Get.isRegistered<UserController>()) {
+      final userController = Get.find<UserController>();
+      userController.setUser(photo: downloadUrl);
     }
+
+    if (Get.isRegistered<StudentUserController>()) {
+      final stuCtrl = Get.find<StudentUserController>();
+      await stuCtrl.updateProfile({'avatarUrl': downloadUrl});
+    }
+
+    profileImage.value = null;
+    AppSnackbar.success(
+      title: 'Success',
+      message: 'Profile image updated successfully!',
+    );
+    Get.log('Cloudinary upload success: $downloadUrl');
   }
 
-  /// Check if user has a profile image (either local or cloud)
-  bool get hasProfileImage {
-    return profileImageUrl.value.isNotEmpty || profileImage.value != null;
+  void _handleUploadFailure() {
+    AppSnackbar.warning(
+      title: 'Upload Failed',
+      message: 'Failed to upload image to cloud. Please try again.',
+    );
+  }
+
+  void _handleUploadError(dynamic e) {
+    Get.log('Error uploading profile image: $e');
+    AppSnackbar.error(
+      title: 'Error',
+      message: 'Failed to upload profile image: ${e.toString()}',
+    );
+    profileImage.value = null;
   }
 
   void editProfile() {
@@ -342,95 +237,20 @@ class SettingsController extends GetxController {
     );
   }
 
-  void addLanguage() {
-    AppBottomSheet.showList(
-      title: 'Select Language',
-      maxHeight: 160,
-      items: availableLanguages.map((language) {
-        final isSelected = languagesController.text.contains(language);
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 4),
-          title: Text(
-            language,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-          trailing:
-              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-          onTap: () {
-            _selectLanguage(language);
-            Get.back();
-          },
-        );
-      }).toList(),
-    );
-  }
-
   void selectUniversityLevel() {
-    AppBottomSheet.showList(
-      title: 'Select University Level',
-      maxHeight: 360,
-      items: availableLevels.map((level) {
-        final isSelected = universityLevel.value.contains('Level $level');
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 8),
-          title: Text(
-            'Level $level',
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          subtitle: Text(
-            _getLevelDescription(level),
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
-          trailing:
-              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-          onTap: () {
-            _selectUniversityLevel(level);
-            Get.back();
-          },
-        );
-      }).toList(),
+    SettingsBottomSheets.showUniversityLevelPicker(
+      levels: availableLevels,
+      currentLevel: universityLevel.value,
+      onSelect: _selectUniversityLevel,
     );
-  }
-
-  String _getLevelDescription(int level) {
-    switch (level) {
-      case 100:
-        return 'First Year - Foundation courses';
-      case 200:
-        return 'Second Year - Core courses';
-      case 300:
-        return 'Third Year - Advanced courses';
-      case 400:
-        return 'Fourth Year - Specialization';
-      case 500:
-        return 'Final Year - Research & Thesis';
-      default:
-        return '';
-    }
   }
 
   void _selectUniversityLevel(int level) {
-    // Extract university name from current text (assuming format: "University - Level X")
-    final currentText = universityLevel.value;
-    String universityName = 'TTU';
+    final universityName = _extractUniversityName();
+    final newLevel = '$universityName - Level $level';
 
-    if (currentText.contains('-')) {
-      universityName = currentText.split('-')[0].trim();
-    }
-
-    // Update both observable and controller
-    universityLevel.value = '$universityName - Level $level';
-    universityController.text = '$universityName - Level $level';
+    universityLevel.value = newLevel;
+    universityController.text = newLevel;
 
     AppSnackbar.success(
       title: 'Level Updated',
@@ -438,41 +258,16 @@ class SettingsController extends GetxController {
     );
   }
 
-  void _selectLanguage(String language) {
-    final currentLanguages = languagesController.text;
-
-    if (currentLanguages.isEmpty) {
-      languagesController.text = language;
-    } else if (currentLanguages.contains(language)) {
-      // Remove language if already selected
-      final languages = currentLanguages.split(', ');
-      languages.remove(language);
-      languagesController.text = languages.join(', ');
-    } else {
-      // Add new language
-      languagesController.text = '$currentLanguages, $language';
+  String _extractUniversityName() {
+    final currentText = universityLevel.value;
+    if (currentText.contains('-')) {
+      return currentText.split('-')[0].trim();
     }
-
-    AppSnackbar.success(
-      title: 'Language Updated',
-      message: 'Language selection updated successfully',
-    );
+    return 'TTU';
   }
 
   void saveChanges() {
-    // Legacy no-op replaced by Firestore version below (kept for potential backward compatibility call sites)
     saveChangesAsync();
-  }
-
-  List<String> _parseLanguages() {
-    final raw = languagesController.text.trim();
-    if (raw.isEmpty) return [];
-    return raw
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toSet()
-        .toList();
   }
 
   Future<void> _ensureUserDocExists() async {
@@ -485,7 +280,7 @@ class SettingsController extends GetxController {
     await col.doc(id).set({
       'displayName': fullNameController.text.trim(),
       'phone': phoneController.text.trim(),
-      'languages': _parseLanguages(),
+      'languages': parseLanguages(),
       'universityLevel': universityLevel.value,
       'photoUrl': profileImageUrl.value,
       'role': 'student',
@@ -500,55 +295,16 @@ class SettingsController extends GetxController {
   Future<void> saveChangesAsync() async {
     if (isSaving.value) return;
     isSaving.value = true;
+
     try {
       await _ensureUserDocExists();
       if (userDocId.value.isEmpty) {
         throw 'Unable to resolve user document.';
       }
-      // Map to StudentUser schema
-      final nameParts = fullNameController.text.trim().split(' ');
-      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-      final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
 
-      final updateData = {
-        'firstname': firstName,
-        'lastname': lastName,
-        'phone': phoneController.text.trim(),
-        'language': languagesController.text.trim(),
-        'university_level': universityLevel.value,
-        if (profileImageUrl.value.isNotEmpty)
-          'avatarUrl': profileImageUrl.value,
-      };
-
-      // Prefer updating via StudentUserController to ensure consistency
-      if (Get.isRegistered<StudentUserController>()) {
-        final stuCtrl = Get.find<StudentUserController>();
-        await stuCtrl.updateProfile(updateData);
-      } else if (userDocId.value.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userDocId.value)
-            .set(updateData, SetOptions(merge: true));
-      }
-
-      // Persist locally
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('userName', fullNameController.text.trim());
-      await prefs.setString('userPhone', phoneController.text.trim());
-      if (userDocId.value.isNotEmpty) {
-        await prefs.setString('user_doc_id', userDocId.value);
-      }
-
-      displayName.value = fullNameController.text.trim();
-      displayPhone.value = phoneController.text.trim();
-      if (Get.isRegistered<UserController>()) {
-        Get.find<UserController>().setUser(
-          name: displayName.value,
-          phone: displayPhone.value,
-          photo:
-              profileImageUrl.value.isNotEmpty ? profileImageUrl.value : null,
-        );
-      }
+      final updateData = _buildUpdateData();
+      await _updateUserProfile(updateData);
+      await _persistChangesLocally();
 
       AppSnackbar.success(
         title: 'Saved',
@@ -564,6 +320,46 @@ class SettingsController extends GetxController {
     }
   }
 
+  Map<String, dynamic> _buildUpdateData() {
+    final nameParts = parseFullName(fullNameController.text);
+    return {
+      'firstname': nameParts['firstName']!,
+      'lastname': nameParts['lastName']!,
+      'phone': phoneController.text.trim(),
+      'language': languagesController.text.trim(),
+      'university_level': universityLevel.value,
+      if (profileImageUrl.value.isNotEmpty) 'avatarUrl': profileImageUrl.value,
+    };
+  }
+
+  Future<void> _updateUserProfile(Map<String, dynamic> updateData) async {
+    if (Get.isRegistered<StudentUserController>()) {
+      final stuCtrl = Get.find<StudentUserController>();
+      await stuCtrl.updateProfile(updateData);
+    } else if (userDocId.value.isNotEmpty) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userDocId.value)
+          .set(updateData, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> _persistChangesLocally() async {
+    await saveToSharedPreferences(
+      nameKey: 'userName',
+      phoneKey: 'userPhone',
+      docIdKey: 'user_doc_id',
+    );
+
+    if (Get.isRegistered<UserController>()) {
+      Get.find<UserController>().setUser(
+        name: displayName.value,
+        phone: displayPhone.value,
+        photo: profileImageUrl.value.isNotEmpty ? profileImageUrl.value : null,
+      );
+    }
+  }
+
   void changePassword() {
     AppSnackbar.info(
       title: 'Change Password',
@@ -572,29 +368,18 @@ class SettingsController extends GetxController {
   }
 
   void deleteAccount() {
-    AppDialog.showConfirmation(
-      title: 'Delete Account',
-      message:
-          'Are you sure you want to delete your account? This action cannot be undone.',
-      cancelLabel: 'Cancel',
-      confirmLabel: 'Delete',
-      confirmColor: Colors.red,
-      barrierDismissible: false,
-      onConfirm: () {
-        AppSnackbar.warning(
-          title: 'Account Deleted',
-          message: 'Your account has been deleted successfully',
-        );
-      },
-    );
+    showDeleteAccountDialog(() {
+      AppSnackbar.warning(
+        title: 'Account Deleted',
+        message: 'Your account has been deleted successfully',
+      );
+    });
   }
 
   @override
   void onClose() {
-    fullNameController.dispose();
-    phoneController.dispose();
+    disposeControllers();
     universityController.dispose();
-    languagesController.dispose();
     super.onClose();
   }
 }
