@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,112 +7,30 @@ import '../../../../infrastructure/dal/services/interpreter_user.firestore.servi
 import '../../../../domain/users/interpreter_user.model.dart';
 import '../../shared/controllers/interpreter_profile.controller.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
+import '../../../../shared/mixins/login.mixin.dart';
 
-class InterpreterSigninController extends GetxController {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-
-  // Validation state
-  final isEmailValid = true.obs;
-  final isPasswordValid = true.obs;
-
-  // Password visibility state
-  final isPasswordVisible = false.obs;
-
-  // Remember me state
-  final isRememberMe = false.obs;
-
+class InterpreterSigninController extends GetxController with LoginMixin {
   final isSubmitting = false.obs;
-
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Services
   final InterpreterUserFirestoreService _firestoreService =
       Get.find<InterpreterUserFirestoreService>();
 
-  void validateEmail() {
-    final email = emailController.text.trim();
-    isEmailValid.value = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
-  }
-
-  void validatePassword() {
-    isPasswordValid.value = passwordController.text.trim().isNotEmpty;
-  }
-
-  void togglePasswordVisibility() {
-    isPasswordVisible.value = !isPasswordVisible.value;
-  }
-
-  bool validateAll() {
-    validateEmail();
-    validatePassword();
-    return isEmailValid.value && isPasswordValid.value;
-  }
-
-  Future<void> sendPasswordReset() async {
-    final email = emailController.text.trim();
-    if (email.isEmpty) {
-      AppSnackbar.error(
-        title: 'Email Required',
-        message: 'Enter your university email',
-      );
-      return;
-    }
-
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-      AppSnackbar.success(
-        title: 'Email Sent',
-        message: 'Check your inbox to reset your password',
-      );
-    } on FirebaseAuthException catch (e) {
-      String msg = 'Failed to send reset email';
-      if (e.code == 'user-not-found') msg = 'No account found with this email';
-      if (e.code == 'invalid-email') msg = 'Invalid email format';
-      AppSnackbar.error(
-        title: 'Error',
-        message: msg,
-      );
-    } catch (e) {
-      AppSnackbar.error(
-        title: 'Error',
-        message: e.toString(),
-      );
-    }
-  }
-
   Future<void> login() async {
     if (!validateAll()) {
-      if (emailController.text.trim().isEmpty) {
-        isEmailValid.value = false;
-        AppSnackbar.error(
-          title: 'Email Required',
-          message: 'Enter your university email',
-        );
-      }
-      if (passwordController.text.trim().isEmpty) {
-        isPasswordValid.value = false;
-        AppSnackbar.error(
-          title: 'Password Required',
-          message: 'Enter your password',
-        );
-      }
+      showValidationErrors();
       return;
     }
 
     isSubmitting.value = true;
-    final email = emailController.text.trim();
 
     try {
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: passwordController.text.trim(),
-      );
+      final credential = await signInWithEmailPassword();
 
       final profile = await _loadInterpreterProfile(credential.user);
 
       if (profile == null) {
-        await _auth.signOut();
+        await auth.signOut();
         AppSnackbar.error(
           title: 'Profile Missing',
           message: 'Interpreter profile not found for this account.',
@@ -136,7 +53,7 @@ class InterpreterSigninController extends GetxController {
     } on FirebaseAuthException catch (e) {
       AppSnackbar.error(
         title: 'Login Failed',
-        message: _mapAuthError(e),
+        message: mapAuthError(e),
       );
     } catch (e) {
       AppSnackbar.error(
@@ -149,20 +66,11 @@ class InterpreterSigninController extends GetxController {
   }
 
   Future<void> _prefillRememberedEmail() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final rememberedEmail = prefs.getString('interpreter_remembered_email');
-      if (rememberedEmail != null && rememberedEmail.isNotEmpty) {
-        emailController.text = rememberedEmail;
-        isRememberMe.value = true;
-      }
-    } catch (e) {
-      Get.log('Error loading remembered email: $e');
-    }
+    await loadRememberedEmail('interpreter_remembered_email');
   }
 
   Future<void> _checkAuthStatus() async {
-    final user = _auth.currentUser;
+    final user = auth.currentUser;
     if (user == null) return;
 
     try {
@@ -229,35 +137,23 @@ class InterpreterSigninController extends GetxController {
       await prefs.setString('university', profile.university!);
     }
 
+    await saveRememberedEmail(
+      'interpreter_remembered_email',
+      profile.email,
+      remember: rememberEmail,
+    );
+
     if (rememberEmail) {
-      await prefs.setString('interpreter_remembered_email', profile.email);
       emailController.text = profile.email;
       isRememberMe.value = true;
     } else {
-      await prefs.remove('interpreter_remembered_email');
       isRememberMe.value = false;
-    }
-  }
-
-  String _mapAuthError(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'user-not-found':
-        return 'No account found with this email';
-      case 'wrong-password':
-        return 'Incorrect password';
-      case 'invalid-email':
-        return 'Invalid email format';
-      case 'user-disabled':
-        return 'This account has been disabled';
-      default:
-        return 'Authentication failed. Please try again.';
     }
   }
 
   @override
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
+    disposeControllers();
     super.onClose();
   }
 
