@@ -64,5 +64,7 @@ Future<void> initializeFirebase() async {
 
   try {
     await FirebaseAuth.instance.setLanguageCode('en');
-  } catch (_) {}
+  } catch (e) {
+    Get.log('Failed to set FirebaseAuth language code: $e');
+  }
 }
