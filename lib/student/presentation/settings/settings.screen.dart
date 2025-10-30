@@ -4,6 +4,13 @@ import 'package:get/get.dart';
 import '../../../infrastructure/theme/app_theme.dart';
 import '../../../shared/components/settings/settings_screen_layout.component.dart';
 import 'controllers/settings.controller.dart';
+import 'package:sign_language_app/shared/components/settings/profile_avatar_picker.dart';
+import 'package:sign_language_app/shared/components/settings/settings_form_field.dart';
+import 'package:sign_language_app/shared/components/settings/phone_number_field.dart';
+import 'package:sign_language_app/shared/components/settings/delete_account_section.component.dart';
+import 'package:sign_language_app/shared/components/settings/save_changes_button.component.dart';
+import 'package:sign_language_app/shared/components/settings/settings_section_header.component.dart';
+import 'package:sign_language_app/shared/components/settings/empty_notifications_tab.component.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
@@ -26,66 +33,16 @@ class SettingsScreen extends GetView<SettingsController> {
           SizedBox(height: 20),
           // Profile Picture
           Center(
-            child: GestureDetector(
-              onTap: () => controller.pickProfileImage(),
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  // Profile Image with Firebase Storage support
-                  Obx(() => controller.getProfileImageWidget()),
-
-                  // Camera icon overlay
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 15,
-                      backgroundColor: AppColors.primary,
-                      child: Icon(
-                        Icons.camera_alt,
-                        size: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-
-                  // Upload progress indicator
-                  if (controller.isUploadingImage.value)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.primary),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+            child: Obx(() => ProfileAvatarPicker(
+                  avatarWidget: controller.getProfileImageWidget(),
+                  onTap: controller.pickProfileImage,
+                  isUploading: controller.isUploadingImage.value,
+                )),
           ),
           SizedBox(height: 24),
 
           // Basic Information Section
-          Text(
-            'Basic Information',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
+          SettingsSectionHeader(title: 'Basic Information'),
           SizedBox(height: 16),
 
           // Full Name
@@ -132,73 +89,15 @@ class SettingsScreen extends GetView<SettingsController> {
           SizedBox(height: 24),
 
           // Save Changes Button
-          Align(
-            alignment: Alignment.centerRight,
-            child: Obx(() => ElevatedButton(
-                  onPressed: controller.isSaving.value
-                      ? null
-                      : () => controller.saveChangesAsync(),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 0),
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: controller.isSaving.value
-                      ? SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          'Save Changes',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                )),
+          SaveChangesButton(
+            isSaving: controller.isSaving,
+            onSave: () => controller.saveChangesAsync(),
           ),
           SizedBox(height: 32),
 
           // Delete Account Section
-          Text(
-            'Delete Account',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Deleting your account will remove all of your activity and campaigns, and you will no longer be able to sign in with this account.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-              height: 1.4,
-            ),
-          ),
-          SizedBox(height: 20),
-          OutlinedButton(
-            onPressed: () => controller.deleteAccount(),
-            style: OutlinedButton.styleFrom(
-              minimumSize: Size(double.infinity, 0),
-              foregroundColor: Colors.red,
-              side: BorderSide(color: Colors.red),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: Text(
-              'Delete account',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+          DeleteAccountSection(
+            onDelete: () => controller.deleteAccount(),
           ),
           SizedBox(height: 20),
         ],
@@ -207,51 +106,15 @@ class SettingsScreen extends GetView<SettingsController> {
   }
 
   Widget _buildNotificationsTab() {
-    return Center(
-      child: Text(
-        'No notifications yet',
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.grey[600],
-        ),
-      ),
-    );
+    return const EmptyNotificationsTab();
   }
 
   Widget _buildFormField(
       String label, TextEditingController controller, String placeholder) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: placeholder,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary),
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ),
-      ],
+    return SettingsFormField(
+      label: label,
+      controller: controller,
+      placeholder: placeholder,
     );
   }
 
@@ -259,50 +122,9 @@ class SettingsScreen extends GetView<SettingsController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Phone number',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        SizedBox(height: 8),
-        Obx(() => TextField(
-              controller: controller.phoneController,
-              decoration: InputDecoration(
-                hintText: controller.displayPhone.value.isEmpty
-                    ? 'Enter your phone number'
-                    : controller.displayPhone.value,
-                prefixIcon: Container(
-                  margin: EdgeInsets.all(8),
-                  width: 24,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
-                    image: DecorationImage(
-                      image: NetworkImage(
-                        'https://flagcdn.com/w40/gh.png',
-                      ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.primary),
-                ),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
+        Obx(() => PhoneNumberField(
+              phoneController: controller.phoneController,
+              displayPhone: controller.displayPhone.value,
             )),
       ],
     );

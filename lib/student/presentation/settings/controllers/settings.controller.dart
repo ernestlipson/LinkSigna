@@ -69,6 +69,17 @@ class SettingsController extends GetxController with SettingsMixin {
         phoneController.text = user!.phone!;
         displayPhone.value = user.phone!;
       }
+
+      // Load profile image URL from UserController or SharedPreferences
+      if (user?.photo?.isNotEmpty == true) {
+        profileImageUrl.value = user!.photo!;
+      } else {
+        final savedImageUrl =
+            prefs.getString('current_profile_image_url') ?? '';
+        if (savedImageUrl.isNotEmpty) {
+          profileImageUrl.value = savedImageUrl;
+        }
+      }
     }
 
     final userPhone = prefs.getString('userPhone') ?? '';
@@ -140,7 +151,15 @@ class SettingsController extends GetxController with SettingsMixin {
     try {
       final userId = await resolveUserIdentifier();
       await loadProfileImageUrl(userId, CloudinaryConfig.folderStudents);
-      _updateUserControllerPhoto();
+
+      // If we found a URL from SharedPreferences, update the controller
+      if (profileImageUrl.value.isNotEmpty) {
+        _updateUserControllerPhoto();
+        // Also persist to SharedPreferences under a general key
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+            'current_profile_image_url', profileImageUrl.value);
+      }
     } catch (e) {
       Get.log('Error loading profile image URL: $e');
     }
@@ -350,6 +369,12 @@ class SettingsController extends GetxController with SettingsMixin {
       phoneKey: 'userPhone',
       docIdKey: 'user_doc_id',
     );
+
+    // Persist profile image URL to SharedPreferences
+    if (profileImageUrl.value.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('current_profile_image_url', profileImageUrl.value);
+    }
 
     if (Get.isRegistered<UserController>()) {
       Get.find<UserController>().setUser(
