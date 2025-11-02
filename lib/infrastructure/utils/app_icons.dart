@@ -39,6 +39,18 @@ class AppIcons {
         height: size,
         color: color,
       );
+  static Widget clock({double? size, Color? color}) => SvgPicture.asset(
+        'assets/icons/clock.svg',
+        width: size,
+        height: size,
+        color: color,
+      );
+  static Widget messages({double? size, Color? color}) => SvgPicture.asset(
+        'assets/icons/messages-3.svg',
+        width: size,
+        height: size,
+        color: color,
+      );
   static Widget vector({double? size, Color? color}) => SvgPicture.asset(
         'assets/icons/Vector.svg',
         width: size,

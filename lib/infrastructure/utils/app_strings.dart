@@ -1,4 +1,4 @@
-class ScreenStrings {
+class AppStrings {
   static const String signUpTitle = "Sign Up";
   static const String nameHint = "Enter your name";
   static const String nameLabel = "Full Name";
@@ -29,4 +29,12 @@ class ScreenStrings {
   static const String forgotPassword = "Forgot password?";
   static const String emailValidationError = "Email must end with .gh";
   static const String passwordValidationError = "Password is required";
+
+  // Navigation labels
+  static const String navHome = "Home";
+  static const String navSessions = "Sessions";
+  static const String navHistory = "History";
+  static const String navSetting = "Setting";
+  static const String navInterpreter = "Interpreter";
+  static const String navMessage = "Message";
 }

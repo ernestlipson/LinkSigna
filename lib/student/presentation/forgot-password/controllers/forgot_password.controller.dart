@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../../../infrastructure/presentation/controllers/country.controller.dart';
-import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
+import 'package:sign_language_app/infrastructure/utils/app_strings.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class ForgotPasswordController extends GetxController {
@@ -37,7 +37,7 @@ class ForgotPasswordController extends GetxController {
 
     if (phone.isEmpty) {
       isPhoneValid.value = false;
-      phoneErrorMessage.value = ScreenStrings.requiredFieldError;
+      phoneErrorMessage.value = AppStrings.requiredFieldError;
       return;
     }
 
@@ -51,7 +51,7 @@ class ForgotPasswordController extends GetxController {
     // Check if phone number is exactly 10 digits
     if (phone.length != 10) {
       isPhoneValid.value = false;
-      phoneErrorMessage.value = ScreenStrings.phoneValidationError;
+      phoneErrorMessage.value = AppStrings.phoneValidationError;
       return;
     }
 

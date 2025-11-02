@@ -1,6 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart' hide Response;
 import '../models/location.model.dart';
 import '../models/flags.model.dart';
@@ -40,54 +38,12 @@ class CountryService {
 
   Future<String?> getUserCountryCode() async {
     try {
-      await _checkLocationPermissions();
-      final position = await _getCurrentPosition();
-      return await _getCountryCodeFromPosition(position);
+      final userLocation = await _fetchLocationInfo();
+      return userLocation.countryCode;
     } catch (error) {
       _logError('Failed to get user country code', error);
       return null;
     }
-  }
-
-  Future<void> _checkLocationPermissions() async {
-    final isServiceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!isServiceEnabled) {
-      throw LocationServiceException('Location service is disabled');
-    }
-
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.deniedForever) {
-      throw LocationServiceException(
-          'Location permission is permanently denied');
-    }
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (!_isValidPermission(permission)) {
-        throw LocationServiceException('Location permission denied');
-      }
-    }
-  }
-
-  bool _isValidPermission(LocationPermission permission) {
-    return permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always;
-  }
-
-  Future<Position> _getCurrentPosition() async {
-    return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-      ),
-    );
-  }
-
-  Future<String?> _getCountryCodeFromPosition(Position position) async {
-    final placemarks = await placemarkFromCoordinates(
-      position.latitude,
-      position.longitude,
-    );
-    return placemarks.first.isoCountryCode;
   }
 
   Future<LocationInfo> _fetchLocationInfo() async {

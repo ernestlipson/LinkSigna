@@ -27,7 +27,7 @@ android {
         applicationId = "com.example.sign_language_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdkVersion 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -35,6 +35,15 @@ android {
 
     buildTypes {
         release {
+            // Enables code-related app optimization
+            minifyEnabled true
+            
+            // Enables resource shrinking
+            shrinkResources true
+            
+            // ProGuard rules
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug

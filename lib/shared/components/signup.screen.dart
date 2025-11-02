@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../infrastructure/theme/app_theme.dart';
-import '../../infrastructure/utils/screen_strings.dart';
+import '../../infrastructure/utils/app_strings.dart';
 import 'app.button.dart';
 import 'app.field.dart';
 import 'signup_logo.dart';
@@ -74,13 +74,13 @@ class SharedSignUpScreen extends StatelessWidget {
     this.showUserTypeSelector = false,
     this.selectedUserType,
     this.onUserTypeChanged,
-    this.signUpTitle = ScreenStrings.signUpTitle,
-    this.signUpButtonText = ScreenStrings.signUpButton,
-    this.nameErrorText = ScreenStrings.requiredFieldError,
-    this.emailErrorText = ScreenStrings.requiredFieldError,
-    this.passwordErrorText = ScreenStrings.requiredFieldError,
-    this.emailHint = ScreenStrings.emailHint,
-    this.universityPlaceholder = ScreenStrings.universityHint,
+    this.signUpTitle = AppStrings.signUpTitle,
+    this.signUpButtonText = AppStrings.signUpButton,
+    this.nameErrorText = AppStrings.requiredFieldError,
+    this.emailErrorText = AppStrings.requiredFieldError,
+    this.passwordErrorText = AppStrings.requiredFieldError,
+    this.emailHint = AppStrings.emailHint,
+    this.universityPlaceholder = AppStrings.universityHint,
   });
 
   @override
@@ -114,8 +114,8 @@ class SharedSignUpScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
               Obx(() => CustomTextFormField(
-                    hintText: ScreenStrings.nameHint,
-                    labelText: ScreenStrings.nameLabel,
+                    hintText: AppStrings.nameHint,
+                    labelText: AppStrings.nameLabel,
                     controller: nameController,
                     isRequired: true,
                     errorText: isNameValid.value ? null : nameErrorText,
@@ -124,7 +124,7 @@ class SharedSignUpScreen extends StatelessWidget {
               const SizedBox(height: 10),
               Obx(() => CustomTextFormField(
                     hintText: emailHint,
-                    labelText: ScreenStrings.emailLabel,
+                    labelText: AppStrings.emailLabel,
                     controller: emailController,
                     isRequired: true,
                     keyboardType: TextInputType.emailAddress,
@@ -133,8 +133,8 @@ class SharedSignUpScreen extends StatelessWidget {
                   )),
               const SizedBox(height: 10),
               Obx(() => CustomTextFormField(
-                    hintText: ScreenStrings.passwordHint,
-                    labelText: ScreenStrings.passwordLabel,
+                    hintText: AppStrings.passwordHint,
+                    labelText: AppStrings.passwordLabel,
                     controller: passwordController,
                     isRequired: true,
                     obscureText: !isPasswordVisible.value,
@@ -177,7 +177,7 @@ class SharedSignUpScreen extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(right: 18.0),
                           child: Text(
-                            ScreenStrings.termsAndPrivacy,
+                            AppStrings.termsAndPrivacy,
                           ),
                         ),
                       ),
@@ -193,14 +193,14 @@ class SharedSignUpScreen extends StatelessWidget {
               Center(
                 child: RichText(
                   text: TextSpan(
-                    text: ScreenStrings.alreadyHaveAccount,
+                    text: AppStrings.alreadyHaveAccount,
                     style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.w400,
                     ),
                     children: [
                       TextSpan(
-                        text: ScreenStrings.loginText,
+                        text: AppStrings.loginText,
                         style: TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,

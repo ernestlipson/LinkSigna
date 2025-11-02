@@ -39,14 +39,12 @@ dependencies:
   flutter_svg: ^2.0.17
   dio: ^5.8.0+1
   json_annotation: ^4.9.0
-  google_sign_in: ^6.3.0
+  google_sign_in: ^7.1.1
   sqflite: ^2.4.1
   shimmer_animation: ^2.2.2
-  geolocator: ^13.0.3
-  geocoding: ^3.0.0
   appwrite: ^17.0.2
   agora_rtc_engine: ^6.5.2
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.1
   firebase_core: ^4.0.0
   firebase_auth: ^6.0.0
   firebase_core_platform_interface: ^6.0.0
@@ -55,19 +53,18 @@ dependencies:
   intl_phone_number_input: ^0.7.4
   shared_preferences: ^2.3.2
   image_picker: ^1.0.4
-  googleapis: ^13.2.0
-  googleapis_auth: ^1.6.0
+  googleapis: ^14.0.0
+  googleapis_auth: ^2.0.0
   url_launcher: ^6.3.1
-  intl: ^0.19.0
+  intl: ^0.20.2
   cloud_firestore: ^6.0.1
   uuid: ^4.5.1
-  cloudinary_public: ^0.23.1
   firebase_app_check: ^0.4.1+1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

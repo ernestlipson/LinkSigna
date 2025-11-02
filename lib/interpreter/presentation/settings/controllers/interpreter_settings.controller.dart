@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 import 'package:sign_language_app/shared/components/settings_bottom_sheets.dart';
 
-import '../../../../config/cloudinary.config.dart';
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../presentation/shared/controllers/interpreter_profile.controller.dart';
 import '../../../../shared/mixins/settings.mixin.dart';
@@ -159,6 +158,12 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
   @override
   Future<void> pickProfileImage() async {
     await super.pickProfileImage();
+
+    // Update localImagePath in profile controller for immediate UI update
+    if (profileImage.value != null) {
+      final profileController = Get.find<InterpreterProfileController>();
+      profileController.localImagePath.value = profileImage.value!.path;
+    }
   }
 
   @override
@@ -189,7 +194,7 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
       final downloadUrl = await cloudinary.uploadProfileImage(
         imageFile: imageFile,
         userId: interpreterId,
-        folder: CloudinaryConfig.folderInterpreters,
+        folder: 'profiles/interpreters',
       );
 
       if (downloadUrl != null) {
@@ -211,6 +216,17 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
     await profileController.updateProfile({
       'profilePictureUrl': downloadUrl,
     });
+
+    // Update the profile value immediately for reactive UI using copyWith
+    if (profileController.profile.value != null) {
+      profileController.profile.value =
+          profileController.profile.value!.copyWith(
+        profilePictureUrl: downloadUrl,
+      );
+    }
+
+    // Clear local image path since we now have the network URL
+    profileController.localImagePath.value = '';
 
     profileImage.value = null;
     AppSnackbar.success(

@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/utils/app_icons.dart';
 
-class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? profileImageUrl;
   final String? localImagePath;
   final Widget? profileAvatar;
@@ -12,8 +13,10 @@ class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
   final bool hasNotification;
+  final GetxController? profileController;
+  final String? profileImageField;
 
-  const ProfileAppBar({
+  const CustomAppBar({
     super.key,
     this.profileImageUrl,
     this.localImagePath,
@@ -22,6 +25,8 @@ class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onNotificationTap,
     this.onProfileTap,
     this.hasNotification = false,
+    this.profileController,
+    this.profileImageField,
   });
 
   @override
@@ -94,10 +99,12 @@ class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildProfileImage() {
+    // If a custom profile avatar widget is provided, use it
     if (profileAvatar != null) {
       return profileAvatar!;
     }
 
+    // Check for local image path first (recently picked image)
     if (localImagePath != null && localImagePath!.isNotEmpty) {
       final file = File(localImagePath!);
       if (file.existsSync()) {
@@ -109,6 +116,7 @@ class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
       }
     }
 
+    // Check for network image URL
     if (profileImageUrl != null && profileImageUrl!.isNotEmpty) {
       return CachedNetworkImage(
         imageUrl: profileImageUrl!,
@@ -129,6 +137,7 @@ class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
       );
     }
 
+    // Default avatar
     return defaultAvatar();
   }
 

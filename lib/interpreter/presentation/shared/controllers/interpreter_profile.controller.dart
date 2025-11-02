@@ -10,6 +10,7 @@ class InterpreterProfileController extends GetxController {
       Get.find<InterpreterUserFirestoreService>();
   final Rx<InterpreterUser?> profile = Rx<InterpreterUser?>(null);
   final RxString interpreterId = RxString('');
+  final RxString localImagePath = RxString(''); // For local image path
   StreamSubscription? _profileSub;
 
   @override

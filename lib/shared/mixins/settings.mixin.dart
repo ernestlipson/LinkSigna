@@ -11,7 +11,7 @@ import 'package:sign_language_app/shared/components/app_bottom_sheet.component.d
 import 'package:sign_language_app/shared/components/app_dialog.component.dart';
 import 'package:sign_language_app/shared/components/profile_image.widget.dart';
 
-import '../../infrastructure/dal/services/cloudinary.service.dart';
+import '../../infrastructure/dal/services/firebase.storage.service.dart';
 
 mixin SettingsMixin on GetxController {
   final RxInt selectedTab = 0.obs;
@@ -29,7 +29,7 @@ mixin SettingsMixin on GetxController {
   final RxString userDocId = ''.obs;
 
   final ImagePicker picker = ImagePicker();
-  late CloudinaryService cloudinary;
+  late FirebaseStorageService cloudinary;
 
   final List<String> availableLanguages = [
     'Ghanaian Sign Language',
@@ -39,7 +39,7 @@ mixin SettingsMixin on GetxController {
   ];
 
   void initializeCloudinaryService() {
-    cloudinary = Get.put(CloudinaryService());
+    cloudinary = Get.put(FirebaseStorageService());
   }
 
   Widget getProfileImageWidget() {

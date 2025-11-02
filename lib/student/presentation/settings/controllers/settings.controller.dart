@@ -9,7 +9,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../config/cloudinary.config.dart';
 import '../../shared/controllers/user.controller.dart';
 import '../../shared/controllers/student_user.controller.dart';
 import '../../../../shared/mixins/settings.mixin.dart';
@@ -150,7 +149,7 @@ class SettingsController extends GetxController with SettingsMixin {
   Future<void> _loadProfileImageUrl() async {
     try {
       final userId = await resolveUserIdentifier();
-      await loadProfileImageUrl(userId, CloudinaryConfig.folderStudents);
+      await loadProfileImageUrl(userId, 'profiles/students');
 
       // If we found a URL from SharedPreferences, update the controller
       if (profileImageUrl.value.isNotEmpty) {
@@ -197,7 +196,7 @@ class SettingsController extends GetxController with SettingsMixin {
       final downloadUrl = await cloudinary.uploadProfileImage(
         imageFile: imageFile,
         userId: userId,
-        folder: CloudinaryConfig.folderStudents,
+        folder: 'profiles/students',
       );
 
       if (downloadUrl != null) {
@@ -218,6 +217,8 @@ class SettingsController extends GetxController with SettingsMixin {
     if (Get.isRegistered<UserController>()) {
       final userController = Get.find<UserController>();
       userController.setUser(photo: downloadUrl);
+      // Clear local image path since we now have the network URL
+      userController.localImagePath.value = '';
     }
 
     if (Get.isRegistered<StudentUserController>()) {

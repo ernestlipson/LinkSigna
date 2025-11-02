@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import '../../../shared/components/app.button.dart';
 import '../../../shared/components/app.field.dart';
 import 'package:sign_language_app/infrastructure/utils/app.constants.dart';
-import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
+import 'package:sign_language_app/infrastructure/utils/app_strings.dart';
 import 'controllers/forgot_password.controller.dart';
 
 class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
@@ -67,8 +67,8 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
               // Phone number field
               Obx(() {
                 return CustomTextFormField(
-                  hintText: ScreenStrings.phoneHint,
-                  labelText: ScreenStrings.phoneLabel,
+                  hintText: AppStrings.phoneHint,
+                  labelText: AppStrings.phoneLabel,
                   controller: controller.phoneController,
                   keyboardType: TextInputType.phone,
                   maxLength: 10, // Limit to 10 digits
