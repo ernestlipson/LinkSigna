@@ -4,6 +4,10 @@ import 'package:get/get.dart';
 import '../shared/controllers/user.controller.dart';
 import '../interpreters/controllers/interpreters.controller.dart';
 import '../interpreters/interpreter_profile.screen.dart';
+import 'package:sign_language_app/shared/components/dashboard/dashboard_section.component.dart';
+import 'package:sign_language_app/shared/components/dashboard/empty_state_box.component.dart';
+import 'package:sign_language_app/shared/components/dashboard/session_card.component.dart';
+import 'package:sign_language_app/infrastructure/dal/models/session.dart';
 
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
@@ -12,28 +16,43 @@ class HomeDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final userController = Get.find<UserController>();
     final interpretersController = Get.put(InterpretersController());
-    final sessions = [
-      {
-        'name': 'Arlene McCoy',
-        'class': 'Communication Skills',
-        'date': '2025-04-15',
-        'time': '10:00 am',
-        'status': 'Pending',
-      },
-      {
-        'name': 'Arlene McCoy',
-        'class': 'Communication Skills',
-        'date': '2025-04-15',
-        'time': '10:00 am',
-        'status': 'Confirmed',
-      },
-      {
-        'name': 'Arlene McCoy',
-        'class': 'Communication Skills',
-        'date': '2025-04-15',
-        'time': '10:00 am',
-        'status': 'Pending',
-      },
+
+    final upcomingSessions = [
+      Session(
+        id: 'up-1',
+        studentName: 'Arlene McCoy',
+        className: 'Communication Skills',
+        date: DateTime(2025, 4, 15),
+        time: '10:00 am',
+        status: SessionStatus.pending,
+      ),
+      Session(
+        id: 'up-2',
+        studentName: 'Arlene McCoy',
+        className: 'Communication Skills',
+        date: DateTime(2025, 4, 15),
+        time: '10:00 am',
+        status: SessionStatus.confirmed,
+      ),
+    ];
+
+    final historySessions = [
+      Session(
+        id: 'hist-1',
+        studentName: 'Arlene McCoy',
+        className: 'Communication Skills',
+        date: DateTime(2025, 3, 10),
+        time: '09:00 am',
+        status: SessionStatus.completed,
+      ),
+      Session(
+        id: 'hist-2',
+        studentName: 'Arlene McCoy',
+        className: 'Communication Skills',
+        date: DateTime(2025, 3, 02),
+        time: '12:30 pm',
+        status: SessionStatus.completed,
+      ),
     ];
 
     return SingleChildScrollView(
@@ -43,544 +62,143 @@ class HomeDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text:
-                          'Welcome ${userController.displayName.value.isNotEmpty ? userController.displayName.value : "User"}\n',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Colors.black,
-                      ),
-                    ),
-                    TextSpan(
-                      text:
-                          "Here's what's happening with your interpreter sessions today.",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.normal,
-                        fontSize: 12,
-                        color: Colors.grey,
-                        height: 2.0,
-                      ),
-                    ),
-                  ],
-                ),
+            Text(
+              'Welcome ${userController.displayName.value.isNotEmpty ? userController.displayName.value : "User"}',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 24),
-            // Interpreters Section
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Color(0xFFE5E7EB)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Interpreters',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+            const SizedBox(height: 16),
+            DashboardSection(
+              title: 'Interpreters',
+              onViewAll: () {},
+              child: SizedBox(
+                height: 140,
+                child: Obx(() {
+                  if (interpretersController.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (interpretersController.loadError.value != null) {
+                    return Center(
+                      child: Text(interpretersController.loadError.value!),
+                    );
+                  }
+                  final list = interpretersController.interpreters;
+                  if (list.isEmpty) {
+                    return const EmptyStateBox(message: 'No interpreters yet');
+                  }
+                  return ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: list.length.clamp(0, 10),
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final i = list[index];
+                      return GestureDetector(
+                        onTap: () => Get.to(
+                            () => InterpreterProfileScreen(interpreter: i)),
+                        child: Container(
+                          width: 220,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
                           ),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'View All',
-                            style: TextStyle(
-                              color: Color(0xFF9B197D),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 140,
-                      child: Obx(() {
-                        if (interpretersController.isLoading.value) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        }
-                        if (interpretersController.loadError.value != null) {
-                          return Center(
-                              child: Text(
-                                  interpretersController.loadError.value!));
-                        }
-                        final list = interpretersController.interpreters;
-                        if (list.isEmpty) {
-                          return const Center(
-                              child: Text('No interpreters yet'));
-                        }
-                        return ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: list.length.clamp(0, 10),
-                          separatorBuilder: (_, __) =>
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 28,
+                                backgroundImage: NetworkImage(i.profileImage),
+                                backgroundColor: Colors.grey[200],
+                              ),
                               const SizedBox(width: 12),
-                          itemBuilder: (context, index) {
-                            final i = list[index];
-                            return GestureDetector(
-                              onTap: () => Get.to(() =>
-                                  InterpreterProfileScreen(interpreter: i)),
-                              child: Container(
-                                width: 220,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Color(0xFFE5E7EB)),
-                                ),
-                                padding: const EdgeInsets.all(12),
-                                child: Row(
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    CircleAvatar(
-                                      radius: 28,
-                                      backgroundImage:
-                                          NetworkImage(i.profileImage),
-                                      backgroundColor: Colors.grey[200],
+                                    Text(
+                                      i.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 14),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            i.name,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            i.email,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Row(
-                                            children: [
-                                              Icon(
-                                                Icons.star,
-                                                size: 14,
-                                                color: Colors.amber,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                i.rating.toStringAsFixed(1),
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey[700],
-                                                ),
-                                              ),
-                                              const Spacer(),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: i.isAvailable
-                                                      ? const Color(0xFFE6F9F0)
-                                                      : const Color(0xFFFDF2F2),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: Text(
-                                                  i.isAvailable
-                                                      ? 'Available'
-                                                      : 'Unavailable',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: i.isAvailable
-                                                        ? const Color(
-                                                            0xFF34C759)
-                                                        : const Color(
-                                                            0xFFEF4444),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      i.email,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: Colors.grey[600]),
                                     ),
                                   ],
                                 ),
                               ),
-                            );
-                          },
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
               ),
             ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Color(0xFFE5E7EB)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Upcoming Session',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'View All',
-                            style: TextStyle(
-                              color: Color(0xFF9B197D),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 500, // Adjust as needed
-                      child: ListView.separated(
-                        physics: BouncingScrollPhysics(),
-                        itemCount: sessions.length,
+            const SizedBox(height: 24),
+            DashboardSection(
+              title: 'Upcoming Sessions',
+              onViewAll: () {},
+              child: SizedBox(
+                height: 400,
+                child: upcomingSessions.isEmpty
+                    ? const EmptyStateBox(message: 'No upcoming sessions')
+                    : ListView.separated(
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: upcomingSessions.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          final session = sessions[index];
-                          final isPending = session['status'] == 'Pending';
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Color(0xFFE5E7EB)),
-                            ),
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Session with ${session['name']}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                const Divider(height: 20),
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      const TextSpan(
-                                        text: 'Class: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      TextSpan(text: session['class']),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      const TextSpan(
-                                        text: 'Date: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      TextSpan(text: session['date']),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      const TextSpan(
-                                        text: 'Time: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      TextSpan(text: session['time']),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Text(
-                                      'Status:',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      width: 10,
-                                      height: 10,
-                                      decoration: BoxDecoration(
-                                        color: isPending
-                                            ? const Color(0xFFF6C768)
-                                            : const Color(0xFF34C759),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: isPending
-                                            ? const Color(0xFFFDF6E9)
-                                            : const Color(0xFFE6F9F0),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        isPending ? 'Pending' : 'Confirmed',
-                                        style: TextStyle(
-                                          color: isPending
-                                              ? const Color(0xFFF6C768)
-                                              : const Color(0xFF34C759),
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        onPressed: isPending ? null : () {},
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: isPending
-                                              ? const Color(0xFFE5E7EB)
-                                              : const Color(0xFF9B197D),
-                                          foregroundColor: isPending
-                                              ? Colors.grey
-                                              : Colors.white,
-                                          textStyle: const TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                          elevation: 0,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: const Text('Join Video Call'),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: OutlinedButton(
-                                        onPressed: () {},
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor:
-                                              const Color(0xFF9B197D),
-                                          side: const BorderSide(
-                                              color: Color(0xFF9B197D)),
-                                          textStyle: const TextStyle(
-                                              fontWeight: FontWeight.bold),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: const Text('Cancel Session'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                          final s = upcomingSessions[index];
+                          final isPending = s.status == SessionStatus.pending;
+                          return SessionCard(
+                            session: s,
+                            isUpcoming: true,
+                            onJoin: isPending
+                                ? null
+                                : () => Get.snackbar('Video Call',
+                                    'Joining video call with ${s.studentName}'),
+                            onCancel: () => Get.snackbar('Cancel Session',
+                                'Session with ${s.studentName} cancelled'),
+                          );
+                        },
+                      ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            DashboardSection(
+              title: 'History',
+              onViewAll: () {},
+              child: SizedBox(
+                height: 320,
+                child: historySessions.isEmpty
+                    ? const EmptyStateBox(message: 'No past sessions')
+                    : ListView.separated(
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: historySessions.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final s = historySessions[index];
+                          return SessionCard(
+                            session: s,
+                            isUpcoming: false,
+                            onViewFeedback: () => Get.snackbar(
+                              'Feedback',
+                              'Viewing feedback for session with ${s.studentName}',
                             ),
                           );
                         },
                       ),
-                    ),
-                  ],
-                ),
               ),
             ),
             const SizedBox(height: 24),
-            // History Section
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Color(0xFFE5E7EB)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'History',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text(
-                            'View All',
-                            style: TextStyle(
-                              color: Color(0xFF9B197D),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 350, // Adjust as needed
-                      child: ListView.separated(
-                        physics: BouncingScrollPhysics(),
-                        itemCount: 3,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Color(0xFFE5E7EB)),
-                            ),
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Session with Arlene McCoy',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                const Divider(height: 20),
-                                const Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'Class: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      TextSpan(text: 'Communication Skills'),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                const Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'Date: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      TextSpan(text: '2025-04-15'),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                const Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'Time: ',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      TextSpan(text: '10:00 am'),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Text(
-                                      'Status:',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      width: 10,
-                                      height: 10,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF34C759),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFE6F9F0),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: const Text(
-                                        'Completed',
-                                        style: TextStyle(
-                                          color: Color(0xFF34C759),
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Upcoming Sessions Section
           ],
         ),
       ),

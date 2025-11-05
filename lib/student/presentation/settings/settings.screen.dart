@@ -31,7 +31,6 @@ class SettingsScreen extends GetView<SettingsController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 20),
-          // Profile Picture
           Center(
             child: Obx(() => ProfileAvatarPicker(
                   avatarWidget: controller.getProfileImageWidget(),
@@ -40,12 +39,8 @@ class SettingsScreen extends GetView<SettingsController> {
                 )),
           ),
           SizedBox(height: 24),
-
-          // Basic Information Section
           SettingsSectionHeader(title: 'Basic Information'),
           SizedBox(height: 16),
-
-          // Full Name
           Obx(() => _buildFormField(
                 'Full name',
                 controller.fullNameController,
@@ -54,24 +49,16 @@ class SettingsScreen extends GetView<SettingsController> {
                     : controller.displayName.value,
               )),
           SizedBox(height: 16),
-
-          // Phone Number
           _buildPhoneNumberField(),
           SizedBox(height: 16),
-
-          // University & Level
           _buildUniversityLevelField(),
           SizedBox(height: 16),
-
-          // Languages
           _buildFormField(
             'Languages',
             controller.languagesController,
             'Ghanaian Sign Language',
           ),
           SizedBox(height: 12),
-
-          // Add Language Button
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
@@ -87,15 +74,11 @@ class SettingsScreen extends GetView<SettingsController> {
             ),
           ),
           SizedBox(height: 24),
-
-          // Save Changes Button
           SaveChangesButton(
             isSaving: controller.isSaving,
             onSave: () => controller.saveChangesAsync(),
           ),
           SizedBox(height: 32),
-
-          // Delete Account Section
           DeleteAccountSection(
             onDelete: () => controller.deleteAccount(),
           ),
