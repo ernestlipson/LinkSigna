@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../infrastructure/theme/app_theme.dart';
 import '../../../shared/components/settings/settings_screen_layout.component.dart';
 import 'controllers/settings.controller.dart';
 import 'package:sign_language_app/shared/components/settings/profile_avatar_picker.dart';
@@ -57,21 +56,6 @@ class SettingsScreen extends GetView<SettingsController> {
             'Languages',
             controller.languagesController,
             'Ghanaian Sign Language',
-          ),
-          SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () => controller.addLanguage(),
-              icon: Icon(Icons.add, color: AppColors.primary, size: 20),
-              label: Text(
-                'Add Language',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
           ),
           SizedBox(height: 24),
           SaveChangesButton(

@@ -12,6 +12,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onHelpTap;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onLogoutTap; // new logout callback
   final bool hasNotification;
   final GetxController? profileController;
   final String? profileImageField;
@@ -24,6 +25,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onHelpTap,
     this.onNotificationTap,
     this.onProfileTap,
+    this.onLogoutTap,
     this.hasNotification = false,
     this.profileController,
     this.profileImageField,
@@ -74,22 +76,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
-                onTap: onProfileTap,
-                child: Container(
-                  height: 33,
-                  width: 33,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFFE4E4E4),
-                      width: 2,
-                    ),
-                  ),
-                  child: ClipOval(
-                    child: _buildProfileImage(),
-                  ),
-                ),
+              _ProfileMenu(
+                buildAvatar: _buildProfileImage,
+                onProfileTap: onProfileTap,
+                onLogoutTap: onLogoutTap,
               ),
             ],
           ),
@@ -154,4 +144,76 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+}
+
+enum _ProfileMenuAction { profile, logout }
+
+class _ProfileMenu extends StatelessWidget {
+  final Widget Function() buildAvatar;
+  final VoidCallback? onProfileTap;
+  final VoidCallback? onLogoutTap;
+
+  const _ProfileMenu({
+    required this.buildAvatar,
+    this.onProfileTap,
+    this.onLogoutTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_ProfileMenuAction>(
+      tooltip: 'Profile menu',
+      onSelected: (value) {
+        switch (value) {
+          case _ProfileMenuAction.profile:
+            if (onProfileTap != null) onProfileTap!();
+            break;
+          case _ProfileMenuAction.logout:
+            if (onLogoutTap != null) onLogoutTap!();
+            break;
+        }
+      },
+      elevation: 6,
+      offset:
+          const Offset(0, 40), // shifted: show directly under & aligned right
+      padding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      itemBuilder: (context) => [
+        PopupMenuItem<_ProfileMenuAction>(
+          value: _ProfileMenuAction.profile,
+          child: Row(
+            children: const [
+              Icon(Icons.person_outline, size: 20, color: Colors.black87),
+              SizedBox(width: 8),
+              Text('Your Profile'),
+            ],
+          ),
+        ),
+        PopupMenuItem<_ProfileMenuAction>(
+          value: _ProfileMenuAction.logout,
+          child: Row(
+            children: const [
+              Icon(Icons.logout, size: 20, color: Colors.black87),
+              SizedBox(width: 8),
+              Text('Log out'),
+            ],
+          ),
+        ),
+      ],
+      child: Container(
+        height: 33,
+        width: 33,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: const Color(0xFFE4E4E4),
+            width: 2,
+          ),
+        ),
+        child: ClipOval(child: buildAvatar()),
+      ),
+    );
+  }
 }
