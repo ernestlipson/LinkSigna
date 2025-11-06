@@ -133,7 +133,7 @@ class SharedSignInScreen extends StatelessWidget {
                                 onChanged: (value) {
                                   isRememberMe!.value = value;
                                 },
-                                activeColor: AppColors.primary,
+                                activeThumbColor: AppColors.primary,
                                 activeTrackColor:
                                     AppColors.primary.withOpacity(0.2),
                               ))
@@ -141,7 +141,7 @@ class SharedSignInScreen extends StatelessWidget {
                           Switch(
                             value: false,
                             onChanged: (value) {},
-                            activeColor: AppColors.primary,
+                            activeThumbColor: AppColors.primary,
                             activeTrackColor:
                                 AppColors.primary.withOpacity(0.2),
                           ),
