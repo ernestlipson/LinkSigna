@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
-import '../../../../domain/users/interpreter_user.model.dart';
+import '../../../../infrastructure/dal/services/user.firestore.service.dart';
+import '../../../../domain/users/user.model.dart';
 
 class InterpreterProfileController extends GetxController {
-  final InterpreterUserFirestoreService _firestoreService =
-      Get.find<InterpreterUserFirestoreService>();
-  final Rx<InterpreterUser?> profile = Rx<InterpreterUser?>(null);
+  final UserFirestoreService _firestoreService =
+      Get.find<UserFirestoreService>();
+  final Rx<User?> profile = Rx<User?>(null);
   final RxString interpreterId = RxString('');
-  final RxString localImagePath = RxString(''); // For local image path
+  final RxString localImagePath = RxString('');
   StreamSubscription? _profileSub;
 
   @override
@@ -48,11 +48,10 @@ class InterpreterProfileController extends GetxController {
     }
   }
 
-  /// Load profile by interpreter ID
   Future<void> loadProfileById(String id) async {
     try {
       final user = await _firestoreService.getById(id);
-      if (user != null) {
+      if (user != null && user.isInterpreter) {
         profile.value = user;
         interpreterId.value = id;
         _listenToProfile(id);
@@ -63,14 +62,13 @@ class InterpreterProfileController extends GetxController {
     }
   }
 
-  /// Load profile by email (fallback)
   Future<void> loadProfileByEmail(String email) async {
     try {
       final user = await _firestoreService.findByEmail(email);
-      if (user != null) {
+      if (user != null && user.isInterpreter) {
         profile.value = user;
-        interpreterId.value = user.interpreterID;
-        _listenToProfile(user.interpreterID);
+        interpreterId.value = user.uid;
+        _listenToProfile(user.uid);
         await _cacheUserData(user);
       }
     } catch (e) {
@@ -78,11 +76,10 @@ class InterpreterProfileController extends GetxController {
     }
   }
 
-  /// Set profile data directly (used after login/signup)
-  void setProfile(InterpreterUser user) {
+  void setProfile(User user) {
     profile.value = user;
-    interpreterId.value = user.interpreterID;
-    _listenToProfile(user.interpreterID);
+    interpreterId.value = user.uid;
+    _listenToProfile(user.uid);
     _cacheUserData(user);
   }
 
@@ -122,13 +119,12 @@ class InterpreterProfileController extends GetxController {
     }
   }
 
-  /// Cache user data locally for redundancy
-  Future<void> _cacheUserData(InterpreterUser user) async {
+  Future<void> _cacheUserData(User user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('interpreter_id', user.interpreterID);
-      await prefs.setString('interpreter_email', user.email);
-      await prefs.setString('interpreter_name', user.displayName);
+      await prefs.setString('interpreter_id', user.uid);
+      await prefs.setString('interpreter_email', user.email ?? '');
+      await prefs.setString('interpreter_name', user.displayName?.trim() ?? '');
       await prefs.setBool('interpreter_logged_in', true);
     } catch (e) {
       Get.log('Error caching user data: $e');

@@ -8,12 +8,11 @@ import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 
 import 'infrastructure/navigation/routes.dart';
+import 'infrastructure/dal/services/user.firestore.service.dart';
 import 'student/presentation/shared/controllers/user.controller.dart';
 
 Future<String> initializeUserSession() async {
   final prefs = await SharedPreferences.getInstance();
-  final hasInterpreterLoggedIn =
-      prefs.getBool('interpreter_logged_in') ?? false;
   final firebaseUser = FirebaseAuth.instance.currentUser;
 
   if (!Get.isRegistered<UserController>()) {
@@ -24,31 +23,33 @@ Future<String> initializeUserSession() async {
     final userController = Get.find<UserController>();
     final userName = prefs.getString('userName') ?? 'User';
     userController.setUser(name: userName);
-  }
 
-  return getInitialRoute(
-    hasInterpreterLoggedIn: hasInterpreterLoggedIn,
-    isInterpreterAuthenticated: firebaseUser != null,
-    isStudentLoggedIn: firebaseUser != null,
-  );
-}
+    try {
+      if (Get.isRegistered<UserFirestoreService>()) {
+        final userService = Get.find<UserFirestoreService>();
+        final role = await userService.getUserRole(firebaseUser.uid);
 
-String getInitialRoute({
-  required bool hasInterpreterLoggedIn,
-  required bool isInterpreterAuthenticated,
-  required bool isStudentLoggedIn,
-}) {
-  if (hasInterpreterLoggedIn) {
-    if (isInterpreterAuthenticated) {
-      return Routes.INTERPRETER_HOME;
-    } else {
-      return Routes.INTERPRETER_SIGNIN;
+        if (role != null) {
+          if (role == 'interpreter') {
+            return Routes.INTERPRETER_HOME;
+          } else if (role == 'student') {
+            return Routes.STUDENT_HOME;
+          }
+        }
+      }
+    } catch (e) {
+      Get.log('Error getting user role: $e');
     }
-  } else if (isStudentLoggedIn) {
-    return Routes.STUDENT_HOME;
-  } else {
-    return Routes.initialRoute;
   }
+
+  final storedRole = prefs.getString('userRole');
+  if (storedRole == 'interpreter') {
+    return Routes.INTERPRETER_SIGNIN;
+  } else if (storedRole == 'student') {
+    return Routes.STUDENT_LOGIN;
+  }
+
+  return Routes.initialRoute;
 }
 
 Future<void> initializeFirebase() async {

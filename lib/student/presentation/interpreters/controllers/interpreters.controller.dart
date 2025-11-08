@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../interpreter_profile.screen.dart';
 import '../../../infrastructure/dal/services/interpreter.service.dart';
 import '../../../../infrastructure/dal/models/interpreter.model.dart';
@@ -12,10 +13,13 @@ class InterpretersController extends GetxController {
   final RxList<InterpreterData> interpreters = <InterpreterData>[].obs;
   final isLoading = false.obs;
   final loadError = RxnString();
+  final isLoadingMore = false.obs;
+  final hasMoreData = true.obs;
 
   // Filter form controllers
   final searchController = TextEditingController();
   final subjectController = TextEditingController();
+  final scrollController = ScrollController();
 
   // Filter state
   final RxBool isFilterModalOpen = false.obs;
@@ -34,12 +38,17 @@ class InterpretersController extends GetxController {
   final _bookingInProgress = false.obs;
   late final String _studentId;
 
+  // Pagination state
+  DocumentSnapshot? _lastDocument;
+  int _currentLimit = InterpreterService.pageSize;
+
   @override
   void onInit() {
     super.onInit();
     _service = Get.find<InterpreterService>();
     _sessionService = Get.find<SessionFirestoreService>();
     _studentId = _resolveStudentId();
+    _setupScrollListener();
     _listen();
   }
 
@@ -58,17 +67,88 @@ class InterpretersController extends GetxController {
     return 'student_fallback_${DateTime.now().millisecondsSinceEpoch}';
   }
 
+  void _setupScrollListener() {
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >=
+              scrollController.position.maxScrollExtent - 200 &&
+          !isLoadingMore.value &&
+          hasMoreData.value) {
+        _loadMore();
+      }
+    });
+  }
+
   void _listen() {
     isLoading.value = true;
     loadError.value = null;
-    _sub = _service.streamAllInterpreters().listen((list) {
+    _currentLimit = InterpreterService.pageSize;
+
+    _sub = _service.streamAllInterpreters(limit: _currentLimit).listen((list) {
       interpreters.assignAll(list.map(_mapToData).toList());
       isLoading.value = false;
+
+      // Update pagination state
+      if (list.length < _currentLimit) {
+        hasMoreData.value = false;
+      }
+
+      // Store last document for pagination
+      if (list.isNotEmpty) {
+        final lastInterpreter = list.last;
+        _updateLastDocument(lastInterpreter.id);
+      }
     }, onError: (e) {
       loadError.value = 'Failed to load interpreters';
       isLoading.value = false;
       Get.log('Interpreter stream error: $e');
     });
+  }
+
+  Future<void> _updateLastDocument(String documentId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(documentId)
+          .get();
+      if (doc.exists) {
+        _lastDocument = doc;
+      }
+    } catch (e) {
+      Get.log('Error updating last document: $e');
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_lastDocument == null || !hasMoreData.value) return;
+
+    isLoadingMore.value = true;
+    try {
+      final moreInterpreters = await _service.getAllInterpreters(
+        lastDocument: _lastDocument,
+        limit: InterpreterService.pageSize,
+      );
+
+      if (moreInterpreters.isEmpty ||
+          moreInterpreters.length < InterpreterService.pageSize) {
+        hasMoreData.value = false;
+      }
+
+      if (moreInterpreters.isNotEmpty) {
+        interpreters.addAll(moreInterpreters.map(_mapToData).toList());
+        _currentLimit += moreInterpreters.length;
+
+        // Update last document
+        await _updateLastDocument(moreInterpreters.last.id);
+      }
+    } catch (e) {
+      Get.log('Error loading more interpreters: $e');
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to load more interpreters',
+      );
+    } finally {
+      isLoadingMore.value = false;
+    }
   }
 
   InterpreterData _mapToData(Interpreter i) {
@@ -225,6 +305,7 @@ class InterpretersController extends GetxController {
     _sub?.cancel();
     searchController.dispose();
     subjectController.dispose();
+    scrollController.dispose();
     super.onClose();
   }
 }

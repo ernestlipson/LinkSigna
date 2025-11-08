@@ -34,7 +34,7 @@ class InterpreterHomeScreen extends StatelessWidget {
     return Obx(
       () => BaseHomeScreen(
         appBar: CustomAppBar(
-          profileImageUrl: profileController.profile.value?.profilePictureUrl,
+          profileImageUrl: profileController.profile.value?.avatarUrl,
           localImagePath: profileController.localImagePath.value.isNotEmpty
               ? profileController.localImagePath.value
               : null,

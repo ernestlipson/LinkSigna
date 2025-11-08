@@ -146,9 +146,8 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
       final profileController = Get.find<InterpreterProfileController>();
       final user = profileController.profile.value;
 
-      if (user?.profilePictureUrl != null &&
-          user!.profilePictureUrl!.isNotEmpty) {
-        profileImageUrl.value = user.profilePictureUrl!;
+      if (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty) {
+        profileImageUrl.value = user.avatarUrl!;
       }
     } catch (e) {
       print('Failed to load profile image: $e');
@@ -214,18 +213,16 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
 
     final profileController = Get.find<InterpreterProfileController>();
     await profileController.updateProfile({
-      'profilePictureUrl': downloadUrl,
+      'avatarUrl': downloadUrl,
     });
 
-    // Update the profile value immediately for reactive UI using copyWith
     if (profileController.profile.value != null) {
       profileController.profile.value =
           profileController.profile.value!.copyWith(
-        profilePictureUrl: downloadUrl,
+        avatarUrl: downloadUrl,
       );
     }
 
-    // Clear local image path since we now have the network URL
     profileController.localImagePath.value = '';
 
     profileImage.value = null;

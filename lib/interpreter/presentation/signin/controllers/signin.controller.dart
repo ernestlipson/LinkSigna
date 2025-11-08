@@ -1,20 +1,17 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
-import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
-import '../../../../domain/users/interpreter_user.model.dart';
-import '../../shared/controllers/interpreter_profile.controller.dart';
+import '../../../../infrastructure/dal/services/user.firestore.service.dart';
+import '../../../../domain/users/user.model.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 import '../../../../shared/mixins/login.mixin.dart';
 
 class InterpreterSigninController extends GetxController with LoginMixin {
   final isSubmitting = false.obs;
 
-  // Services
-  final InterpreterUserFirestoreService _firestoreService =
-      Get.find<InterpreterUserFirestoreService>();
+  final UserFirestoreService _userService = Get.find<UserFirestoreService>();
 
   Future<void> login() async {
     if (!validateAll()) {
@@ -30,7 +27,7 @@ class InterpreterSigninController extends GetxController with LoginMixin {
       final profile = await _loadInterpreterProfile(credential.user);
 
       if (profile == null) {
-        await auth.signOut();
+        await auth.FirebaseAuth.instance.signOut();
         AppSnackbar.error(
           title: 'Profile Missing',
           message: 'Interpreter profile not found for this account.',
@@ -38,11 +35,16 @@ class InterpreterSigninController extends GetxController with LoginMixin {
         return;
       }
 
-      await _cacheSession(profile, rememberEmail: isRememberMe.value);
-
-      if (Get.isRegistered<InterpreterProfileController>()) {
-        Get.find<InterpreterProfileController>().setProfile(profile);
+      if (!profile.isInterpreter) {
+        await auth.FirebaseAuth.instance.signOut();
+        AppSnackbar.error(
+          title: 'Error',
+          message: 'This account is not registered as an interpreter',
+        );
+        return;
       }
+
+      await _cacheSession(profile, rememberEmail: isRememberMe.value);
 
       AppSnackbar.success(
         title: 'Success',
@@ -50,7 +52,7 @@ class InterpreterSigninController extends GetxController with LoginMixin {
       );
 
       Get.offAllNamed(Routes.INTERPRETER_HOME);
-    } on FirebaseAuthException catch (e) {
+    } on auth.FirebaseAuthException catch (e) {
       AppSnackbar.error(
         title: 'Login Failed',
         message: mapAuthError(e),
@@ -70,18 +72,14 @@ class InterpreterSigninController extends GetxController with LoginMixin {
   }
 
   Future<void> _checkAuthStatus() async {
-    final user = auth.currentUser;
+    final user = auth.FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     try {
       final profile = await _loadInterpreterProfile(user);
-      if (profile == null) return;
+      if (profile == null || !profile.isInterpreter) return;
 
       await _cacheSession(profile, rememberEmail: isRememberMe.value);
-
-      if (Get.isRegistered<InterpreterProfileController>()) {
-        Get.find<InterpreterProfileController>().setProfile(profile);
-      }
 
       Get.offAllNamed(Routes.INTERPRETER_HOME);
     } catch (e) {
@@ -89,62 +87,62 @@ class InterpreterSigninController extends GetxController with LoginMixin {
     }
   }
 
-  Future<InterpreterUser?> _loadInterpreterProfile(User? user) async {
+  Future<User?> _loadInterpreterProfile(auth.User? user) async {
     if (user == null) return null;
 
-    final byAuth = await _firestoreService.findByAuthUid(user.uid);
-    if (byAuth != null) return byAuth;
+    var profile = await _userService.findByAuthUid(user.uid);
+    if (profile != null && profile.isInterpreter) return profile;
 
     final email = user.email ?? emailController.text.trim();
     if (email.isEmpty) return null;
 
-    final byEmail = await _firestoreService.findByEmail(email);
-    if (byEmail != null) {
-      await _firestoreService.updateFields(byEmail.interpreterID, {
-        'authUid': user.uid,
-      });
-      return byEmail.copyWith(authUid: user.uid);
+    profile = await _userService.findByEmail(email);
+    if (profile != null && profile.isInterpreter) {
+      await _userService.updateFields(profile.uid, {'authUid': user.uid});
+      return profile.copyWith(authUid: user.uid);
     }
 
     if (user.displayName != null) {
       final parts = user.displayName!.trim().split(' ');
       final firstName = parts.isNotEmpty ? parts.first : '';
       final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
-      return _firestoreService.getOrCreateByAuthUid(
+      return _userService.getOrCreateInterpreter(
         authUid: user.uid,
-        email: email,
         firstName: firstName,
         lastName: lastName,
+        email: email,
       );
     }
 
-    return _firestoreService.getOrCreateByAuthUid(
+    return _userService.getOrCreateInterpreter(
       authUid: user.uid,
-      email: email,
       firstName: '',
       lastName: '',
+      email: email,
     );
   }
 
-  Future<void> _cacheSession(InterpreterUser profile,
+  Future<void> _cacheSession(User profile,
       {required bool rememberEmail}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('interpreter_logged_in', true);
-    await prefs.setString('interpreter_email', profile.email);
-    await prefs.setString('interpreter_name', profile.displayName.trim());
-    await prefs.setString('interpreter_id', profile.interpreterID);
+    await prefs.setString('interpreter_email', profile.email ?? '');
+    await prefs.setString(
+        'interpreter_name', profile.displayName?.trim() ?? '');
+    await prefs.setString('interpreter_id', profile.uid);
+    await prefs.setString('userRole', 'interpreter');
     if (profile.university != null && profile.university!.isNotEmpty) {
       await prefs.setString('university', profile.university!);
     }
 
     await saveRememberedEmail(
       'interpreter_remembered_email',
-      profile.email,
+      profile.email ?? '',
       remember: rememberEmail,
     );
 
-    if (rememberEmail) {
-      emailController.text = profile.email;
+    if (rememberEmail && profile.email != null) {
+      emailController.text = profile.email!;
       isRememberMe.value = true;
     } else {
       isRememberMe.value = false;

@@ -5,8 +5,7 @@ import '../../../../infrastructure/presentation/controllers/country.controller.d
 import '../../dal/services/interpreter.service.dart';
 
 import '../../../presentation/shared/controllers/user.controller.dart';
-import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
-import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
+import '../../../../infrastructure/dal/services/user.firestore.service.dart';
 import '../../../presentation/shared/controllers/student_user.controller.dart';
 import '../../../../interpreter/presentation/shared/controllers/interpreter_profile.controller.dart';
 
@@ -16,13 +15,9 @@ class GlobalBinding extends Bindings {
     Get.lazyPut<CountryRepository>(() => CountryRepository(), fenix: true);
     Get.lazyPut<CountryController>(() => CountryController(), fenix: true);
     Get.lazyPut<UserController>(() => UserController(), fenix: true);
-    Get.lazyPut<StudentUserFirestoreService>(
-        () => StudentUserFirestoreService(),
+    Get.lazyPut<UserFirestoreService>(() => UserFirestoreService(),
         fenix: true);
     Get.lazyPut<StudentUserController>(() => StudentUserController(),
-        fenix: true);
-    Get.lazyPut<InterpreterUserFirestoreService>(
-        () => InterpreterUserFirestoreService(),
         fenix: true);
     Get.lazyPut<InterpreterProfileController>(
         () => InterpreterProfileController(),

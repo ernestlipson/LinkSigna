@@ -1,9 +1,10 @@
-// A simple model for your Interpreter data
+// A simple model for your Interpreter data from unified users collection
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Interpreter {
-  final String id; // This will be the document ID
-  final String interpreterId; // interpreter_id from Firestore
+  final String id; // This will be the document ID (uid from User model)
+  final String
+      interpreterId; // authUid or uid - kept for backwards compatibility
   final String firstName;
   final String lastName;
   final String email;
@@ -45,15 +46,31 @@ class Interpreter {
       return null;
     }
 
+    // Handle both old and new field names for compatibility
+    final displayName = data['displayName'] as String?;
+    String firstName = data['firstName'] ?? '';
+    String lastName = data['lastName'] ?? '';
+
+    // If displayName exists but first/last don't, split displayName
+    if ((firstName.isEmpty || lastName.isEmpty) &&
+        displayName != null &&
+        displayName.isNotEmpty) {
+      final parts = displayName.split(' ');
+      if (parts.isNotEmpty) {
+        firstName = parts.first;
+        lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+      }
+    }
+
     return Interpreter(
       id: doc.id,
-      interpreterId: data['interpreter_id'] ?? '',
-      firstName: data['firstName'] ?? '',
-      lastName: data['lastName'] ?? '',
+      interpreterId: data['authUid'] ?? data['interpreter_id'] ?? doc.id,
+      firstName: firstName,
+      lastName: lastName,
       email: data['email'] ?? '',
-      profilePictureUrl: data['profilePictureUrl'] ?? '',
+      profilePictureUrl: data['avatarUrl'] ?? data['profilePictureUrl'] ?? '',
       isAvailable: data['isAvailable'] ?? false,
-      joinedDate: parseDate(data['joinedDate']),
+      joinedDate: parseDate(data['joinedDate'] ?? data['createdAt']),
       languages: data['languages'] ?? [],
       rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
       specializations: data['specializations'] ?? [],
@@ -63,17 +80,20 @@ class Interpreter {
 
   Map<String, dynamic> toFirestore() {
     return {
-      'interpreter_id': interpreterId,
+      'role': 'interpreter',
+      'authUid': interpreterId,
       'firstName': firstName,
       'lastName': lastName,
+      'displayName': '$firstName $lastName'.trim(),
       'email': email,
-      'profilePictureUrl': profilePictureUrl,
+      'avatarUrl': profilePictureUrl,
       'isAvailable': isAvailable,
       'joinedDate': joinedDate,
       'languages': languages,
       'rating': rating,
       'specializations': specializations,
       'updatedAt': updatedAt,
+      'createdAt': joinedDate ?? DateTime.now(),
     };
   }
 }

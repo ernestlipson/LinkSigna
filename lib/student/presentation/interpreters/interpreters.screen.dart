@@ -97,8 +97,20 @@ class StudentBookInterpretersScreen extends StatelessWidget {
                   return const Center(child: Text('No interpreters found'));
                 }
                 return ListView.builder(
-                  itemCount: list.length,
+                  controller: controller.scrollController,
+                  itemCount:
+                      list.length + (controller.hasMoreData.value ? 1 : 0),
                   itemBuilder: (context, index) {
+                    if (index == list.length) {
+                      // Loading indicator at the bottom
+                      return Obx(() => controller.isLoadingMore.value
+                          ? Container(
+                              padding: EdgeInsets.all(16),
+                              alignment: Alignment.center,
+                              child: CircularProgressIndicator(),
+                            )
+                          : SizedBox.shrink());
+                    }
                     final interpreter = list[index];
                     return _buildInterpreterCard(interpreter, controller);
                   },

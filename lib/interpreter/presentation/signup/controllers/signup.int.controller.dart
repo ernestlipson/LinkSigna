@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
-import '../../../../infrastructure/dal/services/interpreter_user.firestore.service.dart';
+import '../../../../infrastructure/dal/services/user.firestore.service.dart';
 import '../../../../shared/mixins/signup.mixin.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
@@ -21,37 +21,35 @@ class InterpreterSignupController extends GetxController with SignupMixin {
 
     isSubmitting.value = true;
     try {
-      // Create Firebase Auth user
       final credential = await createFirebaseAuthUser();
 
-      // Parse name into first and last name
       final nameParts = parseFullName(nameController.text);
       final firstName = nameParts['firstName']!;
       final lastName = nameParts['lastName']!;
 
-      // Create Firestore interpreter profile
-      final interpreterService = Get.find<InterpreterUserFirestoreService>();
-      await interpreterService.getOrCreateByAuthUid(
+      final userService = Get.find<UserFirestoreService>();
+      await userService.createInterpreter(
         authUid: credential.user!.uid,
         firstName: firstName,
         lastName: lastName,
         email: emailController.text.trim(),
-        university: selectedUniversity.value,
+        university: selectedUniversity.value.isNotEmpty
+            ? selectedUniversity.value
+            : null,
       );
 
-      // Store session in SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('interpreter_logged_in', true);
       await prefs.setString('interpreter_email', emailController.text.trim());
       await prefs.setString('interpreter_name', nameController.text.trim());
       await prefs.setString('university', selectedUniversity.value);
+      await prefs.setString('userRole', 'interpreter');
 
       AppSnackbar.success(
         title: 'Success',
         message: 'Account created successfully!',
       );
 
-      // Navigate directly to interpreter home
       Get.offAllNamed(Routes.INTERPRETER_HOME);
     } on FirebaseAuthException catch (e) {
       showFirebaseAuthError(e.code);

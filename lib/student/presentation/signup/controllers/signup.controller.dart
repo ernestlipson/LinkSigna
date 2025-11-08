@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
-import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
+import '../../../../infrastructure/dal/services/user.firestore.service.dart';
 import '../../../../../infrastructure/mixins/country_flag_loader.mixin.dart';
 import '../../../../shared/mixins/signup.mixin.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
@@ -44,25 +44,27 @@ class SignupController extends GetxController
     isSubmitting.value = true;
     isPhoneOtpLoading.value = true;
     try {
-      // Create Firebase Auth user with email/password
       final credential = await createFirebaseAuthUser();
 
-      // Create Firestore user document
-      final studentService = Get.find<StudentUserFirestoreService>();
-      await studentService.getOrCreateByAuthUid(
+      final userService = Get.find<UserFirestoreService>();
+      await userService.createStudent(
         authUid: credential.user!.uid,
         displayName: nameController.text.trim(),
         email: emailController.text.trim(),
-        university: selectedUniversity.value,
+        phone: phoneController.text.trim().isNotEmpty
+            ? phoneController.text.trim()
+            : null,
+        university: selectedUniversity.value.isNotEmpty
+            ? selectedUniversity.value
+            : null,
       );
 
-      // Save to SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('student_logged_in', true);
       await prefs.setString('userName', nameController.text.trim());
       await prefs.setString('userEmail', emailController.text.trim());
+      await prefs.setString('userRole', 'student');
 
-      // Navigate to home
       Get.offAllNamed(Routes.STUDENT_HOME);
 
       AppSnackbar.success(

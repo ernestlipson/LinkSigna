@@ -2,8 +2,7 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/infrastructure/navigation/routes.dart';
-import 'package:sign_language_app/infrastructure/dal/services/student_user.firestore.service.dart';
-import 'package:sign_language_app/student/presentation/shared/controllers/student_user.controller.dart';
+import 'package:sign_language_app/infrastructure/dal/services/user.firestore.service.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 import 'package:sign_language_app/infrastructure/dal/services/firebase.exception.dart';
 import '../../../../../infrastructure/mixins/country_flag_loader.mixin.dart';
@@ -22,31 +21,35 @@ class LoginController extends GetxController
 
     isLoading.value = true;
     try {
-      // Sign in with email and password
       final credential = await signInWithEmailPassword();
 
-      // Load complete user profile from Firestore
-      final studentService = Get.find<StudentUserFirestoreService>();
-      final userProfile =
-          await studentService.findByAuthUid(credential.user!.uid);
+      final userService = Get.find<UserFirestoreService>();
+      final userProfile = await userService.findByAuthUid(credential.user!.uid);
 
-      // Save user data to SharedPreferences
+      if (userProfile == null) {
+        throw Exception('User profile not found');
+      }
+
+      if (!userProfile.isStudent) {
+        await auth.signOut();
+        AppSnackbar.error(
+          title: 'Error',
+          message: 'This account is not registered as a student',
+        );
+        return;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('userEmail', emailController.text.trim());
       await prefs.setString('userName',
-          userProfile?.displayName ?? credential.user?.displayName ?? 'User');
+          userProfile.displayName ?? credential.user?.displayName ?? 'User');
       await prefs.setBool('student_logged_in', true);
+      await prefs.setString('userRole', 'student');
 
-      if (userProfile != null) {
-        await prefs.setString('university', userProfile.university ?? '');
-
-        // Update StudentUserController if registered
-        if (Get.isRegistered<StudentUserController>()) {
-          Get.find<StudentUserController>().current.value = userProfile;
-        }
+      if (userProfile.university != null) {
+        await prefs.setString('university', userProfile.university!);
       }
 
-      // Save remember me preference (persist email only)
       await saveRememberedEmail(
         'remembered_email',
         emailController.text.trim(),
@@ -58,7 +61,6 @@ class LoginController extends GetxController
         message: 'Login successful!',
       );
 
-      // Navigate to home screen
       Get.offAllNamed(Routes.STUDENT_HOME);
     } on FirebaseAuthException catch (e) {
       handleFirebaseAuthException(e, defaultMessage: 'Login failed');

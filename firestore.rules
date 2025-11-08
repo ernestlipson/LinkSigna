@@ -1,82 +1,83 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection - allow authenticated users to read/write their own data
+    // Users collection - unified collection for students and interpreters
+    // Role-based access control with role field ('student' or 'interpreter')
     match /users/{userId} {
+      // Allow any authenticated user to read user profiles
+      // This enables students to view interpreter profiles and vice versa
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == resource.data.authUid;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.authUid;
+      
+      // Allow users to update only their own profile
+      // Prevent changing authUid or role after creation
+      allow update: if request.auth != null 
+        && resource.data.authUid == request.auth.uid
+        && request.resource.data.authUid == resource.data.authUid
+        && request.resource.data.role == resource.data.role;
+      
+      // Allow users to create their own profile
+      // Must match authenticated UID and provide required fields
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.authUid
+        && request.resource.data.role in ['student', 'interpreter']
+        && request.resource.data.email is string;
+      
+      // Allow users to delete only their own profile
+      allow delete: if request.auth != null && resource.data.authUid == request.auth.uid;
     }
     
     // Sessions collection - allow authenticated students or interpreters access
-    // We compare the caller's auth UID to the authUid stored in the referenced
-    // student / interpreter documents. This avoids assuming studentId/interpreterId
-    // are auth UIDs (they are document IDs in this project).
     match /sessions/{sessionId} {
-      allow read, write: if request.auth != null && (
-        // caller is the interpreter for this session
-        request.auth.uid == get(/databases/$(database)/documents/interpreters/$(resource.data.interpreterId)).data.authUid
-        // OR caller is the student for this session
-        || request.auth.uid == get(/databases/$(database)/documents/students/$(resource.data.studentId)).data.authUid
-      );
+      // Function to check if user is a participant in the session
+      function isSessionParticipant() {
+        let session = resource.data;
+        let studentDoc = get(/databases/$(database)/documents/users/$(session.studentId));
+        let interpreterDoc = get(/databases/$(database)/documents/users/$(session.interpreterId));
+        
+        return request.auth.uid == studentDoc.data.authUid 
+            || request.auth.uid == interpreterDoc.data.authUid;
+      }
+      
+      // Allow read/write if user is participant
+      allow read, write: if request.auth != null && isSessionParticipant();
 
-      // Allow create only if the caller is either the student or interpreter
-      // referenced by the incoming document (compare authUid on referenced docs)
+      // Allow create if the caller is either the student or interpreter
       allow create: if request.auth != null && (
-        request.auth.uid == get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.authUid
-        || request.auth.uid == get(/databases/$(database)/documents/interpreters/$(request.resource.data.interpreterId)).data.authUid
+        request.auth.uid == get(/databases/$(database)/documents/users/$(request.resource.data.studentId)).data.authUid
+        || request.auth.uid == get(/databases/$(database)/documents/users/$(request.resource.data.interpreterId)).data.authUid
       );
     }
     
-    // Interpreters collection - secured access for interpreter profiles
+    // DEPRECATED COLLECTIONS - Keep rules for backwards compatibility
+    // These can be removed after full migration to unified users collection
+    
+    // Interpreters collection - DEPRECATED (use users collection instead)
     match /interpreters/{interpreterId} {
-      // Allow any authenticated user to read interpreter profiles
-      // (clients like students need to view interpreter profiles). If you want
-      // to restrict public visibility further, add an `isPublic` or `isAvailable`
-      // flag and require it here.
       allow get: if request.auth != null && resource.data.role == 'interpreter';
       allow list: if request.auth != null && resource.data.role == 'interpreter';
-
-      // Allow create only if the authenticated UID matches the authUid in the incoming doc
-      // and the role is explicitly 'interpreter' to avoid spoofing.
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.authUid
         && request.resource.data.role == 'interpreter'
         && request.resource.data.authUid is string
         && request.resource.data.email is string;
-
-      // Allow update only to the owner; disallow changing authUid or role on update
       allow update: if request.auth != null
         && resource.data.authUid == request.auth.uid
         && request.resource.data.authUid == resource.data.authUid
         && request.resource.data.role == resource.data.role;
-
-      // Allow delete only to the owner
       allow delete: if request.auth != null && resource.data.authUid == request.auth.uid;
     }
     
-    // Students collection - basic protections for student profiles
+    // Students collection - DEPRECATED (use users collection instead)
     match /students/{studentId} {
-      // Allow the owner to read their profile (single document)
       allow get: if request.auth != null && resource.data.authUid == request.auth.uid;
-
-      // Allow authenticated users to query students (e.g., to find by authUid)
-      // The query filter ensures they can only see their own documents
       allow list: if request.auth != null 
         && request.query.limit <= 10
         && resource.data.authUid == request.auth.uid;
-
-      // Creating a student document must be done by the authenticated user that
-      // matches the supplied authUid field.
       allow create: if request.auth != null && request.auth.uid == request.resource.data.authUid;
-
-      // Allow update/delete only by the owner and prevent changing authUid
       allow update: if request.auth != null
         && resource.data.authUid == request.auth.uid
         && request.resource.data.authUid == resource.data.authUid;
-
       allow delete: if request.auth != null && resource.data.authUid == request.auth.uid;
     }
-    
   }
 }
