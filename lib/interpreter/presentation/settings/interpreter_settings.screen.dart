@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/infrastructure/utils/app_strings.dart';
 
 import '../../../../infrastructure/theme/app_theme.dart';
 import '../../../../shared/components/settings/settings_screen_layout.component.dart';
@@ -103,7 +104,7 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
                 'Email',
                 controller.emailController,
                 controller.displayEmail.value.isEmpty ? 'Enter your email' : '',
-                placeholder: 'Enter your email',
+                placeholder: AppStrings.emailHint,
               )),
           const SizedBox(height: 16),
 

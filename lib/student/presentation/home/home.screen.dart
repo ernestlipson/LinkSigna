@@ -3,7 +3,9 @@ import 'package:get/get.dart';
 import 'package:sign_language_app/shared/components/base_home_screen.component.dart';
 import 'package:sign_language_app/shared/helpers/navigation_items.helper.dart';
 import '../../../shared/components/app_bar.component.dart';
+import '../../../shared/components/app_dialog.component.dart';
 import '../shared/controllers/user.controller.dart';
+import '../settings/controllers/settings.controller.dart';
 import 'controllers/home.controller.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -14,6 +16,21 @@ class HomeScreen extends StatelessWidget {
     final homeController = Get.put(HomeController());
     final userController = Get.find<UserController>();
     final navigationItems = NavigationItemsHelper.getStudentNavigationItems();
+
+    void handleLogout() {
+      AppDialog.showLogoutConfirmation(
+        onConfirm: () {
+          // Get the settings controller which has the logout method
+          if (Get.isRegistered<SettingsController>()) {
+            Get.find<SettingsController>().logout();
+          } else {
+            // If not registered, create it temporarily
+            final settingsController = Get.put(SettingsController());
+            settingsController.logout();
+          }
+        },
+      );
+    }
 
     return Obx(
       () => BaseHomeScreen(
@@ -29,6 +46,7 @@ class HomeScreen extends StatelessWidget {
             hasNotification: true,
             onNotificationTap: homeController.showNotifications,
             onProfileTap: homeController.goToProfileTab,
+            onLogoutTap: handleLogout,
           ),
         ),
         body: Column(

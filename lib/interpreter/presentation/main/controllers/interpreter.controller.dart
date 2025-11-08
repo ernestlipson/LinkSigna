@@ -183,10 +183,6 @@ class InterpreterController extends GetxController {
     Get.to(() => InterpreterProfileScreen(interpreter: interpreter));
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
 
   @override
   void onClose() {

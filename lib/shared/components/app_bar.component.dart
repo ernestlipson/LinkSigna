@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/utils/app_icons.dart';
 
@@ -12,7 +13,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onHelpTap;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
-  final VoidCallback? onLogoutTap; // new logout callback
+  final VoidCallback? onLogoutTap;
   final bool hasNotification;
   final GetxController? profileController;
   final String? profileImageField;
@@ -43,95 +44,107 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          AppIcons.travelIB(width: 120),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (onHelpTap != null) ...[
-                IconButton(
-                  onPressed: onHelpTap,
-                  icon: const Icon(Icons.help_outline, color: Colors.black87),
-                ),
-                const SizedBox(width: 8),
-              ],
-              IconButton(
-                onPressed: onNotificationTap,
-                icon: Stack(
-                  children: [
-                    AppIcons.notification(size: 24),
-                    if (hasNotification)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _ProfileMenu(
-                buildAvatar: _buildProfileImage,
-                onProfileTap: onProfileTap,
-                onLogoutTap: onLogoutTap,
-              ),
-            ],
-          ),
+          _buildLogo(),
+          _buildActions(),
         ],
       ),
     );
   }
 
+  Widget _buildLogo() {
+    return AppIcons.travelIB(width: 120);
+  }
+
+  Widget _buildActions() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (onHelpTap != null) ...[
+          _buildHelpButton(),
+          const SizedBox(width: 8),
+        ],
+        _buildProfileMenu(),
+      ],
+    );
+  }
+
+  Widget _buildHelpButton() {
+    return IconButton(
+      onPressed: onHelpTap,
+      icon: const Icon(Icons.help_outline, color: Colors.black87),
+    );
+  }
+
+  Widget _buildProfileMenu() {
+    return _ProfileMenu(
+      buildAvatar: _buildProfileImage,
+      onProfileTap: onProfileTap,
+      onLogoutTap: onLogoutTap,
+    );
+  }
+
   Widget _buildProfileImage() {
-    // If a custom profile avatar widget is provided, use it
     if (profileAvatar != null) {
       return profileAvatar!;
     }
 
-    // Check for local image path first (recently picked image)
-    if (localImagePath != null && localImagePath!.isNotEmpty) {
-      final file = File(localImagePath!);
-      if (file.existsSync()) {
-        return Image.file(
-          file,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => defaultAvatar(),
-        );
-      }
+    if (_hasLocalImage()) {
+      return _buildLocalImage();
     }
 
-    // Check for network image URL
-    if (profileImageUrl != null && profileImageUrl!.isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: profileImageUrl!,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: Colors.grey[300],
-          alignment: Alignment.center,
-          child: const SizedBox(
-            height: 16,
-            width: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-            ),
-          ),
-        ),
-        errorWidget: (context, url, error) => defaultAvatar(),
-      );
+    if (_hasNetworkImage()) {
+      return _buildNetworkImage();
     }
 
-    // Default avatar
-    return defaultAvatar();
+    return _buildDefaultAvatar();
   }
 
-  static Widget defaultAvatar() {
+  bool _hasLocalImage() {
+    return localImagePath != null && localImagePath!.isNotEmpty;
+  }
+
+  bool _hasNetworkImage() {
+    return profileImageUrl != null && profileImageUrl!.isNotEmpty;
+  }
+
+  Widget _buildLocalImage() {
+    final file = File(localImagePath!);
+    if (!file.existsSync()) {
+      return _buildDefaultAvatar();
+    }
+
+    return Image.file(
+      file,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => _buildDefaultAvatar(),
+    );
+  }
+
+  Widget _buildNetworkImage() {
+    return CachedNetworkImage(
+      imageUrl: profileImageUrl!,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => _buildLoadingPlaceholder(),
+      errorWidget: (context, url, error) => _buildDefaultAvatar(),
+    );
+  }
+
+  Widget _buildLoadingPlaceholder() {
+    return Container(
+      color: Colors.grey[300],
+      alignment: Alignment.center,
+      child: const SizedBox(
+        height: 16,
+        width: 16,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefaultAvatar() {
     return Container(
       color: Colors.grey[300],
       child: const Icon(
@@ -163,57 +176,79 @@ class _ProfileMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<_ProfileMenuAction>(
       tooltip: 'Profile menu',
-      onSelected: (value) {
-        switch (value) {
-          case _ProfileMenuAction.profile:
-            if (onProfileTap != null) onProfileTap!();
-            break;
-          case _ProfileMenuAction.logout:
-            if (onLogoutTap != null) onLogoutTap!();
-            break;
-        }
-      },
+      color: Colors.white,
+      onSelected: _handleMenuSelection,
       elevation: 6,
-      offset:
-          const Offset(0, 40), // shifted: show directly under & aligned right
+      offset: const Offset(0, 40),
       padding: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
       itemBuilder: (context) => [
-        PopupMenuItem<_ProfileMenuAction>(
-          value: _ProfileMenuAction.profile,
-          child: Row(
-            children: const [
-              Icon(Icons.person_outline, size: 20, color: Colors.black87),
-              SizedBox(width: 8),
-              Text('Your Profile'),
-            ],
-          ),
-        ),
-        PopupMenuItem<_ProfileMenuAction>(
-          value: _ProfileMenuAction.logout,
-          child: Row(
-            children: const [
-              Icon(Icons.logout, size: 20, color: Colors.black87),
-              SizedBox(width: 8),
-              Text('Log out'),
-            ],
-          ),
-        ),
+        _buildProfileMenuItem(),
+        _buildLogoutMenuItem(),
       ],
-      child: Container(
-        height: 33,
-        width: 33,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: const Color(0xFFE4E4E4),
-            width: 2,
+      child: _buildAvatarContainer(),
+    );
+  }
+
+  void _handleMenuSelection(_ProfileMenuAction action) {
+    switch (action) {
+      case _ProfileMenuAction.profile:
+        onProfileTap?.call();
+        break;
+      case _ProfileMenuAction.logout:
+        onLogoutTap?.call();
+        break;
+    }
+  }
+
+  PopupMenuItem<_ProfileMenuAction> _buildProfileMenuItem() {
+    return PopupMenuItem<_ProfileMenuAction>(
+      value: _ProfileMenuAction.profile,
+      child: Row(
+        children: [
+          SvgPicture.asset(
+            'assets/icons/user-square.svg',
+            width: 20,
+            height: 20,
           ),
-        ),
-        child: ClipOval(child: buildAvatar()),
+          const SizedBox(width: 8),
+          const Text('Your Profile'),
+        ],
       ),
+    );
+  }
+
+  PopupMenuItem<_ProfileMenuAction> _buildLogoutMenuItem() {
+    return PopupMenuItem<_ProfileMenuAction>(
+      value: _ProfileMenuAction.logout,
+      child: Row(
+        children: [
+          SvgPicture.asset(
+            'assets/icons/logout.svg',
+            width: 20,
+            height: 20,
+          ),
+          const SizedBox(width: 8),
+          const Text('Log out'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarContainer() {
+    return Container(
+      height: 33,
+      width: 33,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white,
+          width: 2,
+        ),
+      ),
+      child: ClipOval(child: buildAvatar()),
     );
   }
 }

@@ -56,11 +56,51 @@ Future<void> initializeFirebase() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  await FirebaseAppCheck.instance.activate(
-    androidProvider:
-        kReleaseMode ? AndroidProvider.playIntegrity : AndroidProvider.debug,
-    appleProvider: kReleaseMode ? AppleProvider.appAttest : AppleProvider.debug,
-  );
+  // Activate App Check
+  if (kDebugMode) {
+    try {
+      // Use the debug provider in debug mode.
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.debug,
+        appleProvider: AppleProvider.debug,
+      );
+
+      // Wait a moment for activation to complete
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Get and log the token immediately
+      final token = await FirebaseAppCheck.instance.getToken();
+      if (token != null) {
+        Get.log('========================================');
+        Get.log('App Check Debug Token: $token');
+        Get.log('Copy this EXACT token to Firebase Console');
+        Get.log(
+            'Firebase Console → App Check → Apps → Your Android App → Manage debug tokens');
+        Get.log('========================================');
+      } else {
+        Get.log('WARNING: App Check token is null!');
+      }
+
+      // Listen for token changes
+      FirebaseAppCheck.instance.onTokenChange.listen((token) {
+        if (token != null) {
+          Get.log('App Check Token Changed: $token');
+        }
+      });
+    } catch (e) {
+      Get.log('ERROR activating App Check: $e');
+      Get.log('App Check is enabled but failing. You may need to:');
+      Get.log(
+          '1. Disable App Check enforcement in Firebase Console (APIs tab)');
+      Get.log('2. Or properly register the debug token');
+    }
+  } else {
+    // Use the production providers in release mode.
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.playIntegrity,
+      appleProvider: AppleProvider.appAttestWithDeviceCheckFallback,
+    );
+  }
 
   try {
     await FirebaseAuth.instance.setLanguageCode('en');

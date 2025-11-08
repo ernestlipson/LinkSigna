@@ -94,7 +94,7 @@ class SharedSignUpScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SignupLogo(),
+              const AppCenterLogo(),
               const SizedBox(height: 20),
               if (showUserTypeSelector &&
                   selectedUserType != null &&
@@ -178,6 +178,10 @@ class SharedSignUpScreen extends StatelessWidget {
                           padding: const EdgeInsets.only(right: 18.0),
                           child: Text(
                             AppStrings.termsAndPrivacy,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.black87,
+                            ),
                           ),
                         ),
                       ),

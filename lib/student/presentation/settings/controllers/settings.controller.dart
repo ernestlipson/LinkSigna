@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import '../../shared/controllers/user.controller.dart';
 import '../../shared/controllers/student_user.controller.dart';
 import '../../../../shared/mixins/settings.mixin.dart';
+import '../../../../infrastructure/navigation/routes.dart';
 
 class SettingsController extends GetxController with SettingsMixin {
   final universityController = TextEditingController();
@@ -400,6 +401,40 @@ class SettingsController extends GetxController with SettingsMixin {
         message: 'Your account has been deleted successfully',
       );
     });
+  }
+
+  Future<void> logout() async {
+    try {
+      // Sign out from Firebase
+      await FirebaseAuth.instance.signOut();
+
+      // Clear shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('userName');
+      await prefs.remove('userPhone');
+      await prefs.remove('user_doc_id');
+      await prefs.remove('student_user_doc_id');
+      await prefs.remove('current_profile_image_url');
+
+      // Clear UserController if registered
+      if (Get.isRegistered<UserController>()) {
+        final userController = Get.find<UserController>();
+        userController.setUser(name: '', phone: '', photo: '');
+      }
+
+      // Navigate to student login page
+      Get.offAllNamed(Routes.STUDENT_LOGIN);
+
+      AppSnackbar.success(
+        title: 'Logged Out',
+        message: 'You have been logged out successfully',
+      );
+    } catch (e) {
+      AppSnackbar.error(
+        title: 'Error',
+        message: 'Failed to logout: ${e.toString()}',
+      );
+    }
   }
 
   @override

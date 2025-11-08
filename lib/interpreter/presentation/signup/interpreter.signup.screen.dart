@@ -47,7 +47,7 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
       },
       emailErrorText: AppStrings.emailValidationError,
       passwordErrorText: AppStrings.passwordValidationError,
-      emailHint: 'student@ttu.edu.gh',
+      emailHint: AppStrings.emailHint,
     );
   }
 }

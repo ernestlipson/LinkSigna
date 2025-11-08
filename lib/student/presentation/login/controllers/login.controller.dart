@@ -5,11 +5,12 @@ import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 import 'package:sign_language_app/infrastructure/dal/services/student_user.firestore.service.dart';
 import 'package:sign_language_app/student/presentation/shared/controllers/student_user.controller.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
+import 'package:sign_language_app/infrastructure/dal/services/firebase.exception.dart';
 import '../../../../../infrastructure/mixins/country_flag_loader.mixin.dart';
 import '../../../../shared/mixins/login.mixin.dart';
 
 class LoginController extends GetxController
-    with CountryFlagLoader, LoginMixin {
+    with CountryFlagLoader, LoginMixin, FirebaseExceptionMixin {
   final RxBool isGoogleSignInLoading = false.obs;
 
   // Email/Password Authentication
@@ -60,10 +61,7 @@ class LoginController extends GetxController
       // Navigate to home screen
       Get.offAllNamed(Routes.STUDENT_HOME);
     } on FirebaseAuthException catch (e) {
-      AppSnackbar.error(
-        title: 'Login Failed',
-        message: mapAuthError(e),
-      );
+      handleFirebaseAuthException(e, defaultMessage: 'Login failed');
     } catch (e) {
       AppSnackbar.error(
         title: 'Error',

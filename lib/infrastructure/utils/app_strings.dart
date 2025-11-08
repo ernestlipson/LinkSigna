@@ -2,7 +2,7 @@ class AppStrings {
   static const String signUpTitle = "Sign Up";
   static const String nameHint = "Enter your name";
   static const String nameLabel = "Full Name";
-  static const String emailHint = "Enter your email";
+  static const String emailHint = "Enter your university email (.gh only)";
   static const String emailLabel = "University Email (.gh only)";
   static const String phoneHint = "Eg.+233244000000";
   static const String phoneLabel = "Phone Number";
