@@ -1,6 +1,6 @@
 {
   "java.compile.nullAnalysis.mode": "automatic",
-  "dart.flutterSdkPath": ".fvm/versions/3.27.4",
+  "dart.flutterSdkPath": "/Users/amalitech-pc-11425/flutter",
   "java.configuration.updateBuildConfiguration": "interactive",
   "codium.codeCompletion.enable": false
 }

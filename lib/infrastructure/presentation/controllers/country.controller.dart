@@ -1,8 +1,7 @@
 import 'package:get/get.dart';
-
-import '../../../domain/entities/flag.entity.dart';
-import '../../../domain/repositories/country.repo.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
+import '../../domain/entities/flag.entity.dart';
+import '../../domain/repositories/country.repository.dart';
 
 class CountryController extends GetxController {
   static CountryController get instance => Get.find();

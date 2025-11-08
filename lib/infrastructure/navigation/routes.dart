@@ -3,7 +3,8 @@ class Routes {
   static get initialRoute => STUDENT_SIGNUP;
 
   static const STUDENT_DEAF_HISTORY = '/student/deaf-history';
-  static const STUDENT_FORGOT_PASSWORD = '/student/forgot-password';
+  static const STUDENT_FORGOT_PASSWORD =
+      '/student/forgot-password'; // Deprecated - use FORGOT_PASSWORD
   static const STUDENT_HOME = '/student/home';
   static const STUDENT_INTERPRETERS = '/student/interpreters';
   static const STUDENT_LOGIN = '/student/login';
@@ -18,4 +19,7 @@ class Routes {
   static const INTERPRETER_SIGNIN = '/interpreter/signin';
   static const INTERPRETER_SIGNUP = '/interpreter/signup';
   static const INTERPRETER_SESSIONS = '/interpreter/sessions';
+
+  // Shared Routes
+  static const FORGOT_PASSWORD = '/forgot-password';
 }

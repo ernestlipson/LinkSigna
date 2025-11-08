@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_language_app/infrastructure/navigation/routes.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 mixin LoginMixin on GetxController {
@@ -56,40 +57,12 @@ mixin LoginMixin on GetxController {
     }
   }
 
-  /// Send password reset email
-  Future<void> sendPasswordReset() async {
-    final email = emailController.text.trim();
-    if (email.isEmpty) {
-      AppSnackbar.error(
-        title: 'Email Required',
-        message: 'Enter your university email',
-      );
-      return;
-    }
-
-    try {
-      await auth.sendPasswordResetEmail(email: email);
-      AppSnackbar.success(
-        title: 'Email Sent',
-        message: 'Check your inbox to reset your password',
-      );
-    } on FirebaseAuthException catch (e) {
-      String msg = 'Failed to send reset email';
-      if (e.code == 'user-not-found') msg = 'No account found with this email';
-      if (e.code == 'invalid-email') msg = 'Invalid email format';
-      AppSnackbar.error(
-        title: 'Error',
-        message: msg,
-      );
-    } catch (e) {
-      AppSnackbar.error(
-        title: 'Error',
-        message: e.toString(),
-      );
-    }
+  /// Navigate to Forgot Password screen
+  void sendPasswordReset() {
+    Get.toNamed(Routes.FORGOT_PASSWORD);
   }
 
-  /// Sign in with email and password
+  /// Sign in with email and password (throws FirebaseAuthException on failure)
   Future<UserCredential> signInWithEmailPassword() async {
     return await auth.signInWithEmailAndPassword(
       email: emailController.text.trim(),
@@ -97,7 +70,7 @@ mixin LoginMixin on GetxController {
     );
   }
 
-  /// Map Firebase Auth errors to user-friendly messages
+  /// Map Firebase Auth errors to user-friendly messages (legacy fallback if controller doesn't use FirebaseExceptionMixin)
   String mapAuthError(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':

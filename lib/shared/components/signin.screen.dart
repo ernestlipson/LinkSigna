@@ -1,10 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/shared/components/signup_logo.dart';
 
 import '../../infrastructure/theme/app_theme.dart';
-import '../../infrastructure/utils/screen_strings.dart';
+import '../../infrastructure/utils/app_strings.dart';
 import 'app.button.dart';
 import 'app.field.dart';
 
@@ -55,12 +55,7 @@ class SharedSignInScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 0),
-                child: SvgPicture.asset(
-                  "assets/icons/TravelIB.svg",
-                ),
-              ),
+              AppCenterLogo(),
               SizedBox(height: 30),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,8 +72,8 @@ class SharedSignInScreen extends StatelessWidget {
 
                   // Email Field
                   Obx(() => CustomTextFormField(
-                        labelText: "University Email (.gh only)",
-                        hintText: "ama@gmail.com",
+                        labelText: AppStrings.emailLabel,
+                        hintText: AppStrings.emailHint,
                         controller: emailController,
                         keyboardType: TextInputType.emailAddress,
                         isRequired: true,
@@ -86,16 +81,16 @@ class SharedSignInScreen extends StatelessWidget {
                         errorText: isEmailValid.value
                             ? null
                             : emailController.text.trim().isEmpty
-                                ? ScreenStrings.requiredFieldError
-                                : ScreenStrings.emailValidationError,
+                                ? AppStrings.requiredFieldError
+                                : AppStrings.emailValidationError,
                       )),
                   SizedBox(height: 16),
 
                   // Password Field (conditionally shown)
                   if (showPasswordField && passwordController != null) ...[
                     Obx(() => CustomTextFormField(
-                          hintText: ScreenStrings.passwordHint,
-                          labelText: ScreenStrings.passwordLabel,
+                          hintText: AppStrings.passwordHint,
+                          labelText: AppStrings.passwordLabel,
                           controller: passwordController,
                           isRequired: true,
                           obscureText: isPasswordVisible != null
@@ -104,8 +99,8 @@ class SharedSignInScreen extends StatelessWidget {
                           errorText: isPasswordValid?.value ?? true
                               ? null
                               : passwordController!.text.trim().isEmpty
-                                  ? ScreenStrings.requiredFieldError
-                                  : ScreenStrings.passwordValidationError,
+                                  ? AppStrings.requiredFieldError
+                                  : AppStrings.passwordValidationError,
                           onChanged: (_) => onPasswordChanged?.call(),
                           suffix: onTogglePasswordVisibility != null
                               ? GestureDetector(
@@ -133,7 +128,7 @@ class SharedSignInScreen extends StatelessWidget {
                                 onChanged: (value) {
                                   isRememberMe!.value = value;
                                 },
-                                activeColor: AppColors.primary,
+                                activeThumbColor: AppColors.primary,
                                 activeTrackColor:
                                     AppColors.primary.withOpacity(0.2),
                               ))
@@ -141,12 +136,12 @@ class SharedSignInScreen extends StatelessWidget {
                           Switch(
                             value: false,
                             onChanged: (value) {},
-                            activeColor: AppColors.primary,
+                            activeThumbColor: AppColors.primary,
                             activeTrackColor:
                                 AppColors.primary.withOpacity(0.2),
                           ),
                         Text(
-                          ScreenStrings.rememberMe,
+                          AppStrings.rememberMe,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.black87,
@@ -156,7 +151,7 @@ class SharedSignInScreen extends StatelessWidget {
                         GestureDetector(
                           onTap: onForgotPassword ?? () {},
                           child: Text(
-                            ScreenStrings.forgotPassword,
+                            AppStrings.forgotPassword,
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.primary,

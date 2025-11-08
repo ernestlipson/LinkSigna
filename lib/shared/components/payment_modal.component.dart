@@ -81,7 +81,7 @@ class PaymentModalComponent {
             ),
             SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: 'MTN',
+              initialValue: 'MTN',
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

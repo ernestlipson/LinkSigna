@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:sign_language_app/infrastructure/utils/app_strings.dart';
 
 import '../../../../infrastructure/theme/app_theme.dart';
 import '../../../../shared/components/settings/settings_screen_layout.component.dart';
 import 'controllers/interpreter_settings.controller.dart';
+import 'package:sign_language_app/shared/components/settings/profile_avatar_picker.dart';
+import 'package:sign_language_app/shared/components/settings/settings_form_field.dart';
+import 'package:sign_language_app/shared/components/settings/phone_number_field.dart';
+import 'package:sign_language_app/shared/components/settings/delete_account_section.component.dart';
+import 'package:sign_language_app/shared/components/settings/save_changes_button.component.dart';
+import 'package:sign_language_app/shared/components/settings/settings_section_header.component.dart';
+import 'package:sign_language_app/shared/components/settings/empty_notifications_tab.component.dart';
+import 'package:sign_language_app/shared/components/settings/settings_outlined_button.component.dart';
 
 class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
   final bool showBackButton;
@@ -67,66 +76,16 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
           const SizedBox(height: 20),
           // Profile Picture
           Center(
-            child: GestureDetector(
-              onTap: () => controller.pickProfileImage(),
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  // Profile Image with Firebase Storage support
-                  Obx(() => controller.getProfileImageWidget()),
-
-                  // Camera icon overlay
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 15,
-                      backgroundColor: AppColors.primary,
-                      child: const Icon(
-                        Icons.camera_alt,
-                        size: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-
-                  // Upload progress indicator
-                  if (controller.isUploadingImage.value)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.primary),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+            child: Obx(() => ProfileAvatarPicker(
+                  avatarWidget: controller.getProfileImageWidget(),
+                  onTap: controller.pickProfileImage,
+                  isUploading: controller.isUploadingImage.value,
+                )),
           ),
           const SizedBox(height: 24),
 
           // Basic Information Section
-          const Text(
-            'Basic Information',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
+          const SettingsSectionHeader(title: 'Basic Information'),
           const SizedBox(height: 16),
 
           // Full Name
@@ -145,7 +104,7 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
                 'Email',
                 controller.emailController,
                 controller.displayEmail.value.isEmpty ? 'Enter your email' : '',
-                placeholder: 'Enter your email',
+                placeholder: AppStrings.emailHint,
               )),
           const SizedBox(height: 16),
 
@@ -162,91 +121,26 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
           const SizedBox(height: 24),
 
           // Save Changes Button
-          Obx(() => ElevatedButton(
-                onPressed: controller.isSaving.value
-                    ? null
-                    : () => controller.saveChangesAsync(),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 0),
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: controller.isSaving.value
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Text(
-                        'Save Changes',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-              )),
+          SaveChangesButton(
+            isSaving: controller.isSaving,
+            onSave: () => controller.saveChangesAsync(),
+          ),
           const SizedBox(height: 20),
 
           // Logout
-          OutlinedButton(
+          SettingsOutlinedButton(
             onPressed: () => controller.logout(),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 0),
-              foregroundColor: AppColors.primary,
-              side: BorderSide(color: AppColors.primary),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Logout',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+            label: 'Logout',
+            color: AppColors.primary,
           ),
 
           const SizedBox(height: 40),
 
           // Delete Account Section
-          const Text(
-            'Delete Account',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Deleting your account will remove all of your activity and sessions, and you will no longer be able to sign in with this account.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 20),
-          OutlinedButton(
-            onPressed: () => controller.deleteAccount(),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 0),
-              foregroundColor: Colors.red,
-              side: const BorderSide(color: Colors.red),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Delete account',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+          DeleteAccountSection(
+            onDelete: () => controller.deleteAccount(),
+            description:
+                'Deleting your account will remove all of your activity and sessions, and you will no longer be able to sign in with this account.',
           ),
           const SizedBox(height: 20),
         ],
@@ -255,107 +149,24 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
   }
 
   Widget _buildNotificationsTab() {
-    return Center(
-      child: Text(
-        'No notifications yet',
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.grey[600],
-        ),
-      ),
-    );
+    return const EmptyNotificationsTab();
   }
 
   Widget _buildFormField(
       String label, TextEditingController controller, String displayText,
       {String? placeholder}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: placeholder ?? displayText,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.primary),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-        ),
-      ],
+    return SettingsFormField(
+      label: label,
+      controller: controller,
+      placeholder: placeholder ?? displayText,
     );
   }
 
   Widget _buildPhoneNumberField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Phone number',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Obx(() => TextField(
-              controller: controller.phoneController,
-              decoration: InputDecoration(
-                hintText: controller.displayPhone.value.isEmpty
-                    ? 'Enter your phone number'
-                    : controller.displayPhone.value,
-                prefixIcon: Container(
-                  margin: const EdgeInsets.all(8),
-                  width: 24,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
-                    image: const DecorationImage(
-                      image: NetworkImage(
-                        'https://flagcdn.com/w40/gh.png',
-                      ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.primary),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            )),
-      ],
-    );
+    return Obx(() => PhoneNumberField(
+          phoneController: controller.phoneController,
+          displayPhone: controller.displayPhone.value,
+        ));
   }
 
   Widget _buildExperienceLevelField() {

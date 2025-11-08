@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
-import '../../../../domain/repositories/country.repo.dart';
-import '../../../../presentation/shared/controllers/country.controller.dart';
+import '../../../../../infrastructure/domain/repositories/country.repository.dart';
+import '../../../../../infrastructure/presentation/controllers/country.controller.dart';
 
 class CountryControllerBinding extends Bindings {
   @override

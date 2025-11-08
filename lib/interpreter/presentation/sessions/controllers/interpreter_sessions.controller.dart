@@ -17,7 +17,17 @@ class InterpreterSessionsController extends GetxController {
   void onInit() {
     super.onInit();
     _interpreterId = _resolveInterpreterId();
-    _listen();
+    // Do not start listening if we only have a fallback id (no real interpreter doc).
+    // Starting a query with a non-existent/fallback interpreter doc id causes
+    // Firestore rules to deny the request (see security rules which validate
+    // access based on the referenced interpreter document). Only listen when
+    // we have a valid interpreter id.
+    if (!_interpreterId.startsWith('interpreter_fallback_')) {
+      _listen();
+    } else {
+      Get.log(
+          'InterpreterSessionsController: not listening because no interpreter id is available');
+    }
   }
 
   String _resolveInterpreterId() {

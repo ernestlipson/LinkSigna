@@ -1,50 +1,25 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
-import 'package:sign_language_app/shared/components/app_bottom_sheet.component.dart';
-import 'package:sign_language_app/shared/components/app_dialog.component.dart';
+import 'package:sign_language_app/shared/components/settings_bottom_sheets.dart';
 
-import '../../../../infrastructure/dal/services/cloudinary.service.dart';
-import '../../../../config/cloudinary.config.dart';
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../presentation/shared/controllers/interpreter_profile.controller.dart';
+import '../../../../shared/mixins/settings.mixin.dart';
 
-class InterpreterSettingsController extends GetxController {
-  // Tab selection
-  final RxInt selectedTab = 0.obs;
-
-  // Form controllers
-  final fullNameController = TextEditingController();
+class InterpreterSettingsController extends GetxController with SettingsMixin {
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
   final experienceController = TextEditingController();
-  final languagesController = TextEditingController();
   final certificationController = TextEditingController();
 
-  // Observable variables for reactive UI
   final RxString experience = 'Senior (5+ years)'.obs;
   final RxString certification = 'Ghana Sign Language Certified'.obs;
-  final Rx<File?> profileImage = Rx<File?>(null);
-  final RxString profileImageUrl = ''.obs;
-  final RxString displayName = ''.obs;
   final RxString displayEmail = ''.obs;
-  final RxString displayPhone = ''.obs;
-  final RxBool isUploadingImage = false.obs;
-  final RxBool isSaving = false.obs;
-  final RxString userDocId = ''.obs;
-  final ImagePicker _picker = ImagePicker();
 
-  // Cloudinary Service
-  late CloudinaryService _cloudinary;
-
-  // Available experience levels
   final List<String> experienceLevels = [
     'Junior (1-2 years)',
     'Mid-level (3-4 years)',
@@ -52,7 +27,6 @@ class InterpreterSettingsController extends GetxController {
     'Expert (10+ years)',
   ];
 
-  // Available certifications
   final List<String> certifications = [
     'Ghana Sign Language Certified',
     'International Sign Language Certified',
@@ -60,116 +34,88 @@ class InterpreterSettingsController extends GetxController {
     'BSL Certified',
   ];
 
-  // Available languages list
-  final List<String> availableLanguages = [
-    'Ghanaian Sign Language',
-    'American Sign Language (ASL)',
-    'British Sign Language (BSL)',
-    'International Sign',
-  ];
-
   @override
   void onInit() {
     super.onInit();
-    _cloudinary = Get.put(CloudinaryService());
+    initializeCloudinaryService();
     _loadUserData();
     _loadProfileImageFromStorage();
   }
 
   Future<void> _loadUserData() async {
     try {
-      // Get the profile controller to access Firestore data
       final profileController = Get.find<InterpreterProfileController>();
       final user = profileController.profile.value;
 
       if (user != null) {
-        // Load data from Firestore user profile
-        fullNameController.text = user.displayName;
-        displayName.value = user.displayName;
-
-        emailController.text = user.email;
-        displayEmail.value = user.email;
-
-        phoneController.text = user.phone ?? '';
-        displayPhone.value = user.phone ?? '';
-
-        // Set professional information with defaults
-        if (user.specializations.isNotEmpty) {
-          experienceController.text = user.specializations.first;
-          experience.value = user.specializations.first;
-        } else {
-          experienceController.text = 'Senior (5+ years)';
-          experience.value = 'Senior (5+ years)';
-        }
-
-        certificationController.text = 'Ghana Sign Language Certified';
-        certification.value = 'Ghana Sign Language Certified';
-
-        // Set languages
-        if (user.languages.isNotEmpty) {
-          languagesController.text = user.languages.join(', ');
-        } else {
-          languagesController.text = 'Ghanaian Sign Language';
-        }
-
-        // Set profile image URL if available
-        if (user.profilePictureUrl != null &&
-            user.profilePictureUrl!.isNotEmpty) {
-          profileImageUrl.value = user.profilePictureUrl!;
-        }
-
-        // Store interpreter ID for future updates
-        userDocId.value = user.interpreterID;
+        await _loadFromFirestoreProfile(user);
       } else {
-        // Fallback to SharedPreferences if Firestore data not available
         await _loadFromSharedPreferences();
       }
     } catch (e) {
-      // Fallback to SharedPreferences if there's an error
       await _loadFromSharedPreferences();
       print('Error loading user data from Firestore: $e');
     }
   }
 
-  Future<void> _loadFromSharedPreferences() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
+  Future<void> _loadFromFirestoreProfile(dynamic user) async {
+    _loadBasicInfo(user);
+    _loadProfessionalInfo(user);
+    _loadLanguagesInfo(user);
+    _loadProfileImageUrl(user);
+    userDocId.value = user.interpreterID;
+  }
 
-      // Load user name from SharedPreferences (saved during signup)
-      final userName = prefs.getString('interpreter_name') ??
-          prefs.getString('userName') ??
-          '';
-      fullNameController.text = userName;
-      displayName.value = userName;
+  void _loadBasicInfo(dynamic user) {
+    fullNameController.text = user.displayName;
+    displayName.value = user.displayName;
 
-      // Load email from SharedPreferences if available
-      final userEmail = prefs.getString('interpreter_email') ??
-          prefs.getString('userEmail') ??
-          '';
-      emailController.text = userEmail;
-      displayEmail.value = userEmail;
+    emailController.text = user.email;
+    displayEmail.value = user.email;
 
-      // Load phone number from SharedPreferences if available
-      final userPhone = prefs.getString('userPhone') ?? '';
-      if (userPhone.isNotEmpty) {
-        phoneController.text = userPhone;
-        displayPhone.value = userPhone;
-      }
+    phoneController.text = user.phone ?? '';
+    displayPhone.value = user.phone ?? '';
+  }
 
-      // Set default values if no user data is found
-      if (fullNameController.text.isEmpty) {
-        fullNameController.text = '';
-        displayName.value = '';
-      }
-
-      // Set default values for interpreter-specific fields
+  void _loadProfessionalInfo(dynamic user) {
+    if (user.specializations.isNotEmpty) {
+      experienceController.text = user.specializations.first;
+      experience.value = user.specializations.first;
+    } else {
       experienceController.text = 'Senior (5+ years)';
       experience.value = 'Senior (5+ years)';
-      certificationController.text = 'Ghana Sign Language Certified';
-      certification.value = 'Ghana Sign Language Certified';
-      languagesController.text = 'Ghanaian Sign Language';
+    }
 
-      // Load existing stored Firestore doc id if any
+    certificationController.text = 'Ghana Sign Language Certified';
+    certification.value = 'Ghana Sign Language Certified';
+  }
+
+  void _loadLanguagesInfo(dynamic user) {
+    if (user.languages.isNotEmpty) {
+      languagesController.text = user.languages.join(', ');
+    } else {
+      languagesController.text = 'Ghanaian Sign Language';
+    }
+  }
+
+  void _loadProfileImageUrl(dynamic user) {
+    if (user.profilePictureUrl != null && user.profilePictureUrl!.isNotEmpty) {
+      profileImageUrl.value = user.profilePictureUrl!;
+    }
+  }
+
+  Future<void> _loadFromSharedPreferences() async {
+    try {
+      await loadFromSharedPreferences(
+        'interpreter_name',
+        'userPhone',
+        emailKey: 'interpreter_email',
+        docIdKey: 'interpreter_id',
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      _loadEmailFromPrefs(prefs);
+      _setDefaultProfessionalValues();
       userDocId.value = prefs.getString('interpreter_id') ?? '';
     } catch (e) {
       AppSnackbar.error(
@@ -179,9 +125,24 @@ class InterpreterSettingsController extends GetxController {
     }
   }
 
+  void _loadEmailFromPrefs(SharedPreferences prefs) {
+    final userEmail = prefs.getString('interpreter_email') ??
+        prefs.getString('userEmail') ??
+        '';
+    emailController.text = userEmail;
+    displayEmail.value = userEmail;
+  }
+
+  void _setDefaultProfessionalValues() {
+    experienceController.text = 'Senior (5+ years)';
+    experience.value = 'Senior (5+ years)';
+    certificationController.text = 'Ghana Sign Language Certified';
+    certification.value = 'Ghana Sign Language Certified';
+    languagesController.text = 'Ghanaian Sign Language';
+  }
+
   Future<void> _loadProfileImageFromStorage() async {
     try {
-      // Load profile image from InterpreterProfileController first
       final profileController = Get.find<InterpreterProfileController>();
       final user = profileController.profile.value;
 
@@ -194,57 +155,20 @@ class InterpreterSettingsController extends GetxController {
     }
   }
 
-  Widget getProfileImageWidget() {
-    if (profileImage.value != null) {
-      // Show local file while uploading
-      return CircleAvatar(
-        radius: 50,
-        backgroundImage: FileImage(profileImage.value!),
-      );
-    } else if (profileImageUrl.value.isNotEmpty) {
-      // Show cached network image
-      return CircleAvatar(
-        radius: 50,
-        backgroundImage: CachedNetworkImageProvider(profileImageUrl.value),
-      );
-    } else {
-      // Show default avatar
-      return CircleAvatar(
-        radius: 50,
-        backgroundColor: Colors.grey[200],
-        child: Icon(
-          Icons.person,
-          size: 50,
-          color: Colors.grey[400],
-        ),
-      );
-    }
-  }
-
+  @override
   Future<void> pickProfileImage() async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 80,
-        maxWidth: 800,
-        maxHeight: 800,
-      );
+    await super.pickProfileImage();
 
-      if (pickedFile != null) {
-        profileImage.value = File(pickedFile.path);
-        await _uploadProfileImage();
-      }
-    } catch (e) {
-      AppSnackbar.error(
-        title: 'Error',
-        message: 'Failed to pick image: ${e.toString()}',
-      );
+    // Update localImagePath in profile controller for immediate UI update
+    if (profileImage.value != null) {
+      final profileController = Get.find<InterpreterProfileController>();
+      profileController.localImagePath.value = profileImage.value!.path;
     }
   }
 
-  Future<String> _resolveInterpreterIdentifier() async {
+  @override
+  Future<String> resolveUserIdentifier() async {
     try {
-      // Prefer controller id, fallback to SharedPreferences, then Firebase Auth UID
       final profileController = Get.find<InterpreterProfileController>();
       final idFromCtrl = profileController.interpreterId.value;
       if (idFromCtrl.isNotEmpty) return idFromCtrl;
@@ -262,166 +186,97 @@ class InterpreterSettingsController extends GetxController {
     }
   }
 
-  Future<void> _uploadProfileImage() async {
-    if (profileImage.value == null) return;
-
+  @override
+  Future<void> uploadProfileImageToCloudinary(File imageFile) async {
     try {
       isUploadingImage.value = true;
-
-      final interpreterId = await _resolveInterpreterIdentifier();
-      final file = profileImage.value!;
-
-      final downloadUrl = await _cloudinary.uploadProfileImage(
-        imageFile: file,
+      final interpreterId = await resolveUserIdentifier();
+      final downloadUrl = await cloudinary.uploadProfileImage(
+        imageFile: imageFile,
         userId: interpreterId,
-        folder: CloudinaryConfig.folderInterpreters,
+        folder: 'profiles/interpreters',
       );
 
       if (downloadUrl != null) {
-        profileImageUrl.value = downloadUrl;
-
-        // Update Firestore via profile controller
-        final profileController = Get.find<InterpreterProfileController>();
-        await profileController.updateProfile({
-          'profilePictureUrl': downloadUrl,
-        });
-
-        // Clear local file after success
-        profileImage.value = null;
-
-        AppSnackbar.success(
-          title: 'Success',
-          message: 'Profile image updated successfully',
-        );
+        await _handleImageUploadSuccess(downloadUrl);
       } else {
-        AppSnackbar.warning(
-          title: 'Upload Failed',
-          message: 'Failed to upload image to cloud. Please try again.',
-        );
+        _handleImageUploadFailure();
       }
     } catch (e) {
-      AppSnackbar.error(
-        title: 'Error',
-        message: 'Failed to upload image: ${e.toString()}',
-      );
+      _handleImageUploadError(e);
     } finally {
       isUploadingImage.value = false;
     }
   }
 
+  Future<void> _handleImageUploadSuccess(String downloadUrl) async {
+    profileImageUrl.value = downloadUrl;
+
+    final profileController = Get.find<InterpreterProfileController>();
+    await profileController.updateProfile({
+      'profilePictureUrl': downloadUrl,
+    });
+
+    // Update the profile value immediately for reactive UI using copyWith
+    if (profileController.profile.value != null) {
+      profileController.profile.value =
+          profileController.profile.value!.copyWith(
+        profilePictureUrl: downloadUrl,
+      );
+    }
+
+    // Clear local image path since we now have the network URL
+    profileController.localImagePath.value = '';
+
+    profileImage.value = null;
+    AppSnackbar.success(
+      title: 'Success',
+      message: 'Profile image updated successfully',
+    );
+  }
+
+  void _handleImageUploadFailure() {
+    AppSnackbar.warning(
+      title: 'Upload Failed',
+      message: 'Failed to upload image to cloud. Please try again.',
+    );
+  }
+
+  void _handleImageUploadError(dynamic e) {
+    AppSnackbar.error(
+      title: 'Error',
+      message: 'Failed to upload image: ${e.toString()}',
+    );
+  }
+
   void selectExperienceLevel() {
-    AppBottomSheet.showList(
-      title: 'Select Experience Level',
-      items: experienceLevels.map((level) {
-        final isSelected = experience.value == level;
-        return ListTile(
-          title: Text(level),
-          trailing:
-              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-          onTap: () {
-            experience.value = level;
-            experienceController.text = level;
-            Get.back();
-          },
-        );
-      }).toList(),
+    SettingsBottomSheets.showExperienceLevelPicker(
+      levels: experienceLevels,
+      currentLevel: experience.value,
+      onSelect: (level) {
+        experience.value = level;
+        experienceController.text = level;
+      },
     );
   }
 
   void selectCertification() {
-    AppBottomSheet.showList(
-      title: 'Select Certification',
-      items: certifications.map((cert) {
-        final isSelected = certification.value == cert;
-        return ListTile(
-          title: Text(cert),
-          trailing:
-              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-          onTap: () {
-            certification.value = cert;
-            certificationController.text = cert;
-            Get.back();
-          },
-        );
-      }).toList(),
-    );
-  }
-
-  void addLanguage() {
-    AppBottomSheet.showList(
-      title: 'Add Language',
-      maxHeight: 260,
-      items: availableLanguages.map((language) {
-        final isSelected = languagesController.text.contains(language);
-        return ListTile(
-          title: Text(language),
-          trailing:
-              isSelected ? const Icon(Icons.check, color: Colors.green) : null,
-          onTap: () {
-            final currentLanguages = languagesController.text;
-            if (!currentLanguages.contains(language)) {
-              languagesController.text = currentLanguages.isNotEmpty
-                  ? '$currentLanguages, $language'
-                  : language;
-            }
-            Get.back();
-          },
-        );
-      }).toList(),
+    SettingsBottomSheets.showCertificationPicker(
+      certifications: certifications,
+      currentCertification: certification.value,
+      onSelect: (cert) {
+        certification.value = cert;
+        certificationController.text = cert;
+      },
     );
   }
 
   Future<void> saveChangesAsync() async {
     try {
       isSaving.value = true;
-
-      // Parse the name into first and last name
-      final nameParts = fullNameController.text.trim().split(' ');
-      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-      final lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
-
-      // Parse languages
-      final languagesList = languagesController.text
-          .split(',')
-          .map((lang) => lang.trim())
-          .where((lang) => lang.isNotEmpty)
-          .toList();
-
-      // Parse specializations (using experience as specialization for now)
-      final specializationsList = [experience.value];
-
-      final prefs = await SharedPreferences.getInstance();
-
-      // Save to SharedPreferences
-      await prefs.setString('interpreter_name', fullNameController.text);
-      await prefs.setString('interpreter_email', emailController.text);
-      if (phoneController.text.isNotEmpty) {
-        await prefs.setString('userPhone', phoneController.text);
-      }
-
-      // Update display values
-      displayName.value = fullNameController.text;
-      displayEmail.value = emailController.text;
-      displayPhone.value = phoneController.text;
-
-      // Get the profile controller and update Firestore
-      final profileController = Get.find<InterpreterProfileController>();
-
-      // Prepare update data
-      final updateData = {
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': emailController.text,
-        'phone': phoneController.text.isNotEmpty ? phoneController.text : null,
-        'languages': languagesList,
-        'specializations': specializationsList,
-        'bio': null, // Can be added later when bio field is implemented
-        'profilePictureUrl':
-            profileImageUrl.value.isNotEmpty ? profileImageUrl.value : null,
-      };
-
-      // Update via profile controller
-      await profileController.updateProfile(updateData);
+      final updateData = _buildProfileUpdateData();
+      await _persistDataLocally();
+      await _updateFirestoreProfile(updateData);
 
       AppSnackbar.success(
         title: 'Success',
@@ -437,22 +292,44 @@ class InterpreterSettingsController extends GetxController {
     }
   }
 
-  Future<void> deleteAccount() async {
-    AppDialog.showConfirmation(
-      title: 'Delete Account',
-      message:
-          'Are you sure you want to delete your account? This action cannot be undone.',
-      cancelLabel: 'Cancel',
-      confirmLabel: 'Delete',
-      confirmColor: Colors.red,
-      barrierDismissible: false,
-      onConfirm: () async {
-        await _performAccountDeletion();
-      },
-    );
+  Map<String, dynamic> _buildProfileUpdateData() {
+    final nameParts = parseFullName(fullNameController.text);
+    return {
+      'firstName': nameParts['firstName']!,
+      'lastName': nameParts['lastName']!,
+      'email': emailController.text,
+      'phone': phoneController.text.isNotEmpty ? phoneController.text : null,
+      'languages': parseLanguages(),
+      'specializations': [experience.value],
+      'bio': null,
+      'profilePictureUrl':
+          profileImageUrl.value.isNotEmpty ? profileImageUrl.value : null,
+    };
   }
 
-  // Logout
+  Future<void> _persistDataLocally() async {
+    await saveToSharedPreferences(
+      nameKey: 'interpreter_name',
+      phoneKey: 'userPhone',
+      docIdKey: 'interpreter_id',
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('interpreter_email', emailController.text);
+    displayEmail.value = emailController.text;
+  }
+
+  Future<void> _updateFirestoreProfile(Map<String, dynamic> updateData) async {
+    final profileController = Get.find<InterpreterProfileController>();
+    await profileController.updateProfile(updateData);
+  }
+
+  Future<void> deleteAccount() async {
+    showDeleteAccountDialog(() async {
+      await performAccountDeletion('interpreters', Routes.INTERPRETER_SIGNIN);
+    });
+  }
+
   Future<void> logout() async {
     try {
       await FirebaseAuth.instance.signOut();
@@ -465,48 +342,11 @@ class InterpreterSettingsController extends GetxController {
     }
   }
 
-  Future<void> _performAccountDeletion() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-
-      // Delete user data from Firestore
-      await FirebaseFirestore.instance
-          .collection('interpreters')
-          .doc(user.uid)
-          .delete();
-
-      // Note: Cloudinary asset deletion requires server-side API. Skipping client-side delete.
-
-      // Delete Firebase Auth account
-      await user.delete();
-
-      // Clear SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-
-      AppSnackbar.success(
-        title: 'Account Deleted',
-        message: 'Your account has been successfully deleted',
-      );
-
-      // Navigate to login/signup screen
-      Get.offAllNamed(Routes.initialRoute);
-    } catch (e) {
-      AppSnackbar.error(
-        title: 'Error',
-        message: 'Failed to delete account: ${e.toString()}',
-      );
-    }
-  }
-
   @override
   void onClose() {
-    fullNameController.dispose();
+    disposeControllers();
     emailController.dispose();
-    phoneController.dispose();
     experienceController.dispose();
-    languagesController.dispose();
     certificationController.dispose();
     super.onClose();
   }

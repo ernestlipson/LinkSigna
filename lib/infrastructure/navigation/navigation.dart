@@ -10,8 +10,8 @@ import 'package:sign_language_app/interpreter/presentation/sessions/controllers/
 // Interpreter imports
 import '../../interpreter/presentation/screens.dart';
 import '../../interpreter/presentation/signin/signin.int.dart';
+import '../../shared/components/forgot_password.screen.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/deaf_history.controller.binding.dart';
-import '../../student/infrastructure/navigation/bindings/controllers/forgot_password.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/home.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/interpreters.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/login.controller.binding.dart';
@@ -19,6 +19,7 @@ import '../../student/infrastructure/navigation/bindings/controllers/sessions.co
 import '../../student/infrastructure/navigation/bindings/controllers/settings.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/signup.controller.binding.dart';
 import '../../student/presentation/screens.dart';
+import 'bindings/forgot_password.controller.binding.dart';
 import 'routes.dart';
 
 class Nav {
@@ -40,6 +41,11 @@ class Nav {
     ),
     GetPage(
       name: Routes.STUDENT_FORGOT_PASSWORD,
+      page: () => const ForgotPasswordScreen(),
+      binding: ForgotPasswordControllerBinding(),
+    ),
+    GetPage(
+      name: Routes.FORGOT_PASSWORD,
       page: () => const ForgotPasswordScreen(),
       binding: ForgotPasswordControllerBinding(),
     ),

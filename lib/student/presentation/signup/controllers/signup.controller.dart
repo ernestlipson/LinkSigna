@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../../infrastructure/dal/services/student_user.firestore.service.dart';
-import '../../../../shared/mixins/country_flag_loader.mixin.dart';
+import '../../../../../infrastructure/mixins/country_flag_loader.mixin.dart';
 import '../../../../shared/mixins/signup.mixin.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 

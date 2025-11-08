@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:sign_language_app/student/presentation/shared/controllers/country.controller.dart';
+import '../presentation/controllers/country.controller.dart';
 
 mixin CountryFlagLoader on GetxController {
   final RxBool isLoadingFlag = false.obs;

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import '../../../infrastructure/navigation/routes.dart';
 import '../../../shared/components/signup.screen.dart';
 import 'controllers/signup.int.controller.dart';
-import 'package:sign_language_app/infrastructure/utils/screen_strings.dart';
+import 'package:sign_language_app/infrastructure/utils/app_strings.dart';
 
 class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
   const InterpreterSignupScreen({super.key});
@@ -45,9 +45,9 @@ class InterpreterSignupScreen extends GetView<InterpreterSignupController> {
           Get.offNamed(Routes.STUDENT_SIGNUP);
         }
       },
-      emailErrorText: ScreenStrings.emailValidationError,
-      passwordErrorText: ScreenStrings.passwordValidationError,
-      emailHint: 'student@ttu.edu.gh',
+      emailErrorText: AppStrings.emailValidationError,
+      passwordErrorText: AppStrings.passwordValidationError,
+      emailHint: AppStrings.emailHint,
     );
   }
 }

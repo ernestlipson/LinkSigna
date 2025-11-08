@@ -21,7 +21,7 @@ class AppTheme {
         displayColor: AppColors.text,
       ),
       appBarTheme: const AppBarTheme(
-        color: AppColors.secondary,
+        backgroundColor: AppColors.secondary,
         iconTheme: IconThemeData(color: AppColors.primary),
         elevation: 0,
       ),
