@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../shared/controllers/user.controller.dart';
 import '../interpreters/controllers/interpreters.controller.dart';
-import '../interpreters/interpreter_profile.screen.dart';
+import '../interpreters/interpreter.viewmore.screen.dart';
 import 'package:sign_language_app/shared/components/dashboard/dashboard_section.component.dart';
 import 'package:sign_language_app/shared/components/dashboard/empty_state_box.component.dart';
 import 'package:sign_language_app/shared/components/dashboard/session_card.component.dart';
@@ -96,7 +96,7 @@ class HomeDashboard extends StatelessWidget {
                       final i = list[index];
                       return GestureDetector(
                         onTap: () => Get.to(
-                            () => InterpreterProfileScreen(interpreter: i)),
+                            () => InterpreterViewMoreScreen(interpreter: i)),
                         child: Container(
                           width: 220,
                           decoration: BoxDecoration(
@@ -109,8 +109,16 @@ class HomeDashboard extends StatelessWidget {
                             children: [
                               CircleAvatar(
                                 radius: 28,
-                                backgroundImage: NetworkImage(i.profileImage),
+                                backgroundImage: i.avatarUrl != null &&
+                                        i.avatarUrl!.isNotEmpty
+                                    ? NetworkImage(i.avatarUrl!)
+                                    : null,
                                 backgroundColor: Colors.grey[200],
+                                child:
+                                    i.avatarUrl == null || i.avatarUrl!.isEmpty
+                                        ? Icon(Icons.person,
+                                            color: Colors.grey[400], size: 28)
+                                        : null,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -119,14 +127,14 @@ class HomeDashboard extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      i.name,
+                                      i.fullName,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(fontSize: 14),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      i.email,
+                                      i.email ?? '',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(color: Colors.grey[600]),

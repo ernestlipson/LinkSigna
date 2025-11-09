@@ -32,7 +32,7 @@ class HomeController extends GetxController {
   void changeTab(int index) => selectedIndex.value = index;
 
   /// Jump to Settings screen and ensure profile tab opens
-  void goToProfileTab() {
+void goToProfileTab() {
     selectedIndex.value = 4; // Settings tab index
     if (Get.isRegistered<SettingsController>()) {
       Get.find<SettingsController>().selectedTab.value = 0; // Profile sub-tab

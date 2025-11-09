@@ -127,15 +127,6 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
           ),
           const SizedBox(height: 20),
 
-          // Logout
-          SettingsOutlinedButton(
-            onPressed: () => controller.logout(),
-            label: 'Logout',
-            color: AppColors.primary,
-          ),
-
-          const SizedBox(height: 40),
-
           // Delete Account Section
           DeleteAccountSection(
             onDelete: () => controller.deleteAccount(),

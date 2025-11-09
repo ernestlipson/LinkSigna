@@ -2,38 +2,37 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../interpreter_profile.screen.dart';
 import '../../../infrastructure/dal/services/interpreter.service.dart';
-import '../../../../infrastructure/dal/models/interpreter.model.dart';
+import '../../../../domain/users/user.model.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 import '../../shared/controllers/student_user.controller.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 
 class InterpretersController extends GetxController {
-  final RxList<InterpreterData> interpreters = <InterpreterData>[].obs;
+  final RxList<User> interpreters = <User>[].obs;
   final isLoading = false.obs;
   final loadError = RxnString();
   final isLoadingMore = false.obs;
   final hasMoreData = true.obs;
 
+  // View state management
+  final RxBool isViewingDetails = false.obs;
+  final Rxn<User> selectedInterpreter = Rxn<User>();
+
   // Filter form controllers
   final searchController = TextEditingController();
   final subjectController = TextEditingController();
   final scrollController = ScrollController();
+  final RxString searchQuery = ''.obs;
 
   // Filter state
   final RxBool isFilterModalOpen = false.obs;
-  final RxString selectedExperience = ''.obs;
-  final RxString selectedPrice = ''.obs;
-  final RxString selectedAvailability = ''.obs;
-
-  // New filter options
   final RxString selectedSubject = ''.obs;
   final Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
   final Rx<TimeOfDay?> selectedTime = Rx<TimeOfDay?>(null);
 
   late final InterpreterService _service;
-  StreamSubscription<List<Interpreter>>? _sub;
+  StreamSubscription<List<User>>? _sub;
   late final SessionFirestoreService _sessionService;
   final _bookingInProgress = false.obs;
   late final String _studentId;
@@ -84,7 +83,7 @@ class InterpretersController extends GetxController {
     _currentLimit = InterpreterService.pageSize;
 
     _sub = _service.streamAllInterpreters(limit: _currentLimit).listen((list) {
-      interpreters.assignAll(list.map(_mapToData).toList());
+      interpreters.assignAll(list);
       isLoading.value = false;
 
       // Update pagination state
@@ -95,7 +94,7 @@ class InterpretersController extends GetxController {
       // Store last document for pagination
       if (list.isNotEmpty) {
         final lastInterpreter = list.last;
-        _updateLastDocument(lastInterpreter.id);
+        _updateLastDocument(lastInterpreter.uid);
       }
     }, onError: (e) {
       loadError.value = 'Failed to load interpreters';
@@ -134,11 +133,11 @@ class InterpretersController extends GetxController {
       }
 
       if (moreInterpreters.isNotEmpty) {
-        interpreters.addAll(moreInterpreters.map(_mapToData).toList());
+        interpreters.addAll(moreInterpreters);
         _currentLimit += moreInterpreters.length;
 
         // Update last document
-        await _updateLastDocument(moreInterpreters.last.id);
+        await _updateLastDocument(moreInterpreters.last.uid);
       }
     } catch (e) {
       Get.log('Error loading more interpreters: $e');
@@ -151,42 +150,42 @@ class InterpretersController extends GetxController {
     }
   }
 
-  InterpreterData _mapToData(Interpreter i) {
-    final fullName = _fullName(i.firstName, i.lastName);
-    return InterpreterData(
-      id: i.id,
-      interpreterId: i.interpreterId,
-      name: fullName,
-      email: i.email,
-      profileImage: i.profilePictureUrl.isNotEmpty
-          ? i.profilePictureUrl
-          : 'https://via.placeholder.com/150?text=Interpreter',
-      experience: 2, // You can infer from joinedDate or add logic if needed
-      isAvailable: i.isAvailable,
-      languages: i.languages,
-      rating: i.rating,
-      specializations: i.specializations,
-      updatedAt: i.updatedAt,
-    );
-  }
+  List<User> get filteredInterpreters {
+    List<User> result = interpreters.toList();
 
-  String _fullName(String first, String last) {
-    if (first.isEmpty && last.isEmpty) return 'Unknown Interpreter';
-    if (first.isEmpty) return last;
-    if (last.isEmpty) return first;
-    return '$first $last';
-  }
+    // Apply search filter using reactive searchQuery
+    final q = searchQuery.value.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      result = result
+          .where((i) =>
+              i.fullName.toLowerCase().contains(q) ||
+              (i.email?.toLowerCase().contains(q) ?? false) ||
+              (i.languages?.join(',').toLowerCase().contains(q) ?? false) ||
+              (i.specializations?.join(',').toLowerCase().contains(q) ?? false))
+          .toList();
+    }
 
-  List<InterpreterData> get filteredInterpreters {
-    final q = searchController.text.trim().toLowerCase();
-    if (q.isEmpty) return interpreters;
-    return interpreters
-        .where((i) =>
-            i.name.toLowerCase().contains(q) ||
-            i.email.toLowerCase().contains(q) ||
-            (i.languages.join(',').toLowerCase().contains(q)) ||
-            (i.specializations.join(',').toLowerCase().contains(q)))
-        .toList();
+    // Apply subject/specialization filter
+    if (selectedSubject.value.isNotEmpty) {
+      final subject = selectedSubject.value.toLowerCase();
+      result = result
+          .where((i) =>
+              (i.specializations
+                      ?.any((s) => s.toLowerCase().contains(subject)) ??
+                  false) ||
+              i.fullName.toLowerCase().contains(subject))
+          .toList();
+    }
+
+    // Apply availability filter based on date/time
+    // If date and time are selected, check if interpreter is available
+    if (selectedDate.value != null && selectedTime.value != null) {
+      // For now, filter by availability status
+      // In a real app, you'd check against interpreter's schedule
+      result = result.where((i) => i.isAvailable == true).toList();
+    }
+
+    return result;
   }
 
   void showFilterModal() {
@@ -198,52 +197,76 @@ class InterpretersController extends GetxController {
   }
 
   void applyFilters() {
-    AppSnackbar.success(
-      title: 'Filters Applied',
-      message: 'Filters have been applied successfully!',
-    );
+    // Show feedback to user
+    final filterCount = _getActiveFilterCount();
+    if (filterCount > 0) {
+      AppSnackbar.success(
+        title: 'Filters Applied',
+        message: '$filterCount filter(s) applied successfully!',
+      );
+    }
+
     closeFilterModal();
+  }
+
+  int _getActiveFilterCount() {
+    int count = 0;
+    if (selectedSubject.value.isNotEmpty) count++;
+    if (selectedDate.value != null) count++;
+    if (selectedTime.value != null) count++;
+    return count;
   }
 
   // Date picker method
   Future<void> selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    DateTime tempDate = selectedDate.value ?? now;
+
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: selectedDate.value ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(Duration(days: 365)),
+      initialDate: tempDate,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 365)),
     );
-    if (picked != null) {
-      selectedDate.value = picked;
+
+    if (pickedDate != null) {
+      selectedDate.value = pickedDate;
     }
   }
 
   // Time picker method
   Future<void> selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    TimeOfDay initialTime = selectedTime.value ?? TimeOfDay.now();
+
+    final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: selectedTime.value ?? TimeOfDay.now(),
+      initialTime: initialTime,
     );
-    if (picked != null) {
-      selectedTime.value = picked;
+
+    if (pickedTime != null) {
+      selectedTime.value = pickedTime;
     }
   }
 
   void clearFilters() {
-    selectedExperience.value = '';
-    selectedPrice.value = '';
-    selectedAvailability.value = '';
     selectedSubject.value = '';
     selectedDate.value = null;
     selectedTime.value = null;
     searchController.clear();
+    searchQuery.value = ''; // Clear reactive search query
     subjectController.clear();
+
+    AppSnackbar.success(
+      title: 'Filters Cleared',
+      message: 'All filters have been cleared',
+    );
   }
 
-  Future<void> bookInterpreter(InterpreterData interpreter) async {
+  Future<void> bookInterpreter(User interpreter) async {
     if (_bookingInProgress.value) return; // prevent double tap
 
-    if (!interpreter.isAvailable) {
+    if (interpreter.isAvailable != true) {
       AppSnackbar.warning(
         title: 'Unavailable',
         message: 'This interpreter is currently unavailable.',
@@ -257,19 +280,19 @@ class InterpretersController extends GetxController {
       final className = _deriveClassName();
       await _sessionService.createSession(
         studentId: _studentId,
-        interpreterId: interpreter.id,
+        interpreterId: interpreter.uid,
         className: className,
         startTime: startTime,
       );
 
       // Optionally, set interpreter as unavailable after booking
       await _service.setBookingStatus(
-          interpreterId: interpreter.id, isBooked: true);
+          interpreterId: interpreter.uid, isBooked: true);
 
       AppSnackbar.success(
         title: 'Session Created',
         message:
-            'Session booked with ${interpreter.name}. Waiting for interpreter confirmation.',
+            'Session booked with ${interpreter.fullName}. Waiting for interpreter confirmation.',
       );
     } catch (e) {
       AppSnackbar.error(
@@ -296,8 +319,14 @@ class InterpretersController extends GetxController {
     return 'Communication Skills';
   }
 
-  void viewMore(InterpreterData interpreter) {
-    Get.to(() => InterpreterProfileScreen(interpreter: interpreter));
+  void viewMore(User interpreter) {
+    selectedInterpreter.value = interpreter;
+    isViewingDetails.value = true;
+  }
+
+  void goBackToList() {
+    isViewingDetails.value = false;
+    selectedInterpreter.value = null;
   }
 
   @override
@@ -308,32 +337,4 @@ class InterpretersController extends GetxController {
     scrollController.dispose();
     super.onClose();
   }
-}
-
-class InterpreterData {
-  final String id;
-  final String interpreterId;
-  final String name;
-  final String email;
-  final String profileImage;
-  final int experience;
-  final bool isAvailable;
-  final List<dynamic> languages;
-  final double rating;
-  final List<dynamic> specializations;
-  final DateTime? updatedAt;
-
-  InterpreterData({
-    required this.id,
-    required this.interpreterId,
-    required this.name,
-    required this.email,
-    required this.profileImage,
-    required this.experience,
-    this.isAvailable = false,
-    required this.languages,
-    required this.rating,
-    required this.specializations,
-    required this.updatedAt,
-  });
 }

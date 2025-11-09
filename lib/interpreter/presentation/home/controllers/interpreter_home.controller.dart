@@ -4,6 +4,7 @@ import 'package:sign_language_app/infrastructure/dal/models/session.dart';
 import '../../../../infrastructure/navigation/routes.dart';
 import '../../../../infrastructure/dal/services/session.firestore.service.dart';
 import '../../shared/controllers/interpreter_profile.controller.dart';
+import '../../settings/controllers/interpreter_settings.controller.dart';
 import '../../../../domain/sessions/session.model.dart';
 import 'dart:async';
 
@@ -18,9 +19,19 @@ class InterpreterHomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _ensureControllers();
     _sessionService = Get.find<SessionFirestoreService>();
     _interpreterId = _resolveInterpreterId();
     _listenToSessions();
+  }
+
+  void _ensureControllers() {
+    if (!Get.isRegistered<InterpreterSettingsController>()) {
+      Get.lazyPut<InterpreterSettingsController>(
+        () => InterpreterSettingsController(),
+        fenix: true,
+      );
+    }
   }
 
   void changeTab(int index) {
@@ -127,6 +138,13 @@ class InterpreterHomeController extends GetxController {
         'Failed to logout: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
       );
+    }
+  }
+
+  void goToProfileTab() {
+    selectedIndex.value = 4; // Settings tab index
+    if (Get.isRegistered<InterpreterSettingsController>()) {
+      Get.find<InterpreterSettingsController>().selectedTab.value = 0; // Profile sub-tab
     }
   }
 }

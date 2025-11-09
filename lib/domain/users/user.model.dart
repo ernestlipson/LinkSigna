@@ -26,6 +26,7 @@ class User {
   final bool? isAvailable;
   final String? experience;
   final int? years;
+  final double? pricePerHour; // Price in GHS, null for free interpreters
 
   User({
     required this.uid,
@@ -49,6 +50,7 @@ class User {
     this.isAvailable,
     this.experience,
     this.years,
+    this.pricePerHour,
   });
 
   bool get isStudent => role == UserRole.student;
@@ -59,6 +61,27 @@ class User {
       return '$firstName $lastName'.trim();
     }
     return displayName ?? '';
+  }
+
+  // Check if interpreter is free based on TTU email and university
+  bool get isFreeInterpreter {
+    if (!isInterpreter) return false;
+    final emailLower = email?.toLowerCase() ?? '';
+    final universityLower = university?.toLowerCase() ?? '';
+    return emailLower.contains('ttu') &&
+        universityLower.contains('takoradi technical university (ttu)');
+  }
+
+  // Get display price, returns 0.0 for free interpreters
+  double get displayPrice {
+    if (isFreeInterpreter) return 0.0;
+    return pricePerHour ?? _generateRandomPrice();
+  }
+
+  // Generate random price in increments of 50 between 50-300
+  static double _generateRandomPrice() {
+    final prices = [50.0, 100.0, 150.0, 200.0, 250.0, 300.0];
+    return prices[DateTime.now().microsecondsSinceEpoch % prices.length];
   }
 
   factory User.fromFirestore(DocumentSnapshot doc) {
@@ -98,6 +121,7 @@ class User {
       isAvailable: data['isAvailable'],
       experience: data['experience'],
       years: data['years'],
+      pricePerHour: data['pricePerHour']?.toDouble(),
       createdAt: _toDate(data['createdAt']),
       updatedAt: _toDate(data['updatedAt']),
     );
@@ -132,10 +156,20 @@ class User {
       map['languages'] = languages ?? [];
       map['specializations'] = specializations ?? [];
       map['rating'] = rating ?? 0.0;
-      map['isAvailable'] = isAvailable ?? false;
+      map['isAvailable'] =
+          isAvailable ?? true; // Default to true, set to false only when booked
       map['profilePictureUrl'] = avatarUrl;
       map['experience'] = experience;
       map['years'] = years;
+
+      // Set price: 0 for TTU interpreters, random for others if not set
+      if (email?.toLowerCase().contains('.ttu') == true &&
+          university?.toLowerCase().contains('takoradi technical university') ==
+              true) {
+        map['pricePerHour'] = 0.0;
+      } else {
+        map['pricePerHour'] = pricePerHour ?? _generateRandomPrice();
+      }
     }
 
     map.removeWhere((key, value) => value == null);
@@ -160,6 +194,7 @@ class User {
     bool? isAvailable,
     String? experience,
     int? years,
+    double? pricePerHour,
   }) {
     return User(
       uid: uid,
@@ -181,6 +216,7 @@ class User {
       isAvailable: isAvailable ?? this.isAvailable,
       experience: experience ?? this.experience,
       years: years ?? this.years,
+      pricePerHour: pricePerHour ?? this.pricePerHour,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

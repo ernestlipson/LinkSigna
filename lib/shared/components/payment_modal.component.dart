@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
+import 'package:sign_language_app/shared/components/app.button.dart';
+import 'package:sign_language_app/shared/components/app.field.dart';
 
 class PaymentModalComponent {
   static void showPaymentModal(BuildContext context,
@@ -17,6 +19,9 @@ class PaymentModalComponent {
 
   static Widget _buildPaymentModal(BuildContext context,
       {String? interpreterName}) {
+    // Local state for form fields inside the bottom sheet
+    String selectedProvider = 'MTN';
+    final momoController = TextEditingController();
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -35,119 +40,136 @@ class PaymentModalComponent {
       ),
       child: Padding(
         padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with title and close button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Confirm Your Payment',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+        child: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with title and close button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Confirm Your Payment',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(Icons.close),
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(),
-                ),
-              ],
-            ),
-            SizedBox(height: 8),
-            Text(
-              interpreterName != null
-                  ? 'Please enter your mobile money (Momo) details to confirm your booking with $interpreterName.'
-                  : 'Please enter your mobile money (Momo) details to confirm your booking.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                  ),
+                ],
               ),
-            ),
-            SizedBox(height: 20),
+              SizedBox(height: 8),
+              Text(
+                interpreterName != null
+                    ? 'Please enter your mobile money (Momo) details to confirm your booking with $interpreterName.'
+                    : 'Please enter your mobile money (Momo) details to confirm your booking.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 20),
 
-            // Network Provider Selection
-            Text(
-              'Select Network Provider',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+              // Network Provider (Custom Field)
+              CustomTextFormField(
+                labelText: 'Network Provider',
+                hintText: 'Tap to select provider',
+                readOnly: true,
+                controller: TextEditingController(text: selectedProvider),
+                suffix: const Icon(Icons.keyboard_arrow_down, size: 18),
+                onTap: () {
+                  showModalBottomSheet(
+                    backgroundColor: Colors.white,
+                    context: context,
+                    builder: (ctx) {
+                      final providers = ['MTN', 'Telecel', 'AirtelTigo'];
+                      return SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ...providers.map((p) {
+                                final isSelected = p == selectedProvider;
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() => selectedProvider = p);
+                                    Navigator.pop(ctx);
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? AppColors.primary.withOpacity(0.08)
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        if (isSelected)
+                                          Container(
+                                            width: 14,
+                                            height: 54,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary,
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(28),
+                                                bottomLeft: Radius.circular(28),
+                                              ),
+                                            ),
+                                          ),
+                                        Expanded(
+                                          child: Padding(
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: 16,
+                                              horizontal: isSelected ? 18 : 14,
+                                            ),
+                                            child: Text(
+                                              p,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                                color: isSelected
+                                                    ? AppColors.primary
+                                                    : Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
-            ),
-            SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: 'MTN',
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.primary),
-                ),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                suffixIcon:
-                    Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
-              ),
-              items: [
-                DropdownMenuItem(value: 'MTN', child: Text('MTN')),
-                DropdownMenuItem(value: 'Vodafone', child: Text('Vodafone')),
-                DropdownMenuItem(
-                    value: 'AirtelTigo', child: Text('AirtelTigo')),
-              ],
-              onChanged: (value) {
-                // Handle network selection
-              },
-            ),
-            SizedBox(height: 16),
+              const SizedBox(height: 8),
 
-            // Momo Number Input
-            Text(
-              'Enter Momo Number',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
-            ),
-            SizedBox(height: 8),
-            TextField(
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
+              CustomTextFormField(
+                labelText: 'Momo Number',
                 hintText: 'Enter your momo number',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: Colors.grey[300]!),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: AppColors.primary),
-                ),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                controller: momoController,
+                keyboardType: TextInputType.phone,
               ),
-            ),
-            SizedBox(height: 24),
+              const SizedBox(height: 8),
 
-            // Confirm Payment Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
+              CustomButton(
+                text: 'Confirm Payment',
+                color: AppColors.primary,
                 onPressed: () {
                   Navigator.of(context).pop();
                   Get.snackbar(
@@ -158,25 +180,10 @@ class PaymentModalComponent {
                     colorText: Colors.green[900],
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  'Confirm Payment',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
               ),
-            ),
-            SizedBox(height: 20),
-          ],
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );

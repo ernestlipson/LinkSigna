@@ -3,46 +3,38 @@ import 'package:flutter/services.dart';
 import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 
 class CustomTextFormField extends StatelessWidget {
-  /// Hint text to display when the field is empty.
   final String hintText;
-
-  /// Controller for managing the text inside the field.
   final TextEditingController? controller;
-
-  /// Whether this field is required. If true, displays a validation error when empty.
   final bool isRequired;
-
-  /// Whether to obscure the text (e.g., for passwords).
   final bool obscureText;
-
-  /// Optional prefix widget (e.g., a flag icon).
   final Widget? prefix;
-
-  /// Optional suffix widget (e.g., an eye icon for toggling password visibility).
   final Widget? suffix;
-
-  /// Keyboard type (text, phone, email, etc.).
   final TextInputType? keyboardType;
-  final String? errorText; // New: to display validation errors
-  final String labelText; // New: label text for the field
-  final int? maxLength; // New: maximum character length
-  final List<TextInputFormatter>? inputFormatters; // New: input formatters
-  final ValueChanged<String>? onChanged; // Add onChanged callback
+  final String? errorText;
+  final String labelText;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
+  final ValueChanged<String>? onChanged;
+  final bool readOnly;
+  final VoidCallback? onTap;
 
-  const CustomTextFormField(
-      {super.key,
-      required this.hintText,
-      required this.labelText, // New: label text for the field
-      this.controller,
-      this.isRequired = false,
-      this.obscureText = false,
-      this.prefix,
-      this.suffix,
-      this.keyboardType,
-      this.errorText,
-      this.maxLength,
-      this.inputFormatters,
-      this.onChanged}); // Add onChanged to constructor
+  const CustomTextFormField({
+    super.key,
+    required this.hintText,
+    required this.labelText,
+    this.controller,
+    this.isRequired = false,
+    this.obscureText = false,
+    this.prefix,
+    this.suffix,
+    this.keyboardType,
+    this.errorText,
+    this.maxLength,
+    this.inputFormatters,
+    this.onChanged,
+    this.readOnly = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,23 +43,7 @@ class CustomTextFormField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RichText(
-            text: TextSpan(
-              text: labelText,
-              style: TextStyle(
-                color: Colors.black,
-                fontFamily: "WorkSans",
-                fontWeight: FontWeight.w500,
-              ),
-              children: [
-                if (isRequired)
-                  TextSpan(
-                    text: ' *',
-                    style: const TextStyle(color: AppColors.primary),
-                  ),
-              ],
-            ),
-          ),
+          _Label(labelText: labelText, isRequired: isRequired),
           const SizedBox(height: 4),
           TextFormField(
             controller: controller,
@@ -75,20 +51,22 @@ class CustomTextFormField extends StatelessWidget {
             keyboardType: keyboardType,
             maxLength: maxLength,
             inputFormatters: inputFormatters,
-            // Basic validator to ensure field is filled if required.
+            readOnly: readOnly,
+            onTap: onTap,
             validator: (value) {
-              if (isRequired && (value == null || value.trim().isEmpty)) {
+              if (!isRequired) return null;
+              if (value == null || value.trim().isEmpty) {
                 return 'This field is required';
               }
               return null;
             },
-            style: TextStyle(fontFamily: 'WorkSans'),
+            style: const TextStyle(fontFamily: 'WorkSans'),
             decoration: InputDecoration(
               filled: true,
-              fillColor: const Color(0xFFFFFFFF), // #FFFFFF
+              fillColor: const Color(0xFFFFFFFF),
               hintText: hintText,
-              hintStyle: TextStyle(
-                fontFamily: "WorkSans",
+              hintStyle: const TextStyle(
+                fontFamily: 'WorkSans',
                 color: AppColors.alternate,
               ),
               contentPadding:
@@ -96,12 +74,12 @@ class CustomTextFormField extends StatelessWidget {
               prefixIcon: prefix,
               suffixIcon: suffix,
               errorText: errorText,
-              counterText: "", // Hide the default counter text
+              counterText: '',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8), // borderRadiusLG
+                borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(
-                  color: Color(0xFFD9D9D9), // #D9D9D9
-                  width: 1, // lineWidth
+                  color: Color(0xFFD9D9D9),
+                  width: 1,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
@@ -119,7 +97,38 @@ class CustomTextFormField extends StatelessWidget {
                 ),
               ),
             ),
-            onChanged: onChanged, // Wire up onChanged
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Label extends StatelessWidget {
+  final String labelText;
+  final bool isRequired;
+  const _Label({required this.labelText, required this.isRequired});
+
+  @override
+  Widget build(BuildContext context) {
+    const baseStyle = TextStyle(
+      color: Colors.black,
+      fontFamily: 'WorkSans',
+      fontWeight: FontWeight.w500,
+    );
+
+    if (!isRequired) {
+      return Text(labelText, style: baseStyle);
+    }
+    return RichText(
+      text: TextSpan(
+        text: labelText,
+        style: baseStyle,
+        children: const [
+          TextSpan(
+            text: ' *',
+            style: TextStyle(color: AppColors.primary),
           ),
         ],
       ),

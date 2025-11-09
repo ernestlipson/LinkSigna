@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 
-import '../../../../infrastructure/dal/models/interpreter.model.dart';
+import '../../../../domain/users/user.model.dart';
 
 class InterpreterService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -10,9 +10,9 @@ class InterpreterService {
   static const int pageSize = 20;
 
   // Query the unified 'users' collection for role == 'interpreter'
-  Future<void> addInterpreter(Interpreter interpreter) async {
+  Future<void> addInterpreter(User interpreter) async {
     try {
-      await _db.collection('users').add(interpreter.toFirestore());
+      await _db.collection('users').add(interpreter.toMap());
       Get.log('Interpreter added successfully!');
     } catch (e) {
       Get.log('Error adding interpreter: $e');
@@ -20,7 +20,7 @@ class InterpreterService {
   }
 
   // Get paginated interpreters (one-time fetch)
-  Future<List<Interpreter>> getAllInterpreters({
+  Future<List<User>> getAllInterpreters({
     DocumentSnapshot? lastDocument,
     int limit = pageSize,
   }) async {
@@ -36,9 +36,7 @@ class InterpreterService {
       }
 
       QuerySnapshot querySnapshot = await query.get();
-      return querySnapshot.docs
-          .map((doc) => Interpreter.fromFirestore(doc))
-          .toList();
+      return querySnapshot.docs.map((doc) => User.fromFirestore(doc)).toList();
     } catch (e) {
       Get.log('Error getting interpreters: $e');
       return [];
@@ -46,14 +44,14 @@ class InterpreterService {
   }
 
   // Get a single Interpreter by ID from unified users collection
-  Future<Interpreter?> getInterpreterById(String interpreterId) async {
+  Future<User?> getInterpreterById(String interpreterId) async {
     try {
       DocumentSnapshot doc =
           await _db.collection('users').doc(interpreterId).get();
       if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>?;
-        if (data?['role'] == 'interpreter') {
-          return Interpreter.fromFirestore(doc);
+        final user = User.fromFirestore(doc);
+        if (user.isInterpreter) {
+          return user;
         }
       }
       return null;
@@ -64,20 +62,19 @@ class InterpreterService {
   }
 
   // Real-time stream for all interpreters with pagination support
-  Stream<List<Interpreter>> streamAllInterpreters({int limit = pageSize}) {
+  Stream<List<User>> streamAllInterpreters({int limit = pageSize}) {
     return _db
         .collection('users')
         .where('role', isEqualTo: 'interpreter')
         // .orderBy('updatedAt', descending: true) // Temporarily commented until index is created
         .limit(limit)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Interpreter.fromFirestore(doc))
-            .toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => User.fromFirestore(doc)).toList());
   }
 
   // Stream for paginated results (useful for infinite scroll)
-  Stream<List<Interpreter>> streamInterpretersPaginated({
+  Stream<List<User>> streamInterpretersPaginated({
     required DocumentSnapshot? lastDocument,
     int limit = pageSize,
   }) {
@@ -92,7 +89,7 @@ class InterpreterService {
     }
 
     return query.snapshots().map((snapshot) =>
-        snapshot.docs.map((doc) => Interpreter.fromFirestore(doc)).toList());
+        snapshot.docs.map((doc) => User.fromFirestore(doc)).toList());
   }
 
   // Update booking status (sets isAvailable to false when booked)
@@ -110,8 +107,7 @@ class InterpreterService {
   }
 
   // Get available interpreters only
-  Stream<List<Interpreter>> streamAvailableInterpreters(
-      {int limit = pageSize}) {
+  Stream<List<User>> streamAvailableInterpreters({int limit = pageSize}) {
     return _db
         .collection('users')
         .where('role', isEqualTo: 'interpreter')
@@ -119,8 +115,7 @@ class InterpreterService {
         .orderBy('updatedAt', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Interpreter.fromFirestore(doc))
-            .toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => User.fromFirestore(doc)).toList());
   }
 }
