@@ -1,59 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../shared/controllers/user.controller.dart';
-import '../interpreters/controllers/interpreters.controller.dart';
-import '../interpreters/interpreter.viewmore.screen.dart';
+import '../shared/controllers/student_user.controller.dart';
+import '../sessions/controllers/sessions.controller.dart';
+import 'controllers/home.controller.dart';
 import 'package:sign_language_app/shared/components/dashboard/dashboard_section.component.dart';
 import 'package:sign_language_app/shared/components/dashboard/empty_state_box.component.dart';
-import 'package:sign_language_app/shared/components/dashboard/session_card.component.dart';
-import 'package:sign_language_app/infrastructure/dal/models/session.dart';
+import 'package:sign_language_app/shared/components/session_card_detailed.component.dart';
 
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final userController = Get.find<UserController>();
-    final interpretersController = Get.put(InterpretersController());
-
-    final upcomingSessions = [
-      Session(
-        id: 'up-1',
-        studentName: 'Arlene McCoy',
-        className: 'Communication Skills',
-        date: DateTime(2025, 4, 15),
-        time: '10:00 am',
-        status: SessionStatus.pending,
-      ),
-      Session(
-        id: 'up-2',
-        studentName: 'Arlene McCoy',
-        className: 'Communication Skills',
-        date: DateTime(2025, 4, 15),
-        time: '10:00 am',
-        status: SessionStatus.confirmed,
-      ),
-    ];
-
-    final historySessions = [
-      Session(
-        id: 'hist-1',
-        studentName: 'Arlene McCoy',
-        className: 'Communication Skills',
-        date: DateTime(2025, 3, 10),
-        time: '09:00 am',
-        status: SessionStatus.completed,
-      ),
-      Session(
-        id: 'hist-2',
-        studentName: 'Arlene McCoy',
-        className: 'Communication Skills',
-        date: DateTime(2025, 3, 02),
-        time: '12:30 pm',
-        status: SessionStatus.completed,
-      ),
-    ];
+    final studentUserController = Get.find<StudentUserController>();
+    final sessionsController = Get.put(SessionsController());
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -62,89 +23,67 @@ class HomeDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Welcome ${userController.displayName.value.isNotEmpty ? userController.displayName.value : "User"}',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 16),
+            Obx(() {
+              final user = studentUserController.current.value;
+              final userName = user?.fullName.isNotEmpty == true
+                  ? user!.fullName
+                  : user?.displayName ?? "User";
+
+              return Text(
+                'Welcome $userName',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              );
+            }),
+            const SizedBox(height: 24),
             DashboardSection(
-              title: 'Interpreters',
-              onViewAll: () {},
+              title: 'Upcoming Sessions',
+              onViewAll: () {
+                final homeController = Get.find<HomeController>();
+                homeController.changeTab(2); // Navigate to sessions page
+              },
               child: SizedBox(
-                height: 140,
+                height: 400,
                 child: Obx(() {
-                  if (interpretersController.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
+                  final upcomingSessions = sessionsController.bookings
+                      .where((booking) {
+                        final status = booking['status'] as String? ?? '';
+                        return status != 'completed' && status != 'cancelled';
+                      })
+                      .take(3)
+                      .toList();
+
+                  if (upcomingSessions.isEmpty) {
+                    return const EmptyStateBox(message: 'No upcoming sessions');
                   }
-                  if (interpretersController.loadError.value != null) {
-                    return Center(
-                      child: Text(interpretersController.loadError.value!),
-                    );
-                  }
-                  final list = interpretersController.interpreters;
-                  if (list.isEmpty) {
-                    return const EmptyStateBox(message: 'No interpreters yet');
-                  }
+
                   return ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: list.length.clamp(0, 10),
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: upcomingSessions.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      final i = list[index];
-                      return GestureDetector(
-                        onTap: () => Get.to(
-                            () => InterpreterViewMoreScreen(interpreter: i)),
-                        child: Container(
-                          width: 220,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE5E7EB)),
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 28,
-                                backgroundImage: i.avatarUrl != null &&
-                                        i.avatarUrl!.isNotEmpty
-                                    ? NetworkImage(i.avatarUrl!)
-                                    : null,
-                                backgroundColor: Colors.grey[200],
-                                child:
-                                    i.avatarUrl == null || i.avatarUrl!.isEmpty
-                                        ? Icon(Icons.person,
-                                            color: Colors.grey[400], size: 28)
-                                        : null,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      i.fullName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      i.email ?? '',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(color: Colors.grey[600]),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      final booking = upcomingSessions[index];
+                      final isActive =
+                          sessionsController.isSessionActive(booking);
+                      final status = booking['status'] as String? ?? 'pending';
+                      final statusColor =
+                          sessionsController.getStatusColor(status);
+                      final statusBgColor =
+                          sessionsController.getStatusBackgroundColor(status);
+
+                      return SessionCardDetailed(
+                        booking: booking,
+                        isActive: isActive,
+                        status: status,
+                        statusColor: statusColor,
+                        statusBgColor: statusBgColor,
+                        onJoinVideoCall: () =>
+                            sessionsController.joinVideoCall(booking),
+                        onCancelSession: () =>
+                            sessionsController.cancelSession(booking),
+                        isHistory: false,
                       );
                     },
                   );
@@ -153,57 +92,57 @@ class HomeDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             DashboardSection(
-              title: 'Upcoming Sessions',
-              onViewAll: () {},
-              child: SizedBox(
-                height: 400,
-                child: upcomingSessions.isEmpty
-                    ? const EmptyStateBox(message: 'No upcoming sessions')
-                    : ListView.separated(
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: upcomingSessions.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final s = upcomingSessions[index];
-                          final isPending = s.status == SessionStatus.pending;
-                          return SessionCard(
-                            session: s,
-                            isUpcoming: true,
-                            onJoin: isPending
-                                ? null
-                                : () => Get.snackbar('Video Call',
-                                    'Joining video call with ${s.studentName}'),
-                            onCancel: () => Get.snackbar('Cancel Session',
-                                'Session with ${s.studentName} cancelled'),
-                          );
-                        },
-                      ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            DashboardSection(
               title: 'History',
-              onViewAll: () {},
+              onViewAll: () {
+                final homeController = Get.find<HomeController>();
+                homeController.changeTab(3);
+              },
               child: SizedBox(
                 height: 320,
-                child: historySessions.isEmpty
-                    ? const EmptyStateBox(message: 'No past sessions')
-                    : ListView.separated(
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: historySessions.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final s = historySessions[index];
-                          return SessionCard(
-                            session: s,
-                            isUpcoming: false,
-                            onViewFeedback: () => Get.snackbar(
-                              'Feedback',
-                              'Viewing feedback for session with ${s.studentName}',
-                            ),
+                child: Obx(() {
+                  final historySessions = sessionsController.bookings
+                      .where((booking) {
+                        final status = booking['status'] as String? ?? '';
+                        return status == 'completed';
+                      })
+                      .take(3)
+                      .toList();
+
+                  if (historySessions.isEmpty) {
+                    return const EmptyStateBox(message: 'No past sessions');
+                  }
+
+                  return ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: historySessions.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final booking = historySessions[index];
+                      final status =
+                          booking['status'] as String? ?? 'completed';
+                      final statusColor =
+                          sessionsController.getStatusColor(status);
+                      final statusBgColor =
+                          sessionsController.getStatusBackgroundColor(status);
+
+                      return SessionCardDetailed(
+                        booking: booking,
+                        isActive: false,
+                        status: status,
+                        statusColor: statusColor,
+                        statusBgColor: statusBgColor,
+                        onViewFeedback: () {
+                          // TODO: Navigate to feedback screen
+                          Get.snackbar(
+                            'Feedback',
+                            'Viewing feedback for session with ${booking['interpreterName']}',
                           );
                         },
-                      ),
+                        isHistory: true,
+                      );
+                    },
+                  );
+                }),
               ),
             ),
             const SizedBox(height: 24),

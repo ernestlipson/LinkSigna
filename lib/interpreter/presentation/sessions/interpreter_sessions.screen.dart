@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'controllers/interpreter_sessions.controller.dart';
-import '../../../domain/sessions/session.model.dart';
 
 class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
   const InterpreterSessionsScreen({super.key});
@@ -67,10 +67,13 @@ class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
     );
   }
 
-  Widget _buildCard(SessionModel s) {
-    final active = controller.isSessionActive(s);
-    final statusColor = controller.getStatusColor(s.status);
-    final statusBg = controller.getStatusBg(s.status);
+  Widget _buildCard(Map<String, dynamic> booking) {
+    final active = controller.isSessionActive(booking);
+    final status = booking['status'] as String? ?? 'pending';
+    final statusColor = controller.getStatusColor(status);
+    final statusBg = controller.getStatusBg(status);
+    final dateTime =
+        (booking['dateTime'] as Timestamp?)?.toDate() ?? DateTime.now();
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -88,7 +91,7 @@ class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(
-            'Session with Student',
+            'Session with ${booking['studentName'] ?? 'Unknown Student'}',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -96,13 +99,10 @@ class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
             ),
           ),
           const SizedBox(height: 12),
-          _row('Class', s.className),
-          const SizedBox(height: 4),
           _row('Date',
-              '${s.startTime.year}-${s.startTime.month.toString().padLeft(2, '0')}-${s.startTime.day.toString().padLeft(2, '0')}'),
+              '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}'),
           const SizedBox(height: 4),
-          _row(
-              'Time', TimeOfDay.fromDateTime(s.startTime).format(Get.context!)),
+          _row('Time', TimeOfDay.fromDateTime(dateTime).format(Get.context!)),
           const SizedBox(height: 12),
           Row(children: [
             const Text('Status:',
@@ -121,7 +121,7 @@ class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
               decoration: BoxDecoration(
                   color: statusBg, borderRadius: BorderRadius.circular(6)),
               child: Text(
-                s.status,
+                status,
                 style: TextStyle(
                   color: statusColor,
                   fontWeight: FontWeight.w600,
@@ -131,21 +131,22 @@ class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
             ),
           ]),
           const SizedBox(height: 16),
-          _buildActions(s, active),
+          _buildActions(booking, active),
         ]),
       ),
     );
   }
 
-  Widget _buildActions(SessionModel s, bool active) {
-    if (s.status == 'Cancelled') {
+  Widget _buildActions(Map<String, dynamic> booking, bool active) {
+    final status = booking['status'] as String? ?? 'pending';
+    if (status == 'cancelled') {
       return const SizedBox.shrink();
     }
-    if (s.status == 'Pending') {
+    if (status == 'pending') {
       return Row(children: [
         Expanded(
           child: ElevatedButton(
-            onPressed: () => controller.confirmSession(s),
+            onPressed: () => controller.confirmSession(booking),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF059669),
               foregroundColor: Colors.white,
@@ -163,7 +164,7 @@ class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
         const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton(
-            onPressed: () => controller.cancelSession(s),
+            onPressed: () => controller.cancelSession(booking),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF9B197D),
               side: const BorderSide(color: Color(0xFF9B197D)),
@@ -183,7 +184,7 @@ class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
     return Row(children: [
       Expanded(
         child: ElevatedButton(
-          onPressed: active ? () => controller.joinVideoCall(s) : null,
+          onPressed: active ? () => controller.joinVideoCall(booking) : null,
           style: ElevatedButton.styleFrom(
             backgroundColor:
                 active ? const Color(0xFF9B197D) : Colors.grey.shade300,
@@ -202,7 +203,7 @@ class InterpreterSessionsScreen extends GetView<InterpreterSessionsController> {
       const SizedBox(width: 12),
       Expanded(
         child: OutlinedButton(
-          onPressed: () => controller.cancelSession(s),
+          onPressed: () => controller.cancelSession(booking),
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF9B197D),
             side: const BorderSide(color: Color(0xFF9B197D)),

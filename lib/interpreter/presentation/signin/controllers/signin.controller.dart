@@ -7,6 +7,7 @@ import '../../../../infrastructure/dal/services/user.firestore.service.dart';
 import '../../../../domain/users/user.model.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
 import '../../../../shared/mixins/login.mixin.dart';
+import '../../shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterSigninController extends GetxController with LoginMixin {
   final isSubmitting = false.obs;
@@ -46,6 +47,11 @@ class InterpreterSigninController extends GetxController with LoginMixin {
 
       await _cacheSession(profile, rememberEmail: isRememberMe.value);
 
+      // Set profile in InterpreterProfileController
+      if (Get.isRegistered<InterpreterProfileController>()) {
+        Get.find<InterpreterProfileController>().setProfile(profile);
+      }
+
       AppSnackbar.success(
         title: 'Success',
         message: 'Login successful!',
@@ -80,6 +86,11 @@ class InterpreterSigninController extends GetxController with LoginMixin {
       if (profile == null || !profile.isInterpreter) return;
 
       await _cacheSession(profile, rememberEmail: isRememberMe.value);
+
+      // Set profile in InterpreterProfileController
+      if (Get.isRegistered<InterpreterProfileController>()) {
+        Get.find<InterpreterProfileController>().setProfile(profile);
+      }
 
       Get.offAllNamed(Routes.INTERPRETER_HOME);
     } catch (e) {

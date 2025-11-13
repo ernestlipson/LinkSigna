@@ -4,7 +4,7 @@ import 'package:sign_language_app/shared/components/base_home_screen.component.d
 import 'package:sign_language_app/shared/helpers/navigation_items.helper.dart';
 import '../../../shared/components/app_bar.component.dart';
 import '../../../shared/components/app_dialog.component.dart';
-import '../shared/controllers/user.controller.dart';
+import '../shared/controllers/student_user.controller.dart';
 import '../settings/controllers/settings.controller.dart';
 import 'controllers/home.controller.dart';
 
@@ -14,7 +14,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final homeController = Get.put(HomeController());
-    final userController = Get.find<UserController>();
+    final studentUserController = Get.find<StudentUserController>();
     final navigationItems = NavigationItemsHelper.getStudentNavigationItems();
 
     void handleLogout() {
@@ -37,12 +37,11 @@ class HomeScreen extends StatelessWidget {
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(kToolbarHeight),
           child: CustomAppBar(
-            profileImageUrl: userController.photoUrl.value.isNotEmpty
-                ? userController.photoUrl.value
-                : null,
-            localImagePath: userController.localImagePath.value.isNotEmpty
-                ? userController.localImagePath.value
-                : null,
+            profileImageUrl: studentUserController.current.value?.avatarUrl,
+            localImagePath:
+                studentUserController.localImagePath.value.isNotEmpty
+                    ? studentUserController.localImagePath.value
+                    : null,
             hasNotification: true,
             onNotificationTap: homeController.showNotifications,
             onProfileTap: homeController.goToProfileTab,

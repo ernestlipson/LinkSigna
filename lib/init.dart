@@ -9,21 +9,12 @@ import 'firebase_options.dart';
 
 import 'infrastructure/navigation/routes.dart';
 import 'infrastructure/dal/services/user.firestore.service.dart';
-import 'student/presentation/shared/controllers/user.controller.dart';
 
 Future<String> initializeUserSession() async {
   final prefs = await SharedPreferences.getInstance();
   final firebaseUser = FirebaseAuth.instance.currentUser;
 
-  if (!Get.isRegistered<UserController>()) {
-    Get.put(UserController());
-  }
-
   if (firebaseUser != null) {
-    final userController = Get.find<UserController>();
-    final userName = prefs.getString('userName') ?? 'User';
-    userController.setUser(name: userName);
-
     try {
       if (Get.isRegistered<UserFirestoreService>()) {
         final userService = Get.find<UserFirestoreService>();

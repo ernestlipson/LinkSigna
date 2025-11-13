@@ -5,6 +5,7 @@ import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 import 'package:sign_language_app/domain/users/user.model.dart';
 import 'package:sign_language_app/shared/components/app.button.dart';
 import 'package:sign_language_app/shared/components/app.field.dart';
+import 'package:sign_language_app/shared/components/search_bar.component.dart';
 import 'controllers/interpreters.controller.dart';
 import 'interpreter.viewmore.screen.dart';
 
@@ -48,23 +49,11 @@ class StudentBookInterpretersScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextField(
-                    controller: controller.searchController,
-                    onChanged: (value) => controller.searchQuery.value = value,
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                      border: InputBorder.none,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      hintStyle: TextStyle(color: Colors.grey[600]),
-                    ),
-                  ),
+                child: SearchBarComponent(
+                  hintText: 'Search',
+                  onChanged: (value) => controller.searchQuery.value = value,
+                  controller: controller.searchController,
+                  padding: EdgeInsets.zero,
                 ),
               ),
               SizedBox(width: 12),
@@ -301,21 +290,22 @@ class StudentBookInterpretersScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Builder(builder: (_) {
-                  final booked = interpreter.isAvailable == false;
-                  final isAvailable = interpreter.isAvailable == true;
-                  final buttonText = booked
+                child: Obx(() {
+                  final isBooked =
+                      controller.isInterpreterBooked(interpreter.uid);
+                  final unavailable = interpreter.isAvailable == false;
+                  final buttonText = isBooked
                       ? 'Booked'
-                      : isAvailable
-                          ? 'Book Interpreter'
-                          : 'Unavailable';
+                      : unavailable
+                          ? 'Unavailable'
+                          : 'Book Interpreter';
 
                   return CustomButton(
                     text: buttonText,
-                    onPressed: (booked || !isAvailable)
+                    onPressed: (isBooked || unavailable)
                         ? () {} // Disabled - does nothing
                         : () => controller.bookInterpreter(interpreter),
-                    color: (booked || !isAvailable)
+                    color: (isBooked || unavailable)
                         ? Colors.grey[400]
                         : AppColors.primary,
                   );
@@ -326,7 +316,7 @@ class StudentBookInterpretersScreen extends StatelessWidget {
                 child: CustomOutlinedButton(
                   text: 'View More',
                   onPressed: () => controller.viewMore(interpreter),
-                  borderColor: AppColors.primary,
+                  borderColor: AppColors.border,
                   textColor: AppColors.text,
                 ),
               ),

@@ -8,6 +8,8 @@ class AppColors {
   static const Color icon = Color(0xFF292D32);
   static const Color paidColor = Color(0xFF7D2828);
   static const Color freeColor = Color(0xFF317159);
+  static const Color altText = Color(0xFF344054);
+  static const Color border = Color(0xFFD0D5DD);
 }
 
 class AppTheme {

@@ -9,7 +9,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../shared/controllers/user.controller.dart';
 import '../../shared/controllers/student_user.controller.dart';
 import '../../../../shared/mixins/settings.mixin.dart';
 import '../../../../infrastructure/navigation/routes.dart';
@@ -28,12 +27,12 @@ class SettingsController extends GetxController with SettingsMixin {
   }
 
   void _loadExistingProfileImage() {
-    if (!Get.isRegistered<UserController>()) return;
+    if (!Get.isRegistered<StudentUserController>()) return;
 
-    final userController = Get.find<UserController>();
-    if (userController.localImagePath.value.isEmpty) return;
+    final studentUserController = Get.find<StudentUserController>();
+    if (studentUserController.localImagePath.value.isEmpty) return;
 
-    final file = File(userController.localImagePath.value);
+    final file = File(studentUserController.localImagePath.value);
     if (file.existsSync()) {
       profileImage.value = file;
     }
@@ -57,22 +56,22 @@ class SettingsController extends GetxController with SettingsMixin {
     fullNameController.text = userName;
     displayName.value = userName;
 
-    if (Get.isRegistered<UserController>()) {
-      final userController = Get.find<UserController>();
-      final user = userController.user.value;
+    if (Get.isRegistered<StudentUserController>()) {
+      final studentUserController = Get.find<StudentUserController>();
+      final user = studentUserController.current.value;
 
-      if (user?.name?.isNotEmpty == true) {
-        fullNameController.text = user!.name!;
-        displayName.value = user.name!;
+      if (user?.fullName.isNotEmpty == true) {
+        fullNameController.text = user!.fullName;
+        displayName.value = user.fullName;
       }
       if (user?.phone?.isNotEmpty == true) {
         phoneController.text = user!.phone!;
         displayPhone.value = user.phone!;
       }
 
-      // Load profile image URL from UserController or SharedPreferences
-      if (user?.photo?.isNotEmpty == true) {
-        profileImageUrl.value = user!.photo!;
+      // Load profile image URL from StudentUserController or SharedPreferences
+      if (user?.avatarUrl?.isNotEmpty == true) {
+        profileImageUrl.value = user!.avatarUrl!;
       } else {
         final savedImageUrl =
             prefs.getString('current_profile_image_url') ?? '';
@@ -166,12 +165,13 @@ class SettingsController extends GetxController with SettingsMixin {
   }
 
   void _updateUserControllerPhoto() {
-    if (profileImageUrl.value.isEmpty || !Get.isRegistered<UserController>()) {
+    if (profileImageUrl.value.isEmpty ||
+        !Get.isRegistered<StudentUserController>()) {
       return;
     }
 
-    final userController = Get.find<UserController>();
-    userController.setUser(photo: profileImageUrl.value);
+    final studentUserController = Get.find<StudentUserController>();
+    studentUserController.updateProfile({'avatarUrl': profileImageUrl.value});
   }
 
   @override
@@ -181,12 +181,13 @@ class SettingsController extends GetxController with SettingsMixin {
   }
 
   void _updateLocalProfileImage() {
-    if (profileImage.value == null || !Get.isRegistered<UserController>()) {
+    if (profileImage.value == null ||
+        !Get.isRegistered<StudentUserController>()) {
       return;
     }
 
-    final userController = Get.find<UserController>();
-    userController.setLocalProfileImage(profileImage.value!.path);
+    final studentUserController = Get.find<StudentUserController>();
+    studentUserController.setLocalProfileImage(profileImage.value!.path);
   }
 
   @override
@@ -215,11 +216,11 @@ class SettingsController extends GetxController with SettingsMixin {
   Future<void> _handleUploadSuccess(String downloadUrl) async {
     profileImageUrl.value = downloadUrl;
 
-    if (Get.isRegistered<UserController>()) {
-      final userController = Get.find<UserController>();
-      userController.setUser(photo: downloadUrl);
+    if (Get.isRegistered<StudentUserController>()) {
+      final studentUserController = Get.find<StudentUserController>();
+      await studentUserController.updateProfile({'avatarUrl': downloadUrl});
       // Clear local image path since we now have the network URL
-      userController.localImagePath.value = '';
+      studentUserController.localImagePath.value = '';
     }
 
     if (Get.isRegistered<StudentUserController>()) {
@@ -377,14 +378,6 @@ class SettingsController extends GetxController with SettingsMixin {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('current_profile_image_url', profileImageUrl.value);
     }
-
-    if (Get.isRegistered<UserController>()) {
-      Get.find<UserController>().setUser(
-        name: displayName.value,
-        phone: displayPhone.value,
-        photo: profileImageUrl.value.isNotEmpty ? profileImageUrl.value : null,
-      );
-    }
   }
 
   void changePassword() {
@@ -415,12 +408,6 @@ class SettingsController extends GetxController with SettingsMixin {
       await prefs.remove('user_doc_id');
       await prefs.remove('student_user_doc_id');
       await prefs.remove('current_profile_image_url');
-
-      // Clear UserController if registered
-      if (Get.isRegistered<UserController>()) {
-        final userController = Get.find<UserController>();
-        userController.setUser(name: '', phone: '', photo: '');
-      }
 
       // Navigate to student login page
       Get.offAllNamed(Routes.STUDENT_LOGIN);

@@ -7,6 +7,7 @@ import 'package:sign_language_app/shared/components/app.snackbar.dart';
 import 'package:sign_language_app/infrastructure/dal/services/firebase.exception.dart';
 import '../../../../../infrastructure/mixins/country_flag_loader.mixin.dart';
 import '../../../../shared/mixins/login.mixin.dart';
+import '../../shared/controllers/student_user.controller.dart';
 
 class LoginController extends GetxController
     with CountryFlagLoader, LoginMixin, FirebaseExceptionMixin {
@@ -45,9 +46,16 @@ class LoginController extends GetxController
           userProfile.displayName ?? credential.user?.displayName ?? 'User');
       await prefs.setBool('student_logged_in', true);
       await prefs.setString('userRole', 'student');
+      await prefs.setString('student_user_doc_id', userProfile.uid);
 
       if (userProfile.university != null) {
         await prefs.setString('university', userProfile.university!);
+      }
+
+      // Set profile in StudentUserController to ensure it's available immediately
+      if (Get.isRegistered<StudentUserController>()) {
+        final studentController = Get.find<StudentUserController>();
+        studentController.current.value = userProfile;
       }
 
       await saveRememberedEmail(

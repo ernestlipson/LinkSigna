@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/utils/app_strings.dart';
 
-import '../../../../infrastructure/theme/app_theme.dart';
 import '../../../../shared/components/settings/settings_screen_layout.component.dart';
 import 'controllers/interpreter_settings.controller.dart';
 import 'package:sign_language_app/shared/components/settings/profile_avatar_picker.dart';
@@ -13,7 +12,7 @@ import 'package:sign_language_app/shared/components/settings/delete_account_sect
 import 'package:sign_language_app/shared/components/settings/save_changes_button.component.dart';
 import 'package:sign_language_app/shared/components/settings/settings_section_header.component.dart';
 import 'package:sign_language_app/shared/components/settings/empty_notifications_tab.component.dart';
-import 'package:sign_language_app/shared/components/settings/settings_outlined_button.component.dart';
+import 'package:sign_language_app/shared/components/app.field.dart';
 
 class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
   final bool showBackButton;
@@ -164,40 +163,11 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Professional Experience',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 8),
-        // Multiline text field for entering professional experience
-        TextField(
+        CustomTextFormField(
+          labelText: 'Professional Experience',
+          hintText: 'Describe your professional experience',
           controller: controller.experienceController,
           keyboardType: TextInputType.multiline,
-          minLines: 1,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: controller.experienceController.text.isEmpty
-                ? 'Describe your professional experience'
-                : controller.experienceController.text,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.primary),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
         ),
       ],
     );
@@ -207,38 +177,21 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Years in Sign Language',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
+        CustomTextFormField(
+          labelText: 'Years in Sign Language',
+          hintText: 'Enter years of experience',
           controller: controller.certificationController,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            hintText: controller.certificationController.text.isEmpty
-                ? 'Enter years of experience'
-                : controller.certificationController.text,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+          suffix: const Padding(
+            padding: EdgeInsets.only(right: 16.0),
+            child: Center(
+              widthFactor: 1,
+              child: Text(
+                'yrs',
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: AppColors.primary),
-            ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            suffixText: 'yrs',
           ),
         ),
       ],

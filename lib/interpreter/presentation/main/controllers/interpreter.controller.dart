@@ -174,6 +174,8 @@ class InterpreterController extends GetxController {
         PaymentModalComponent.showPaymentModal(
           Get.context!,
           interpreterName: interpreter.name,
+          amountGhs: (interpreter.price ?? 0).toDouble(),
+          customerEmail: interpreter.email,
         );
       }
     }
@@ -182,7 +184,6 @@ class InterpreterController extends GetxController {
   void viewMore(InterpreterData interpreter) {
     Get.to(() => InterpreterProfileScreen(interpreter: interpreter));
   }
-
 
   @override
   void onClose() {

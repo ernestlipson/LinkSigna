@@ -10,38 +10,46 @@ class StudentUserController extends GetxController {
   final current = Rxn<User>();
   final loading = false.obs;
   final error = RxnString();
+  final RxString localImagePath = ''.obs;
   StreamSubscription? _sub;
   final _auth = FirebaseAuth.instance;
   late UserFirestoreService _service;
   static const _prefsDocKey = 'student_user_doc_id';
+  static const _localImageKey = 'local_profile_image';
   String? _docId;
 
   @override
   void onInit() {
     super.onInit();
     _service = Get.find<UserFirestoreService>();
+    _loadLocalImagePath();
     _bootstrap();
   }
 
   Future<void> _bootstrap() async {
     final authUser = _auth.currentUser;
     if (authUser == null) return;
+
     final prefs = await SharedPreferences.getInstance();
     _docId = prefs.getString(_prefsDocKey);
 
+    // First try: Use cached document ID
     if (_docId != null) {
       _subscribe(_docId!);
       return;
     }
 
+    // Second try: Find by authUid
     final byAuth = await _service.findByAuthUid(authUser.uid);
     if (byAuth != null && byAuth.isStudent) {
       _docId = byAuth.uid;
       await prefs.setString(_prefsDocKey, _docId!);
       _subscribe(_docId!);
+      current.value = byAuth; // Set immediately
       return;
     }
 
+    // Third try: Find by phone
     final phone = authUser.phoneNumber;
     if (phone != null && phone.isNotEmpty) {
       final byPhone = await _service.findByPhone(phone);
@@ -49,9 +57,25 @@ class StudentUserController extends GetxController {
         _docId = byPhone.uid;
         await prefs.setString(_prefsDocKey, _docId!);
         _subscribe(_docId!);
+        current.value = byPhone; // Set immediately
         return;
       }
     }
+
+    // Fourth try: Find by email
+    final email = authUser.email;
+    if (email != null && email.isNotEmpty) {
+      final byEmail = await _service.findByEmail(email);
+      if (byEmail != null && byEmail.isStudent) {
+        _docId = byEmail.uid;
+        await prefs.setString(_prefsDocKey, _docId!);
+        _subscribe(_docId!);
+        current.value = byEmail; // Set immediately
+        return;
+      }
+    }
+
+    Get.log('Warning: No student profile found for authenticated user');
   }
 
   void _subscribe(String docId) {
@@ -119,6 +143,42 @@ class StudentUserController extends GetxController {
         title: 'Update Failed',
         message: e.toString(),
       );
+    }
+  }
+
+  // Profile image management
+  void setLocalProfileImage(String imagePath) {
+    localImagePath.value = imagePath;
+    _saveLocalImagePath(imagePath);
+  }
+
+  String? get currentProfileImage {
+    if (localImagePath.value.isNotEmpty) {
+      return localImagePath.value;
+    }
+    return current.value?.avatarUrl;
+  }
+
+  bool get isLocalImage => localImagePath.value.isNotEmpty;
+
+  Future<void> _saveLocalImagePath(String path) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_localImageKey, path);
+    } catch (e) {
+      Get.log('Error saving local image path: $e');
+    }
+  }
+
+  Future<void> _loadLocalImagePath() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedPath = prefs.getString(_localImageKey);
+      if (savedPath != null && savedPath.isNotEmpty) {
+        localImagePath.value = savedPath;
+      }
+    } catch (e) {
+      Get.log('Error loading local image path: $e');
     }
   }
 

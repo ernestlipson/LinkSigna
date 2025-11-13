@@ -120,8 +120,12 @@ class InterpreterProfileScreen extends StatelessWidget {
               padding: EdgeInsets.only(bottom: 20),
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => PaymentModalComponent.showPaymentModal(context,
-                    interpreterName: interpreter.name),
+                onPressed: () => PaymentModalComponent.showPaymentModal(
+                  context,
+                  interpreterName: interpreter.name,
+                  amountGhs: (interpreter.price ?? 0).toDouble(),
+                  customerEmail: interpreter.email,
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

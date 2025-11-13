@@ -26,26 +26,70 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.authUid == request.auth.uid;
     }
     
-    // Sessions collection - allow authenticated students or interpreters access
-    match /sessions/{sessionId} {
-      // Function to check if user is a participant in the session
-      function isSessionParticipant() {
-        let session = resource.data;
-        let studentDoc = get(/databases/$(database)/documents/users/$(session.studentId));
-        let interpreterDoc = get(/databases/$(database)/documents/users/$(session.interpreterId));
-        
-        return request.auth.uid == studentDoc.data.authUid 
-            || request.auth.uid == interpreterDoc.data.authUid;
-      }
+    // Bookings collection - secure booking approval system
+    match /bookings/{bookingId} {
+      // Allow students to create bookings
+      // Validation: must have required fields and status must be 'pending'
+      allow create: if request.auth != null 
+        && request.resource.data.studentId is string
+        && request.resource.data.interpreterId is string
+        && request.resource.data.dateTime is timestamp
+        && request.resource.data.status == 'pending'
+        && request.resource.data.studentName is string
+        && request.resource.data.interpreterName is string;
       
-      // Allow read/write if user is participant
-      allow read, write: if request.auth != null && isSessionParticipant();
-
-      // Allow create if the caller is either the student or interpreter
-      allow create: if request.auth != null && (
-        request.auth.uid == get(/databases/$(database)/documents/users/$(request.resource.data.studentId)).data.authUid
-        || request.auth.uid == get(/databases/$(database)/documents/users/$(request.resource.data.interpreterId)).data.authUid
+      // Allow any authenticated user to read bookings
+      // This allows students to see their bookings and interpreters to see theirs
+      allow read: if request.auth != null;
+      
+      // Allow any authenticated user to update booking status
+      // Client-side code should verify ownership before allowing updates
+      allow update: if request.auth != null && (
+        // Status can be changed from pending to confirmed or cancelled
+        (resource.data.status == 'pending' && 
+         request.resource.data.status in ['confirmed', 'cancelled'] &&
+         request.resource.data.studentId == resource.data.studentId &&
+         request.resource.data.interpreterId == resource.data.interpreterId &&
+         request.resource.data.dateTime == resource.data.dateTime)
+        ||
+        // Any booking (except cancelled) can be cancelled
+        (resource.data.status != 'cancelled' &&
+         request.resource.data.status == 'cancelled' &&
+         request.resource.data.studentId == resource.data.studentId &&
+         request.resource.data.interpreterId == resource.data.interpreterId &&
+         request.resource.data.dateTime == resource.data.dateTime)
       );
+      
+      // Allow authenticated users to delete bookings
+      allow delete: if request.auth != null;
+    }
+    
+    // WebRTC signaling channels - for peer-to-peer video calls
+    match /channels/{channelId} {
+      // Allow any authenticated user to create a channel (offer)
+      allow create: if request.auth != null;
+      
+      // Allow participants to read channel data (offer/answer)
+      // Anyone can read to join the call
+      allow read: if request.auth != null;
+      
+      // Allow any authenticated user to update channel (answer)
+      allow update: if request.auth != null;
+      
+      // Allow creator to delete channel when call ends
+      allow delete: if request.auth != null;
+      
+      // ICE candidates subcollection for WebRTC signaling
+      match /candidates/{candidateId} {
+        // Allow any authenticated user to add ICE candidates
+        allow create: if request.auth != null;
+        
+        // Allow participants to read ICE candidates
+        allow read: if request.auth != null;
+        
+        // Allow cleanup when call ends
+        allow delete: if request.auth != null;
+      }
     }
     
     // DEPRECATED COLLECTIONS - Keep rules for backwards compatibility

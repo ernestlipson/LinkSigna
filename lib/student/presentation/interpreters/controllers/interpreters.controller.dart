@@ -2,11 +2,15 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../infrastructure/dal/services/interpreter.service.dart';
 import '../../../../domain/users/user.model.dart';
-import '../../../../infrastructure/dal/services/session.firestore.service.dart';
+import '../../../../infrastructure/dal/services/booking.firestore.service.dart';
+import '../../../../infrastructure/dal/services/user.firestore.service.dart';
 import '../../shared/controllers/student_user.controller.dart';
 import 'package:sign_language_app/shared/components/app.snackbar.dart';
+import 'package:sign_language_app/shared/components/payment_modal.component.dart';
 
 class InterpretersController extends GetxController {
   final RxList<User> interpreters = <User>[].obs;
@@ -33,9 +37,12 @@ class InterpretersController extends GetxController {
 
   late final InterpreterService _service;
   StreamSubscription<List<User>>? _sub;
-  late final SessionFirestoreService _sessionService;
+  late final BookingFirestoreService _bookingService;
   final _bookingInProgress = false.obs;
   late final String _studentId;
+
+  // Track booked interpreters
+  final RxSet<String> bookedInterpreterIds = <String>{}.obs;
 
   // Pagination state
   DocumentSnapshot? _lastDocument;
@@ -45,25 +52,83 @@ class InterpretersController extends GetxController {
   void onInit() {
     super.onInit();
     _service = Get.find<InterpreterService>();
-    _sessionService = Get.find<SessionFirestoreService>();
-    _studentId = _resolveStudentId();
+    _bookingService = Get.find<BookingFirestoreService>();
+    _initializeStudentId();
     _setupScrollListener();
     _listen();
   }
 
-  String _resolveStudentId() {
-    // Get student ID from StudentUserController if available
+  Future<void> _initializeStudentId() async {
+    _studentId = await _resolveStudentId();
+    Get.log('InterpretersController: Resolved student ID: $_studentId');
+    _loadBookedInterpreters();
+  }
+
+  Future<String> _resolveStudentId() async {
+    // First: Try to get from SharedPreferences (most reliable)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedId = prefs.getString('student_user_doc_id');
+      if (cachedId != null && cachedId.isNotEmpty) {
+        Get.log(
+            'InterpretersController: Using cached student ID from SharedPreferences: $cachedId');
+        return cachedId;
+      }
+    } catch (e) {
+      Get.log('Error reading from SharedPreferences: $e');
+    }
+
+    // Second: Get student ID from StudentUserController if available
     if (Get.isRegistered<StudentUserController>()) {
       final studentController = Get.find<StudentUserController>();
       final currentStudent = studentController.current.value;
       if (currentStudent != null && currentStudent.uid.isNotEmpty) {
-        return currentStudent.uid; // This is the Firestore document ID
+        Get.log(
+            'InterpretersController: Using student ID from controller: ${currentStudent.uid}');
+        return currentStudent.uid;
+      }
+    }
+
+    // Third: Try to find by Firebase Auth UID
+    final authUser = FirebaseAuth.instance.currentUser;
+    if (authUser != null) {
+      try {
+        final userService = Get.find<UserFirestoreService>();
+        final user = await userService.findByAuthUid(authUser.uid);
+        if (user != null && user.isStudent) {
+          Get.log(
+              'InterpretersController: Found student by authUid: ${user.uid}');
+          // Cache it for next time
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('student_user_doc_id', user.uid);
+          return user.uid;
+        }
+      } catch (e) {
+        Get.log('Error finding user by authUid: $e');
       }
     }
 
     // Fallback: generate a UUID if no proper student ID found
     Get.log('Warning: No proper student ID found, using fallback');
     return 'student_fallback_${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  void _loadBookedInterpreters() {
+    // Load active bookings for this student
+    _bookingService.bookingsForStudent(_studentId).listen((bookings) {
+      final activeBookings = bookings
+          .where((b) => b['status'] == 'pending' || b['status'] == 'confirmed')
+          .toList();
+
+      bookedInterpreterIds.clear();
+      for (var booking in activeBookings) {
+        bookedInterpreterIds.add(booking['interpreterId'] as String);
+      }
+    });
+  }
+
+  bool isInterpreterBooked(String interpreterId) {
+    return bookedInterpreterIds.contains(interpreterId);
   }
 
   void _setupScrollListener() {
@@ -274,30 +339,69 @@ class InterpretersController extends GetxController {
       return;
     }
 
+    // Check if already booked
+    if (isInterpreterBooked(interpreter.uid)) {
+      AppSnackbar.info(
+        title: 'Already Booked',
+        message: 'You already have an active booking with this interpreter.',
+      );
+      return;
+    }
+
+    // If interpreter is paid, show payment modal instead of directly booking
+    if (!interpreter.isFreeInterpreter) {
+      final studentEmail = _getStudentEmail();
+      if (Get.context != null) {
+        PaymentModalComponent.showPaymentModal(
+          Get.context!,
+          interpreterName: interpreter.fullName,
+          amountGhs: interpreter.displayPrice,
+          customerEmail: studentEmail,
+        );
+      }
+      return;
+    }
+
+    // For free interpreters, proceed with direct booking
     _bookingInProgress.value = true;
     try {
-      final startTime = _deriveStartTime();
-      final className = _deriveClassName();
-      await _sessionService.createSession(
+      // Use current date and time
+      final bookingDateTime = DateTime.now();
+
+      // Get student name and email
+      String studentName = 'Unknown Student';
+      String studentEmail = '';
+      if (Get.isRegistered<StudentUserController>()) {
+        final studentController = Get.find<StudentUserController>();
+        final student = studentController.current.value;
+        studentName = student?.displayName ?? 'Unknown Student';
+        studentEmail = student?.email ?? '';
+      }
+
+      // Create booking in bookings collection
+      await _bookingService.createBooking(
         studentId: _studentId,
         interpreterId: interpreter.uid,
-        className: className,
-        startTime: startTime,
+        dateTime: bookingDateTime,
+        status: 'pending',
+        studentName: studentName,
+        studentEmail: studentEmail,
+        interpreterName: interpreter.fullName,
+        interpreterEmail: interpreter.email,
       );
 
-      // Optionally, set interpreter as unavailable after booking
-      await _service.setBookingStatus(
-          interpreterId: interpreter.uid, isBooked: true);
+      // Mark interpreter as booked locally
+      bookedInterpreterIds.add(interpreter.uid);
 
       AppSnackbar.success(
-        title: 'Session Created',
+        title: 'Booking Created',
         message:
-            'Session booked with ${interpreter.fullName}. Waiting for interpreter confirmation.',
+            'Successfully booked ${interpreter.fullName} for ${_formatDateTime(bookingDateTime)}. Waiting for confirmation.',
       );
     } catch (e) {
       AppSnackbar.error(
         title: 'Booking Failed',
-        message: 'Could not create session: $e',
+        message: 'Could not create booking: $e',
       );
       Get.log('Error booking interpreter: $e');
     } finally {
@@ -305,18 +409,37 @@ class InterpretersController extends GetxController {
     }
   }
 
-  DateTime _deriveStartTime() {
-    // If user selected date/time filters, use them; else schedule 30 mins ahead
-    final base = DateTime.now().add(const Duration(minutes: 30));
-    final date = selectedDate.value;
-    final time = selectedTime.value;
-    if (date == null || time == null) return base;
-    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final bookingDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+    String dateStr;
+    if (bookingDate == today) {
+      dateStr = 'today';
+    } else if (bookingDate == today.add(const Duration(days: 1))) {
+      dateStr = 'tomorrow';
+    } else {
+      dateStr = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
+
+    final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+
+    return '$dateStr at $hour:$minute $period';
   }
 
-  String _deriveClassName() {
-    if (selectedSubject.value.isNotEmpty) return selectedSubject.value;
-    return 'Communication Skills';
+  String _getStudentEmail() {
+    // Try to get student email from StudentUserController
+    if (Get.isRegistered<StudentUserController>()) {
+      final studentController = Get.find<StudentUserController>();
+      final currentStudent = studentController.current.value;
+      if (currentStudent != null && currentStudent.email != null) {
+        return currentStudent.email!;
+      }
+    }
+    return 'student@example.com'; // Fallback
   }
 
   void viewMore(User interpreter) {

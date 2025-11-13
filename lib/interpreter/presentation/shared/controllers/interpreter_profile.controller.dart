@@ -42,6 +42,9 @@ class InterpreterProfileController extends GetxController {
         await loadProfileById(cachedId);
       } else if (cachedEmail != null && cachedEmail.isNotEmpty) {
         await loadProfileByEmail(cachedEmail);
+      } else {
+        // Try loading by authUid as fallback
+        await loadProfileByAuthUid(authUser.uid);
       }
     } catch (e) {
       Get.log('Error loading profile from cache: $e');
@@ -73,6 +76,20 @@ class InterpreterProfileController extends GetxController {
       }
     } catch (e) {
       Get.log('Error loading profile by email: $e');
+    }
+  }
+
+  Future<void> loadProfileByAuthUid(String authUid) async {
+    try {
+      final user = await _firestoreService.findByAuthUid(authUid);
+      if (user != null && user.isInterpreter) {
+        profile.value = user;
+        interpreterId.value = user.uid;
+        _listenToProfile(user.uid);
+        await _cacheUserData(user);
+      }
+    } catch (e) {
+      Get.log('Error loading profile by authUid: $e');
     }
   }
 

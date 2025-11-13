@@ -1,26 +1,29 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sign_language_app/infrastructure/dal/models/session.dart';
 import '../../../../infrastructure/navigation/routes.dart';
-import '../../../../infrastructure/dal/services/session.firestore.service.dart';
+import '../../../../infrastructure/dal/services/booking.firestore.service.dart';
 import '../../shared/controllers/interpreter_profile.controller.dart';
 import '../../settings/controllers/interpreter_settings.controller.dart';
-import '../../../../domain/sessions/session.model.dart';
 import 'dart:async';
 
 class InterpreterHomeController extends GetxController {
   final RxInt selectedIndex = 0.obs;
   final RxList<Session> upcomingSessions = <Session>[].obs;
   final RxList<Session> historySessions = <Session>[].obs;
-  StreamSubscription<List<SessionModel>>? _sub;
-  late final SessionFirestoreService _sessionService;
+  final RxList<Map<String, dynamic>> pendingBookings =
+      <Map<String, dynamic>>[].obs;
+  StreamSubscription<List<Map<String, dynamic>>>? _sub;
+  late final BookingFirestoreService _bookingService;
   late final String _interpreterId;
 
   @override
   void onInit() {
     super.onInit();
     _ensureControllers();
-    _sessionService = Get.find<SessionFirestoreService>();
+    _bookingService = Get.find<BookingFirestoreService>();
     _interpreterId = _resolveInterpreterId();
     _listenToSessions();
   }
@@ -51,21 +54,41 @@ class InterpreterHomeController extends GetxController {
   void _listenToSessions() {
     _sub?.cancel();
     _sub =
-        _sessionService.sessionsForInterpreter(_interpreterId).listen((list) {
+        _bookingService.bookingsForInterpreter(_interpreterId).listen((list) {
       final now = DateTime.now();
       final upcoming = <Session>[];
       final history = <Session>[];
-      for (final s in list) {
-        // Only show sessions in the future as upcoming, and not cancelled
-        if ((s.status == 'Confirmed' || s.status == 'Pending') &&
-            s.startTime.isAfter(now)) {
-          upcoming.add(_toDashboardSession(s));
-        } else if (s.status == 'Cancelled' ||
-            s.status == 'Completed' ||
-            s.startTime.isBefore(now)) {
-          history.add(_toDashboardSession(s));
+      final pending = <Map<String, dynamic>>[];
+
+      for (final booking in list) {
+        final dateTime = (booking['dateTime'] as Timestamp?)?.toDate();
+        if (dateTime == null) continue;
+
+        final status = booking['status'] as String? ?? 'pending';
+
+        // Separate pending bookings for approval
+        if (status == 'pending') {
+          pending.add(booking);
+        }
+
+        // Only show confirmed bookings in the future as upcoming
+        if (status == 'confirmed' && dateTime.isAfter(now)) {
+          upcoming.add(_toDashboardSession(booking, dateTime));
+        } else if (status == 'cancelled' ||
+            status == 'completed' ||
+            dateTime.isBefore(now)) {
+          history.add(_toDashboardSession(booking, dateTime));
         }
       }
+
+      pendingBookings.assignAll(pending
+        ..sort((a, b) {
+          final aTime =
+              (a['dateTime'] as Timestamp?)?.toDate() ?? DateTime.now();
+          final bTime =
+              (b['dateTime'] as Timestamp?)?.toDate() ?? DateTime.now();
+          return aTime.compareTo(bTime);
+        }));
       upcomingSessions
           .assignAll(upcoming..sort((a, b) => a.date.compareTo(b.date)));
       historySessions
@@ -73,29 +96,30 @@ class InterpreterHomeController extends GetxController {
     });
   }
 
-  Session _toDashboardSession(SessionModel s) {
+  Session _toDashboardSession(Map<String, dynamic> booking, DateTime dateTime) {
     // You may want to fetch student name from another service if needed
     return Session(
-      id: s.id,
-      studentName: s.studentId, // Replace with actual student name if available
-      className: s.className,
-      date: s.startTime,
-      time: _formatTime(s.startTime),
-      status: _toSessionStatus(s.status),
+      id: booking['id'] as String? ?? '',
+      studentName: booking['studentId'] as String? ??
+          'Unknown', // Replace with actual student name if available
+      className: 'Booking', // Bookings don't have className
+      date: dateTime,
+      time: _formatTime(dateTime),
+      status: _toSessionStatus(booking['status'] as String? ?? 'pending'),
       rating: null,
       feedback: null,
     );
   }
 
   SessionStatus _toSessionStatus(String status) {
-    switch (status) {
-      case 'Confirmed':
+    switch (status.toLowerCase()) {
+      case 'confirmed':
         return SessionStatus.confirmed;
-      case 'Pending':
+      case 'pending':
         return SessionStatus.pending;
-      case 'Cancelled':
+      case 'cancelled':
         return SessionStatus.cancelled;
-      case 'Completed':
+      case 'completed':
         return SessionStatus.completed;
       default:
         return SessionStatus.pending;
@@ -107,6 +131,49 @@ class InterpreterHomeController extends GetxController {
     final ampm = dt.hour >= 12 ? 'pm' : 'am';
     final min = dt.minute.toString().padLeft(2, '0');
     return '$hour:$min $ampm';
+  }
+
+  // Public methods for booking actions
+  Future<void> confirmBooking(String bookingId) async {
+    try {
+      await _bookingService.confirmBooking(bookingId);
+      Get.snackbar(
+        'Booking Confirmed',
+        'You have confirmed this booking',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green[100],
+        colorText: Colors.green[900],
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to confirm booking: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+    }
+  }
+
+  Future<void> rejectBooking(String bookingId) async {
+    try {
+      await _bookingService.cancelBooking(bookingId);
+      Get.snackbar(
+        'Booking Rejected',
+        'You have rejected this booking',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to reject booking: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[900],
+      );
+    }
   }
 
   @override
@@ -144,7 +211,8 @@ class InterpreterHomeController extends GetxController {
   void goToProfileTab() {
     selectedIndex.value = 4; // Settings tab index
     if (Get.isRegistered<InterpreterSettingsController>()) {
-      Get.find<InterpreterSettingsController>().selectedTab.value = 0; // Profile sub-tab
+      Get.find<InterpreterSettingsController>().selectedTab.value =
+          0; // Profile sub-tab
     }
   }
 }

@@ -1,8 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:get/get.dart';
-import 'package:uuid/uuid.dart';
-import '../../../domain/users/student_user.model.dart';
-
 // DEPRECATED: This service has been replaced by UserFirestoreService
 // which uses a unified 'users' collection with role-based differentiation.
 // Kept for reference only - can be deleted after migration is complete.

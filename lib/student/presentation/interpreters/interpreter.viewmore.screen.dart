@@ -165,16 +165,21 @@ class InterpreterViewMoreScreen extends StatelessWidget {
         ),
         SizedBox(height: 40),
 
-        Container(
-          padding: EdgeInsets.only(bottom: 20),
-          width: double.infinity,
-          child: CustomButton(
-            text: 'Proceed to check out',
-            onPressed: () => PaymentModalComponent.showPaymentModal(context,
-                interpreterName: interpreter.fullName),
-            color: AppColors.primary,
+        if (!interpreter.isFreeInterpreter)
+          Container(
+            padding: EdgeInsets.only(bottom: 20),
+            width: double.infinity,
+            child: CustomButton(
+              text: 'Proceed to check out',
+              onPressed: () => PaymentModalComponent.showPaymentModal(
+                context,
+                interpreterName: interpreter.fullName,
+                amountGhs: interpreter.displayPrice,
+                customerEmail: interpreter.email ?? 'student@example.com',
+              ),
+              color: AppColors.primary,
+            ),
           ),
-        ),
       ],
     );
   }
