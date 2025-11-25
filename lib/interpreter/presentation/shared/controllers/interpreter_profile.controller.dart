@@ -1,9 +1,11 @@
 import 'dart:async';
-import 'package:get/get.dart';
+
 import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../infrastructure/dal/services/user.firestore.service.dart';
+
 import '../../../../domain/users/user.model.dart';
+import '../../../../infrastructure/dal/services/user.firestore.service.dart';
 
 class InterpreterProfileController extends GetxController {
   final UserFirestoreService _firestoreService =
@@ -114,12 +116,29 @@ class InterpreterProfileController extends GetxController {
   /// Update profile fields
   Future<void> updateProfile(Map<String, dynamic> data) async {
     try {
-      if (interpreterId.value.isNotEmpty) {
-        await _firestoreService.updateFields(interpreterId.value, data);
+      if (interpreterId.value.isEmpty) {
+        throw Exception('Interpreter ID is empty. Cannot update profile.');
       }
+      await _firestoreService.updateFields(interpreterId.value, data);
     } catch (e) {
       Get.log('Error updating profile: $e');
       rethrow;
+    }
+  }
+
+  /// Force-refresh profile data from Firestore (used after uploads)
+  Future<void> runProfileRefresh() async {
+    try {
+      final id = interpreterId.value;
+      if (id.isEmpty) return;
+
+      final freshProfile = await _firestoreService.getById(id);
+      if (freshProfile != null && freshProfile.isInterpreter) {
+        profile.value = freshProfile;
+        await _cacheUserData(freshProfile);
+      }
+    } catch (e) {
+      Get.log('Error refreshing interpreter profile: $e');
     }
   }
 
@@ -146,6 +165,18 @@ class InterpreterProfileController extends GetxController {
     } catch (e) {
       Get.log('Error caching user data: $e');
     }
+  }
+
+  /// Get the first name from display name for welcome messages
+  String get firstName {
+    final user = profile.value;
+    final displayName = user?.displayName?.trim() ?? '';
+
+    if (displayName.isEmpty) {
+      return 'Interpreter';
+    }
+
+    return displayName.split(RegExp(r'\s+')).first;
   }
 
   /// Get cached interpreter ID

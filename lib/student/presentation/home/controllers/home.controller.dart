@@ -9,12 +9,32 @@ import '../home.dashboard.dart';
 import '../../deaf-history/controllers/deaf_history.controller.dart';
 import '../../sessions/controllers/sessions.controller.dart';
 import '../../settings/controllers/settings.controller.dart';
+import '../../shared/controllers/student_user.controller.dart';
 
 /// Controller responsible for student home navigation and actions.
 /// Single source of truth for selected tab + side-effects (profile jump, notifications).
 class HomeController extends GetxController {
   /// Reactive selected tab index
   final RxInt selectedIndex = 0.obs;
+
+  /// Extract first name from user's full name or display name
+  String get userFirstName {
+    if (!Get.isRegistered<StudentUserController>()) {
+      return "User";
+    }
+
+    final user = Get.find<StudentUserController>().current.value;
+
+    if (user?.fullName.isNotEmpty == true) {
+      final nameParts = user!.fullName.trim().split(' ');
+      return nameParts.isNotEmpty ? nameParts.first : "User";
+    } else if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+      final nameParts = user.displayName!.trim().split(' ');
+      return nameParts.isNotEmpty ? nameParts.first : "User";
+    }
+
+    return "User";
+  }
 
   /// Ordered list of pages matching bottom navigation items order
   final List<GetxController?> _eagerControllers = [];
@@ -32,7 +52,7 @@ class HomeController extends GetxController {
   void changeTab(int index) => selectedIndex.value = index;
 
   /// Jump to Settings screen and ensure profile tab opens
-void goToProfileTab() {
+  void goToProfileTab() {
     selectedIndex.value = 4; // Settings tab index
     if (Get.isRegistered<SettingsController>()) {
       Get.find<SettingsController>().selectedTab.value = 0; // Profile sub-tab

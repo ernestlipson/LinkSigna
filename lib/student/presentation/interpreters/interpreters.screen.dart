@@ -226,6 +226,21 @@ class StudentBookInterpretersScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 8),
+                    // Subject
+                    if (interpreter.subject != null &&
+                        interpreter.subject!.isNotEmpty)
+                      Text(
+                        'Subject: ${interpreter.subject}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    if (interpreter.subject != null &&
+                        interpreter.subject!.isNotEmpty)
+                      SizedBox(height: 4),
+                    // Languages
                     if (interpreter.languages != null &&
                         interpreter.languages!.isNotEmpty)
                       Text(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,17 +9,19 @@ import 'package:sign_language_app/shared/components/app.snackbar.dart';
 import 'package:sign_language_app/shared/components/settings_bottom_sheets.dart';
 
 import '../../../../infrastructure/navigation/routes.dart';
-import '../../../presentation/shared/controllers/interpreter_profile.controller.dart';
 import '../../../../shared/mixins/settings.mixin.dart';
+import '../../../presentation/shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterSettingsController extends GetxController with SettingsMixin {
   final emailController = TextEditingController();
   final experienceController = TextEditingController();
   final certificationController = TextEditingController();
+  final subjectController = TextEditingController();
 
   final RxString experience = 'Senior (5+ years)'.obs;
   final RxString certification = 'Ghana Sign Language Certified'.obs;
   final RxString displayEmail = ''.obs;
+  final RxString displaySubject = ''.obs;
 
   final List<String> experienceLevels = [
     'Junior (1-2 years)',
@@ -37,7 +40,7 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
   @override
   void onInit() {
     super.onInit();
-    initializeCloudinaryService();
+    initializeFirebaseStorage();
     _loadUserData();
     _loadProfileImageFromStorage();
   }
@@ -69,12 +72,8 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
   void _loadBasicInfo(dynamic user) {
     fullNameController.text = user.displayName;
     displayName.value = user.displayName;
-
     emailController.text = user.email;
     displayEmail.value = user.email;
-
-    phoneController.text = user.phone ?? '';
-    displayPhone.value = user.phone ?? '';
   }
 
   void _loadProfessionalInfo(dynamic user) {
@@ -88,6 +87,12 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
 
     certificationController.text = 'Ghana Sign Language Certified';
     certification.value = 'Ghana Sign Language Certified';
+
+    // Load subject
+    if (user.subject != null && user.subject!.isNotEmpty) {
+      subjectController.text = user.subject!;
+      displaySubject.value = user.subject!;
+    }
   }
 
   void _loadLanguagesInfo(dynamic user) {
@@ -99,8 +104,12 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
   }
 
   void _loadProfileImageUrl(dynamic user) {
-    if (user.profilePictureUrl != null && user.profilePictureUrl!.isNotEmpty) {
-      profileImageUrl.value = user.profilePictureUrl!;
+    final remoteUrl = user.profilePictureUrl?.isNotEmpty == true
+        ? user.profilePictureUrl
+        : user.avatarUrl;
+
+    if (remoteUrl != null && remoteUrl.isNotEmpty) {
+      profileImageUrl.value = remoteUrl;
     }
   }
 
@@ -116,6 +125,14 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
       final prefs = await SharedPreferences.getInstance();
       _loadEmailFromPrefs(prefs);
       _setDefaultProfessionalValues();
+
+      // Load subject from SharedPreferences
+      final savedSubject = prefs.getString('interpreter_subject');
+      if (savedSubject != null && savedSubject.isNotEmpty) {
+        subjectController.text = savedSubject;
+        displaySubject.value = savedSubject;
+      }
+
       userDocId.value = prefs.getString('interpreter_id') ?? '';
     } catch (e) {
       AppSnackbar.error(
@@ -139,16 +156,26 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
     certificationController.text = 'Ghana Sign Language Certified';
     certification.value = 'Ghana Sign Language Certified';
     languagesController.text = 'Ghanaian Sign Language';
+    subjectController.text = '';
+    displaySubject.value = '';
   }
 
   Future<void> _loadProfileImageFromStorage() async {
     try {
       final profileController = Get.find<InterpreterProfileController>();
-      final user = profileController.profile.value;
 
+      // Set initial value if available
+      final user = profileController.profile.value;
       if (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty) {
         profileImageUrl.value = user.avatarUrl!;
       }
+
+      // Add reactive listener to keep profileImageUrl in sync
+      ever(profileController.profile, (user) {
+        if (user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty) {
+          profileImageUrl.value = user.avatarUrl!;
+        }
+      });
     } catch (e) {
       print('Failed to load profile image: $e');
     }
@@ -186,11 +213,11 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
   }
 
   @override
-  Future<void> uploadProfileImageToCloudinary(File imageFile) async {
+  Future<void> uploadProfileImageToFirebaseStorage(File imageFile) async {
     try {
       isUploadingImage.value = true;
       final interpreterId = await resolveUserIdentifier();
-      final downloadUrl = await cloudinary.uploadProfileImage(
+      final downloadUrl = await firebaseStorage.uploadProfileImage(
         imageFile: imageFile,
         userId: interpreterId,
         folder: 'profiles/interpreters',
@@ -224,6 +251,7 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
     }
 
     profileController.localImagePath.value = '';
+    await profileController.runProfileRefresh();
 
     profileImage.value = null;
     AppSnackbar.success(
@@ -272,18 +300,48 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
     try {
       isSaving.value = true;
       final updateData = _buildProfileUpdateData();
+
+      // Save locally first (this always works)
       await _persistDataLocally();
-      await _updateFirestoreProfile(updateData);
+
+      // Try to update Firestore with timeout
+      await _updateFirestoreProfile(updateData).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException(
+            'Network request timed out. Please check your internet connection.',
+          );
+        },
+      );
 
       AppSnackbar.success(
         title: 'Success',
         message: 'Profile updated successfully',
       );
-    } catch (e) {
-      AppSnackbar.error(
-        title: 'Error',
-        message: 'Failed to save changes: ${e.toString()}',
+    } on TimeoutException catch (e) {
+      AppSnackbar.warning(
+        title: 'Saved Locally',
+        message:
+            'Changes saved locally but could not sync to server. ${e.message}',
       );
+    } catch (e) {
+      // Check if it's a network error
+      final errorMessage = e.toString().toLowerCase();
+      if (errorMessage.contains('network') ||
+          errorMessage.contains('connection') ||
+          errorMessage.contains('resolve host') ||
+          errorMessage.contains('unavailable')) {
+        AppSnackbar.warning(
+          title: 'Network Error',
+          message:
+              'Changes saved locally. Please check your internet connection to sync with server.',
+        );
+      } else {
+        AppSnackbar.error(
+          title: 'Error',
+          message: 'Failed to save changes: ${e.toString()}',
+        );
+      }
     } finally {
       isSaving.value = false;
     }
@@ -295,12 +353,14 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
       'firstName': nameParts['firstName']!,
       'lastName': nameParts['lastName']!,
       'email': emailController.text,
-      'phone': phoneController.text.isNotEmpty ? phoneController.text : null,
       'languages': parseLanguages(),
       'specializations': [experience.value],
       'bio': null,
       'profilePictureUrl':
           profileImageUrl.value.isNotEmpty ? profileImageUrl.value : null,
+      'subject': subjectController.text.trim().isNotEmpty
+          ? subjectController.text.trim()
+          : null,
     };
   }
 
@@ -314,6 +374,13 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('interpreter_email', emailController.text);
     displayEmail.value = emailController.text;
+
+    // Save subject to local storage
+    if (subjectController.text.trim().isNotEmpty) {
+      await prefs.setString(
+          'interpreter_subject', subjectController.text.trim());
+      displaySubject.value = subjectController.text.trim();
+    }
   }
 
   Future<void> _updateFirestoreProfile(Map<String, dynamic> updateData) async {
@@ -329,8 +396,21 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
 
   Future<void> logout() async {
     try {
+      Get.deleteAll(force: true);
       await FirebaseAuth.instance.signOut();
+
+      // Clear interpreter-specific cached data
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('interpreter_name');
+      await prefs.remove('interpreter_email');
+      await prefs.remove('interpreter_id');
+      await prefs.remove('current_profile_image_url');
+
       Get.offAllNamed(Routes.INTERPRETER_SIGNIN);
+      AppSnackbar.success(
+        title: 'Logged Out',
+        message: 'You have been logged out successfully',
+      );
     } catch (e) {
       AppSnackbar.error(
         title: 'Error',
@@ -345,6 +425,7 @@ class InterpreterSettingsController extends GetxController with SettingsMixin {
     emailController.dispose();
     experienceController.dispose();
     certificationController.dispose();
+    subjectController.dispose();
     super.onClose();
   }
 }

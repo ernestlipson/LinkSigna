@@ -230,14 +230,18 @@ class InterpretersController extends GetxController {
           .toList();
     }
 
-    // Apply subject/specialization filter
+    // Apply subject filter
     if (selectedSubject.value.isNotEmpty) {
       final subject = selectedSubject.value.toLowerCase();
       result = result
           .where((i) =>
+              // Check interpreter's subject field (e.g., "Chemistry Diagnostics")
+              (i.subject?.toLowerCase().contains(subject) ?? false) ||
+              // Also check specializations (e.g., "Senior (5+ years)")
               (i.specializations
                       ?.any((s) => s.toLowerCase().contains(subject)) ??
                   false) ||
+              // Also check name as fallback
               i.fullName.toLowerCase().contains(subject))
           .toList();
     }

@@ -22,4 +22,5 @@ class Routes {
 
   // Shared Routes
   static const FORGOT_PASSWORD = '/forgot-password';
+  static const CHAT = '/chat';
 }

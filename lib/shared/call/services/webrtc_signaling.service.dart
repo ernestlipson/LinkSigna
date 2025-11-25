@@ -19,6 +19,7 @@ class WebRTCSignalingService extends GetxService {
   final isMicOn = true.obs;
   final isCameraOn = true.obs;
   final isFrontCamera = true.obs;
+  final callEnded = false.obs; // Track if call has ended unexpectedly
 
   StreamSubscription? _offerSubscription;
   StreamSubscription? _answerSubscription;
@@ -94,6 +95,31 @@ class WebRTCSignalingService extends GetxService {
         Get.log('Connection state: $state');
         isConnected.value = state ==
             webrtc.RTCPeerConnectionState.RTCPeerConnectionStateConnected;
+
+        // Detect when connection is closed or failed
+        if (state ==
+                webrtc.RTCPeerConnectionState.RTCPeerConnectionStateClosed ||
+            state ==
+                webrtc.RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
+            state ==
+                webrtc.RTCPeerConnectionState
+                    .RTCPeerConnectionStateDisconnected) {
+          Get.log('Call ended due to connection state: $state');
+          // Notify that call ended
+          _handleCallEnded();
+        }
+      };
+
+      // Listen for ICE connection state changes (additional monitoring)
+      _peerConnection?.onIceConnectionState = (state) {
+        Get.log('ICE connection state: $state');
+
+        // Detect network failures
+        if (state == webrtc.RTCIceConnectionState.RTCIceConnectionStateFailed ||
+            state == webrtc.RTCIceConnectionState.RTCIceConnectionStateClosed) {
+          Get.log('Call ended due to ICE state: $state');
+          _handleCallEnded();
+        }
       };
 
       Get.log('Peer connection created');
@@ -248,6 +274,15 @@ class WebRTCSignalingService extends GetxService {
     });
   }
 
+  /// Handle unexpected call end (connection loss, network failure)
+  void _handleCallEnded() {
+    if (!callEnded.value) {
+      callEnded.value = true;
+      Get.log('Call ended unexpectedly - notifying UI');
+      // UI can listen to this and show appropriate message
+    }
+  }
+
   /// Toggle microphone
   void toggleMic() {
     if (_localStream != null) {
@@ -306,6 +341,7 @@ class WebRTCSignalingService extends GetxService {
       isConnected.value = false;
       isMicOn.value = true;
       isCameraOn.value = true;
+      callEnded.value = false;
 
       Get.log('Call ended and cleaned up');
     } catch (e) {

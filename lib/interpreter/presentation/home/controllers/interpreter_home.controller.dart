@@ -1,13 +1,16 @@
-import 'package:get/get.dart';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:sign_language_app/infrastructure/dal/models/session.dart';
-import '../../../../infrastructure/navigation/routes.dart';
-import '../../../../infrastructure/dal/services/booking.firestore.service.dart';
-import '../../shared/controllers/interpreter_profile.controller.dart';
-import '../../settings/controllers/interpreter_settings.controller.dart';
 import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_language_app/infrastructure/dal/models/session.dart';
+
+import '../../../../infrastructure/dal/services/booking.firestore.service.dart';
+import '../../../../infrastructure/navigation/routes.dart';
+import '../../settings/controllers/interpreter_settings.controller.dart';
+import '../../shared/controllers/interpreter_profile.controller.dart';
 
 class InterpreterHomeController extends GetxController {
   final RxInt selectedIndex = 0.obs;
@@ -16,16 +19,15 @@ class InterpreterHomeController extends GetxController {
   final RxList<Map<String, dynamic>> pendingBookings =
       <Map<String, dynamic>>[].obs;
   StreamSubscription<List<Map<String, dynamic>>>? _sub;
+  Worker? _interpreterIdWorker;
   late final BookingFirestoreService _bookingService;
-  late final String _interpreterId;
 
   @override
   void onInit() {
     super.onInit();
     _ensureControllers();
     _bookingService = Get.find<BookingFirestoreService>();
-    _interpreterId = _resolveInterpreterId();
-    _listenToSessions();
+    _initializeWithProfileController();
   }
 
   void _ensureControllers() {
@@ -41,20 +43,35 @@ class InterpreterHomeController extends GetxController {
     selectedIndex.value = index;
   }
 
-  String _resolveInterpreterId() {
+  void _initializeWithProfileController() {
     if (Get.isRegistered<InterpreterProfileController>()) {
       final profileController = Get.find<InterpreterProfileController>();
-      final id = profileController.interpreterId.value;
-      if (id.isNotEmpty) return id;
+
+      // Check if interpreter ID is already available
+      if (profileController.interpreterId.value.isNotEmpty) {
+        _listenToSessions(profileController.interpreterId.value);
+      } else {
+        // Wait for the interpreter ID to be loaded
+        _interpreterIdWorker =
+            ever(profileController.interpreterId, (String id) {
+          if (id.isNotEmpty) {
+            Get.log('InterpreterHomeController: Interpreter ID loaded: $id');
+            _listenToSessions(id);
+            _interpreterIdWorker?.dispose();
+          }
+        });
+      }
+    } else {
+      Get.log('Warning: InterpreterProfileController not registered');
     }
-    Get.log('Warning: No proper interpreter ID found, using fallback');
-    return 'interpreter_fallback_${DateTime.now().millisecondsSinceEpoch}';
   }
 
-  void _listenToSessions() {
+  void _listenToSessions(String interpreterId) {
     _sub?.cancel();
-    _sub =
-        _bookingService.bookingsForInterpreter(_interpreterId).listen((list) {
+
+    Get.log(
+        'InterpreterHomeController: Starting to listen for interpreter: $interpreterId');
+    _sub = _bookingService.bookingsForInterpreter(interpreterId).listen((list) {
       final now = DateTime.now();
       final upcoming = <Session>[];
       final history = <Session>[];
@@ -179,17 +196,44 @@ class InterpreterHomeController extends GetxController {
   @override
   void onClose() {
     _sub?.cancel();
+    _interpreterIdWorker?.dispose();
     super.onClose();
   }
 
   Future<void> logout() async {
     try {
+      // 1. Cancel all active Firestore subscriptions first
+      _sub?.cancel();
+
+      // 2. Clean up profile controller subscriptions
+      if (Get.isRegistered<InterpreterProfileController>()) {
+        final profileController = Get.find<InterpreterProfileController>();
+        profileController.onClose();
+      }
+
+      // 3. Clean up settings controller
+      if (Get.isRegistered<InterpreterSettingsController>()) {
+        final settingsController = Get.find<InterpreterSettingsController>();
+        settingsController.onClose();
+      }
+
       final prefs = await SharedPreferences.getInstance();
 
-      // Clear interpreter login status
+      // 4. Clear interpreter login status
       await prefs.setBool('interpreter_logged_in', false);
       await prefs.remove('userName');
       await prefs.remove('userEmail');
+      await prefs.remove('interpreter_id');
+      await prefs.remove('interpreter_email');
+      await prefs.remove('interpreter_name');
+
+      // 5. Sign out from Firebase Auth to stop all Firestore listeners
+      await FirebaseAuth.instance.signOut();
+
+      // 6. Delete all GetX controllers to ensure complete cleanup
+      Get.delete<InterpreterProfileController>(force: true);
+      Get.delete<InterpreterSettingsController>(force: true);
+      Get.delete<InterpreterHomeController>(force: true);
 
       Get.snackbar(
         'Logout',
@@ -197,7 +241,7 @@ class InterpreterHomeController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
 
-      // Navigate back to signup screen
+      // 7. Navigate back to signup screen
       Get.offAllNamed(Routes.initialRoute);
     } catch (e) {
       Get.snackbar(
@@ -208,6 +252,7 @@ class InterpreterHomeController extends GetxController {
     }
   }
 
+  /// Jump to Settings screen and ensure profile tab opens
   void goToProfileTab() {
     selectedIndex.value = 4; // Settings tab index
     if (Get.isRegistered<InterpreterSettingsController>()) {

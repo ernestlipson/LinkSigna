@@ -6,6 +6,7 @@ class DeleteAccountSection extends StatelessWidget {
   final String title;
   final String description;
   final String buttonLabel;
+  final bool isEnabled;
 
   const DeleteAccountSection({
     super.key,
@@ -14,6 +15,7 @@ class DeleteAccountSection extends StatelessWidget {
     this.description =
         'Deleting your account will remove all of your activity and campaigns, and you will no longer be able to sign in with this account.',
     this.buttonLabel = 'Delete account',
+    this.isEnabled = true,
   });
 
   @override
@@ -40,11 +42,11 @@ class DeleteAccountSection extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         OutlinedButton(
-          onPressed: onDelete,
+          onPressed: isEnabled ? onDelete : null,
           style: OutlinedButton.styleFrom(
             minimumSize: const Size(double.infinity, 0),
-            foregroundColor: Colors.red,
-            side: const BorderSide(color: Colors.red),
+            foregroundColor: isEnabled ? Colors.red : Colors.grey,
+            side: BorderSide(color: isEnabled ? Colors.red : Colors.grey),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
             ),

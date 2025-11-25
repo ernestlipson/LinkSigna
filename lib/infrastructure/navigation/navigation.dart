@@ -19,6 +19,8 @@ import '../../student/infrastructure/navigation/bindings/controllers/sessions.co
 import '../../student/infrastructure/navigation/bindings/controllers/settings.controller.binding.dart';
 import '../../student/infrastructure/navigation/bindings/controllers/signup.controller.binding.dart';
 import '../../student/presentation/screens.dart';
+import '../../shared/chat/presentation/chat.screen.dart';
+import '../../shared/chat/presentation/controllers/chat.controller.dart';
 import 'bindings/forgot_password.controller.binding.dart';
 import 'routes.dart';
 
@@ -101,6 +103,15 @@ class Nav {
       page: () => const InterpreterSessionsScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => InterpreterSessionsController());
+      }),
+    ),
+
+    // Shared Routes
+    GetPage(
+      name: Routes.CHAT,
+      page: () => const ChatScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => ChatController());
       }),
     ),
   ];

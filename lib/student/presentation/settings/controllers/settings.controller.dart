@@ -21,7 +21,7 @@ class SettingsController extends GetxController with SettingsMixin {
   @override
   void onInit() {
     super.onInit();
-    initializeCloudinaryService();
+    initializeFirebaseStorage();
     _loadUserData();
     _loadExistingProfileImage();
   }
@@ -64,10 +64,6 @@ class SettingsController extends GetxController with SettingsMixin {
         fullNameController.text = user!.fullName;
         displayName.value = user.fullName;
       }
-      if (user?.phone?.isNotEmpty == true) {
-        phoneController.text = user!.phone!;
-        displayPhone.value = user.phone!;
-      }
 
       // Load profile image URL from StudentUserController or SharedPreferences
       if (user?.avatarUrl?.isNotEmpty == true) {
@@ -80,22 +76,12 @@ class SettingsController extends GetxController with SettingsMixin {
         }
       }
     }
-
-    final userPhone = prefs.getString('userPhone') ?? '';
-    if (userPhone.isNotEmpty && phoneController.text.isEmpty) {
-      phoneController.text = userPhone;
-      displayPhone.value = userPhone;
-    }
   }
 
   void _setDefaultValues() {
     if (fullNameController.text.isEmpty) {
       fullNameController.text = 'User';
       displayName.value = 'User';
-    }
-    if (phoneController.text.isEmpty) {
-      phoneController.text = '';
-      displayPhone.value = '';
     }
     universityController.text = 'TTU- Level 300';
     universityLevel.value = 'TTU - Level 300';
@@ -107,24 +93,7 @@ class SettingsController extends GetxController with SettingsMixin {
   }
 
   Future<void> _discoverFirestoreDoc(SharedPreferences prefs) async {
-    if (userDocId.value.isNotEmpty || phoneController.text.trim().isEmpty) {
-      return;
-    }
-
-    try {
-      final q = await FirebaseFirestore.instance
-          .collection('users')
-          .where('phone', isEqualTo: phoneController.text.trim())
-          .limit(1)
-          .get();
-
-      if (q.docs.isNotEmpty) {
-        userDocId.value = q.docs.first.id;
-        await prefs.setString('user_doc_id', userDocId.value);
-      }
-    } catch (e) {
-      Get.log('Error locating user doc by phone: $e');
-    }
+    // No longer needed - phone-based lookup removed
   }
 
   @override
@@ -191,11 +160,11 @@ class SettingsController extends GetxController with SettingsMixin {
   }
 
   @override
-  Future<void> uploadProfileImageToCloudinary(File imageFile) async {
+  Future<void> uploadProfileImageToFirebaseStorage(File imageFile) async {
     try {
       isUploadingImage.value = true;
       final userId = await resolveUserIdentifier();
-      final downloadUrl = await cloudinary.uploadProfileImage(
+      final downloadUrl = await firebaseStorage.uploadProfileImage(
         imageFile: imageFile,
         userId: userId,
         folder: 'profiles/students',
@@ -233,7 +202,7 @@ class SettingsController extends GetxController with SettingsMixin {
       title: 'Success',
       message: 'Profile image updated successfully!',
     );
-    Get.log('Cloudinary upload success: $downloadUrl');
+    Get.log('Firebase Storage upload success: $downloadUrl');
   }
 
   void _handleUploadFailure() {
@@ -347,7 +316,6 @@ class SettingsController extends GetxController with SettingsMixin {
     return {
       'firstname': nameParts['firstName']!,
       'lastname': nameParts['lastName']!,
-      'phone': phoneController.text.trim(),
       'language': languagesController.text.trim(),
       'university_level': universityLevel.value,
       if (profileImageUrl.value.isNotEmpty) 'avatarUrl': profileImageUrl.value,
@@ -404,7 +372,6 @@ class SettingsController extends GetxController with SettingsMixin {
       // Clear shared preferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('userName');
-      await prefs.remove('userPhone');
       await prefs.remove('user_doc_id');
       await prefs.remove('student_user_doc_id');
       await prefs.remove('current_profile_image_url');

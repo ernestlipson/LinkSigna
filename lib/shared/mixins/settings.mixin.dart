@@ -29,7 +29,7 @@ mixin SettingsMixin on GetxController {
   final RxString userDocId = ''.obs;
 
   final ImagePicker picker = ImagePicker();
-  late FirebaseStorageService cloudinary;
+  late FirebaseStorageService firebaseStorage;
 
   final List<String> availableLanguages = [
     'Ghanaian Sign Language',
@@ -38,8 +38,8 @@ mixin SettingsMixin on GetxController {
     'International Sign',
   ];
 
-  void initializeCloudinaryService() {
-    cloudinary = Get.put(FirebaseStorageService());
+  void initializeFirebaseStorage() {
+    firebaseStorage = Get.put(FirebaseStorageService());
   }
 
   Widget getProfileImageWidget() {
@@ -78,7 +78,7 @@ mixin SettingsMixin on GetxController {
   Future<void> _handleImageSelection(XFile image) async {
     profileImage.value = File(image.path);
     _showImageSelectedNotification();
-    await uploadProfileImageToCloudinary(File(image.path));
+    await uploadProfileImageToFirebaseStorage(File(image.path));
   }
 
   void _showImageSelectedNotification() {
@@ -95,7 +95,7 @@ mixin SettingsMixin on GetxController {
     );
   }
 
-  Future<void> uploadProfileImageToCloudinary(File imageFile) async {
+  Future<void> uploadProfileImageToFirebaseStorage(File imageFile) async {
     throw UnimplementedError('Override this method in child class');
   }
 
@@ -105,7 +105,7 @@ mixin SettingsMixin on GetxController {
 
   Future<void> loadProfileImageUrl(String userId, String folder) async {
     try {
-      final imageUrl = await cloudinary.getProfileImageUrl(userId);
+      final imageUrl = await firebaseStorage.getProfileImageUrl(userId);
       if (imageUrl != null && imageUrl.isNotEmpty) {
         profileImageUrl.value = imageUrl;
         Get.log('Profile image URL loaded: $imageUrl');
@@ -209,16 +209,16 @@ mixin SettingsMixin on GetxController {
   }
 
   Future<void> showDeleteAccountDialog(VoidCallback onConfirm) async {
-    AppDialog.showConfirmation(
-      title: 'Delete Account',
+    final result = await AppDialog.showDeleteConfirmation(
+      itemName: 'Account',
       message:
           'Are you sure you want to delete your account? This action cannot be undone.',
-      cancelLabel: 'Cancel',
-      confirmLabel: 'Delete',
-      confirmColor: Colors.red,
-      barrierDismissible: false,
-      onConfirm: onConfirm,
     );
+
+    if (result == true) {
+      // Navigate to Dummy A when user confirms deletion
+      Get.toNamed('/dummy-a');
+    }
   }
 
   Future<void> performAccountDeletion(

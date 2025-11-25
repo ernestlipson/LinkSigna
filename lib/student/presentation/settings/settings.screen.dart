@@ -5,11 +5,10 @@ import '../../../shared/components/settings/settings_screen_layout.component.dar
 import 'controllers/settings.controller.dart';
 import 'package:sign_language_app/shared/components/settings/profile_avatar_picker.dart';
 import 'package:sign_language_app/shared/components/settings/settings_form_field.dart';
-import 'package:sign_language_app/shared/components/settings/phone_number_field.dart';
 import 'package:sign_language_app/shared/components/settings/delete_account_section.component.dart';
 import 'package:sign_language_app/shared/components/settings/save_changes_button.component.dart';
 import 'package:sign_language_app/shared/components/settings/settings_section_header.component.dart';
-import 'package:sign_language_app/shared/components/settings/empty_notifications_tab.component.dart';
+// import 'package:sign_language_app/shared/components/settings/empty_notifications_tab.component.dart';
 
 class SettingsScreen extends GetView<SettingsController> {
   const SettingsScreen({super.key});
@@ -19,7 +18,7 @@ class SettingsScreen extends GetView<SettingsController> {
     return SettingsScreenLayout(
       selectedTab: controller.selectedTab,
       buildProfileTab: _buildProfileTab,
-      buildNotificationsTab: _buildNotificationsTab,
+      // buildNotificationsTab: _buildNotificationsTab,
     );
   }
 
@@ -48,8 +47,6 @@ class SettingsScreen extends GetView<SettingsController> {
                     : controller.displayName.value,
               )),
           SizedBox(height: 16),
-          _buildPhoneNumberField(),
-          SizedBox(height: 16),
           _buildUniversityLevelField(),
           SizedBox(height: 16),
           _buildFormField(
@@ -65,15 +62,12 @@ class SettingsScreen extends GetView<SettingsController> {
           SizedBox(height: 32),
           DeleteAccountSection(
             onDelete: () => controller.deleteAccount(),
+            isEnabled: false,
           ),
           SizedBox(height: 20),
         ],
       ),
     );
-  }
-
-  Widget _buildNotificationsTab() {
-    return const EmptyNotificationsTab();
   }
 
   Widget _buildFormField(
@@ -82,18 +76,6 @@ class SettingsScreen extends GetView<SettingsController> {
       label: label,
       controller: controller,
       placeholder: placeholder,
-    );
-  }
-
-  Widget _buildPhoneNumberField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Obx(() => PhoneNumberField(
-              phoneController: controller.phoneController,
-              displayPhone: controller.displayPhone.value,
-            )),
-      ],
     );
   }
 

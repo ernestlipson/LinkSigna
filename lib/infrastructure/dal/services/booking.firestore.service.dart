@@ -108,4 +108,77 @@ class BookingFirestoreService extends GetxService {
   Future<void> confirmBooking(String bookingId) async {
     await updateBookingStatus(bookingId, 'confirmed');
   }
+
+  /// Complete a booking (after video call ends)
+  Future<void> completeBooking(String bookingId) async {
+    await _col.doc(bookingId).update({
+      'status': 'completed',
+      'completedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Get a single booking by ID
+  Future<Map<String, dynamic>?> getBookingById(String bookingId) async {
+    try {
+      final doc = await _col.doc(bookingId).get();
+      if (doc.exists) {
+        return {'id': doc.id, ...doc.data()!};
+      }
+      return null;
+    } catch (e) {
+      Get.log('Error getting booking $bookingId: $e');
+      return null;
+    }
+  }
+
+  /// Update booking with rating
+  Future<void> updateBookingRating(String bookingId, int rating) async {
+    await _col.doc(bookingId).update({
+      'rating': rating,
+      'ratedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Update interpreter's average rating
+  Future<void> updateInterpreterRating(
+      String interpreterId, int newRating) async {
+    try {
+      final userDoc =
+          FirebaseFirestore.instance.collection('users').doc(interpreterId);
+
+      // Get all completed bookings for this interpreter with ratings
+      final bookingsSnapshot = await _col
+          .where('interpreterId', isEqualTo: interpreterId)
+          .where('status', isEqualTo: 'completed')
+          .get();
+
+      // Calculate new average rating
+      final ratingsWithNew = bookingsSnapshot.docs
+          .map((doc) => doc.data()['rating'] as int?)
+          .where((r) => r != null && r > 0)
+          .cast<int>()
+          .toList();
+
+      ratingsWithNew.add(newRating);
+
+      final averageRating = ratingsWithNew.isEmpty
+          ? 0.0
+          : ratingsWithNew.reduce((a, b) => a + b) / ratingsWithNew.length;
+
+      // Update interpreter's rating field
+      await userDoc.update({
+        'rating': averageRating,
+        'totalRatings': ratingsWithNew.length,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      Get.log(
+          'Updated interpreter $interpreterId rating to $averageRating (${ratingsWithNew.length} ratings)');
+    } catch (e) {
+      Get.log('Error updating interpreter rating: $e');
+      rethrow;
+    }
+  }
 }

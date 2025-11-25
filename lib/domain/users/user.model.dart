@@ -27,6 +27,7 @@ class User {
   final String? experience;
   final int? years;
   final double? pricePerHour; // Price in GHS, null for free interpreters
+  final String? subject; // Interpreter's subject expertise
 
   User({
     required this.uid,
@@ -51,6 +52,7 @@ class User {
     this.experience,
     this.years,
     this.pricePerHour,
+    this.subject,
   });
 
   bool get isStudent => role == UserRole.student;
@@ -122,6 +124,7 @@ class User {
       experience: data['experience'],
       years: data['years'],
       pricePerHour: data['pricePerHour']?.toDouble(),
+      subject: data['subject'],
       createdAt: _toDate(data['createdAt']),
       updatedAt: _toDate(data['updatedAt']),
     );
@@ -161,6 +164,7 @@ class User {
       map['profilePictureUrl'] = avatarUrl;
       map['experience'] = experience;
       map['years'] = years;
+      map['subject'] = subject;
 
       // Set price: 0 for TTU interpreters, random for others if not set
       if (email?.toLowerCase().contains('.ttu') == true &&
@@ -195,6 +199,7 @@ class User {
     String? experience,
     int? years,
     double? pricePerHour,
+    String? subject,
   }) {
     return User(
       uid: uid,
@@ -217,6 +222,7 @@ class User {
       experience: experience ?? this.experience,
       years: years ?? this.years,
       pricePerHour: pricePerHour ?? this.pricePerHour,
+      subject: subject ?? this.subject,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

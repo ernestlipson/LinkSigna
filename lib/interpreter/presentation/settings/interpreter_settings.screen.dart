@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:sign_language_app/infrastructure/utils/app_strings.dart';
 
@@ -7,19 +6,14 @@ import '../../../../shared/components/settings/settings_screen_layout.component.
 import 'controllers/interpreter_settings.controller.dart';
 import 'package:sign_language_app/shared/components/settings/profile_avatar_picker.dart';
 import 'package:sign_language_app/shared/components/settings/settings_form_field.dart';
-import 'package:sign_language_app/shared/components/settings/phone_number_field.dart';
 import 'package:sign_language_app/shared/components/settings/delete_account_section.component.dart';
 import 'package:sign_language_app/shared/components/settings/save_changes_button.component.dart';
 import 'package:sign_language_app/shared/components/settings/settings_section_header.component.dart';
-import 'package:sign_language_app/shared/components/settings/empty_notifications_tab.component.dart';
 import 'package:sign_language_app/shared/components/app.field.dart';
 
 class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
-  final bool showBackButton;
-
   const InterpreterSettingsScreen({
     super.key,
-    this.showBackButton = false,
   });
 
   @override
@@ -29,40 +23,6 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
     return SettingsScreenLayout(
       selectedTab: controller.selectedTab,
       buildProfileTab: _buildProfileTab,
-      buildNotificationsTab: _buildNotificationsTab,
-      useSafeArea: true,
-      appBar: showBackButton ? _buildBackAppBar() : null,
-    );
-  }
-
-  PreferredSizeWidget _buildBackAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: IconButton(
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.arrow_back,
-            color: Colors.grey[700],
-            size: 20,
-          ),
-        ),
-        onPressed: () => Get.back(),
-      ),
-      title: const Text(
-        'Settings',
-        style: TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
-      ),
-      centerTitle: true,
     );
   }
 
@@ -107,17 +67,22 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
               )),
           const SizedBox(height: 16),
 
-          // Phone Number
-          _buildPhoneNumberField(),
+          // Subject
+          Obx(() => _buildFormField(
+                'Subject',
+                controller.subjectController,
+                controller.displaySubject.value.isEmpty
+                    ? 'Enter your subject'
+                    : '',
+                placeholder: 'e.g., Mathematics, Science, History',
+              )),
+          const SizedBox(height: 16),
+
           const SizedBox(height: 16),
           // Experience Level
           _buildExperienceLevelField(),
-          const SizedBox(height: 16),
 
-          // Certification
-          _buildExperienceYearsField(),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // Save Changes Button
           SaveChangesButton(
@@ -131,15 +96,12 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
             onDelete: () => controller.deleteAccount(),
             description:
                 'Deleting your account will remove all of your activity and sessions, and you will no longer be able to sign in with this account.',
+            isEnabled: false,
           ),
           const SizedBox(height: 20),
         ],
       ),
     );
-  }
-
-  Widget _buildNotificationsTab() {
-    return const EmptyNotificationsTab();
   }
 
   Widget _buildFormField(
@@ -152,13 +114,6 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
     );
   }
 
-  Widget _buildPhoneNumberField() {
-    return Obx(() => PhoneNumberField(
-          phoneController: controller.phoneController,
-          displayPhone: controller.displayPhone.value,
-        ));
-  }
-
   Widget _buildExperienceLevelField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,31 +123,6 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
           hintText: 'Describe your professional experience',
           controller: controller.experienceController,
           keyboardType: TextInputType.multiline,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExperienceYearsField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomTextFormField(
-          labelText: 'Years in Sign Language',
-          hintText: 'Enter years of experience',
-          controller: controller.certificationController,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          suffix: const Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: Center(
-              widthFactor: 1,
-              child: Text(
-                'yrs',
-                style: TextStyle(color: Colors.grey),
-              ),
-            ),
-          ),
         ),
       ],
     );

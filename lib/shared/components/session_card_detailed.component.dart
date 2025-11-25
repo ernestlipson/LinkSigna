@@ -13,8 +13,10 @@ class SessionCardDetailed extends StatelessWidget {
   final Color statusBgColor;
   final VoidCallback? onJoinVideoCall;
   final VoidCallback? onCancelSession;
+  final VoidCallback? onConfirmSession;
   final VoidCallback? onViewFeedback;
   final bool isHistory;
+  final bool isInterpreterView;
 
   const SessionCardDetailed({
     super.key,
@@ -25,8 +27,10 @@ class SessionCardDetailed extends StatelessWidget {
     required this.statusBgColor,
     this.onJoinVideoCall,
     this.onCancelSession,
+    this.onConfirmSession,
     this.onViewFeedback,
     this.isHistory = false,
+    this.isInterpreterView = false,
   });
 
   @override
@@ -53,7 +57,9 @@ class SessionCardDetailed extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 6),
             child: Text(
-              'Session with ${booking['interpreterName'] ?? 'Unknown Interpreter'}',
+              isInterpreterView
+                  ? 'Session with ${booking['studentName'] ?? 'Unknown Student'}'
+                  : 'Session with ${booking['interpreterName'] ?? 'Unknown Interpreter'}',
               style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -114,54 +120,7 @@ class SessionCardDetailed extends StatelessWidget {
                 ),
                 if (!isHistory) ...[
                   const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomButton(
-                          text: status == 'cancelled'
-                              ? 'Cancelled'
-                              : 'Join Video Call',
-                          onPressed: (isActive && status != 'cancelled')
-                              ? (onJoinVideoCall ?? () {})
-                              : () {},
-                          color: (isActive && status != 'cancelled')
-                              ? const Color(0xFF9B197D)
-                              : Colors.grey.shade300,
-                          textStyle: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: (isActive && status != 'cancelled')
-                                ? Colors.white
-                                : Colors.grey.shade600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: CustomOutlinedButton(
-                          text: status == 'cancelled'
-                              ? 'Cancelled'
-                              : 'Cancel Session',
-                          onPressed: status == 'cancelled'
-                              ? () {}
-                              : () async {
-                                  final confirmed = await AppDialog
-                                      .showCancelSessionConfirmation();
-                                  if (confirmed == true &&
-                                      onCancelSession != null) {
-                                    onCancelSession!();
-                                  }
-                                },
-                          borderColor: status == 'cancelled'
-                              ? Colors.grey.shade400
-                              : AppColors.border,
-                          textColor: status == 'cancelled'
-                              ? Colors.grey.shade500
-                              : AppColors.altText,
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildActionButtons(),
                 ] else if (onViewFeedback != null) ...[
                   const SizedBox(height: 18),
                   SizedBox(
@@ -178,6 +137,81 @@ class SessionCardDetailed extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    if (status == 'cancelled') {
+      return const SizedBox.shrink();
+    }
+
+    if (isInterpreterView && status == 'pending') {
+      // Interpreter view - pending session
+      return Row(
+        children: [
+          Expanded(
+            child: CustomButton(
+              text: 'Confirm',
+              onPressed: onConfirmSession ?? () {},
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: CustomOutlinedButton(
+              text: 'Cancel',
+              onPressed: () async {
+                final confirmed =
+                    await AppDialog.showCancelSessionConfirmation();
+                if (confirmed == true && onCancelSession != null) {
+                  onCancelSession!();
+                }
+              },
+              borderColor: AppColors.border,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Default action buttons (student view or interpreter confirmed session)
+    return Row(
+      children: [
+        Expanded(
+          child: CustomButton(
+            text: status == 'cancelled' ? 'Cancelled' : 'Join Video Call',
+            onPressed: (isActive && status != 'cancelled')
+                ? (onJoinVideoCall ?? () {})
+                : () {},
+            color: (isActive && status != 'cancelled')
+                ? const Color(0xFF9B197D)
+                : Colors.grey.shade300,
+            textStyle: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: (isActive && status != 'cancelled')
+                  ? Colors.white
+                  : Colors.grey.shade600,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: CustomOutlinedButton(
+            text: status == 'cancelled' ? 'Cancelled' : 'Cancel Session',
+            onPressed: status == 'cancelled'
+                ? () {}
+                : () async {
+                    final confirmed =
+                        await AppDialog.showCancelSessionConfirmation();
+                    if (confirmed == true && onCancelSession != null) {
+                      onCancelSession!();
+                    }
+                  },
+            borderColor: AppColors.border,
+            textColor: AppColors.altText,
+          ),
+        ),
+      ],
     );
   }
 

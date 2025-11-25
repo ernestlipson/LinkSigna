@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'controllers/sessions.controller.dart';
 import '../../../shared/components/search_bar.component.dart';
 import '../../../shared/components/session_card_detailed.component.dart';
+import 'controllers/sessions.controller.dart';
 
 class SessionsScreen extends GetView<SessionsController> {
   const SessionsScreen({super.key});
@@ -26,9 +26,11 @@ class SessionsScreen extends GetView<SessionsController> {
   }
 
   Widget _buildSearchBar() {
-    return SearchBarComponent(
-      hintText: 'Search',
-      onChanged: (value) => controller.searchQuery.value = value,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: SearchBarComponent(
+        onChanged: (value) => controller.searchQuery.value = value,
+      ),
     );
   }
 
@@ -60,9 +62,6 @@ class SessionsScreen extends GetView<SessionsController> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.event_busy,
-                          size: 64, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
                       Text(
                         'No sessions yet',
                         style: TextStyle(

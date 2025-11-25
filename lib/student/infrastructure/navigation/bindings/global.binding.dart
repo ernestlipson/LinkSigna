@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../../../../infrastructure/dal/services/booking.firestore.service.dart';
+import '../../../../infrastructure/dal/services/chat.firestore.service.dart';
 import '../../../../infrastructure/domain/repositories/country.repository.dart';
 import '../../../../infrastructure/presentation/controllers/country.controller.dart';
 import '../../dal/services/interpreter.service.dart';
@@ -22,6 +23,8 @@ class GlobalBinding extends Bindings {
         () => InterpreterProfileController(),
         fenix: true);
     Get.lazyPut<BookingFirestoreService>(() => BookingFirestoreService(),
+        fenix: true);
+    Get.lazyPut<ChatFirestoreService>(() => ChatFirestoreService(),
         fenix: true);
     Get.lazyPut<InterpreterService>(() => InterpreterService(), fenix: true);
     Get.lazyPut<WebRTCSignalingService>(() => WebRTCSignalingService(),

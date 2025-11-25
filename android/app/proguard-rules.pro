@@ -17,10 +17,6 @@
 -dontwarn com.google.firebase.**
 -dontwarn com.google.android.gms.**
 
-# Cloudinary
--keep class com.cloudinary.** { *; }
--dontwarn com.cloudinary.**
-
 # Agora
 -keep class io.agora.**{*;}
 -dontwarn io.agora.**

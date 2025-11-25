@@ -5,7 +5,7 @@ import 'package:sign_language_app/infrastructure/theme/app_theme.dart';
 class SettingsScreenLayout extends StatelessWidget {
   final RxInt selectedTab;
   final Widget Function() buildProfileTab;
-  final Widget Function() buildNotificationsTab;
+  final Widget Function()? buildNotificationsTab;
   final PreferredSizeWidget? appBar;
   final bool useSafeArea;
   final String profileTabLabel;
@@ -15,7 +15,7 @@ class SettingsScreenLayout extends StatelessWidget {
     super.key,
     required this.selectedTab,
     required this.buildProfileTab,
-    required this.buildNotificationsTab,
+    this.buildNotificationsTab,
     this.appBar,
     this.useSafeArea = false,
     this.profileTabLabel = 'Profile',
@@ -24,35 +24,40 @@ class SettingsScreenLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasNotifications = buildNotificationsTab != null;
+
     Widget content = Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Obx(() => Row(
-                children: [
-                  Expanded(
-                    child: _SettingsTab(
-                      title: profileTabLabel,
-                      isSelected: selectedTab.value == 0,
-                      onTap: () => selectedTab.value = 0,
+        if (hasNotifications)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Obx(() => Row(
+                  children: [
+                    Expanded(
+                      child: _SettingsTab(
+                        title: profileTabLabel,
+                        isSelected: selectedTab.value == 0,
+                        onTap: () => selectedTab.value = 0,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: _SettingsTab(
-                      title: notificationsTabLabel,
-                      isSelected: selectedTab.value == 1,
-                      onTap: () => selectedTab.value = 1,
+                    Expanded(
+                      child: _SettingsTab(
+                        title: notificationsTabLabel,
+                        isSelected: selectedTab.value == 1,
+                        onTap: () => selectedTab.value = 1,
+                      ),
                     ),
-                  ),
-                ],
-              )),
-        ),
-        Expanded(
-          child: Obx(
-            () => selectedTab.value == 0
-                ? buildProfileTab()
-                : buildNotificationsTab(),
+                  ],
+                )),
           ),
+        Expanded(
+          child: hasNotifications
+              ? Obx(
+                  () => selectedTab.value == 0
+                      ? buildProfileTab()
+                      : buildNotificationsTab!(),
+                )
+              : buildProfileTab(),
         ),
       ],
     );

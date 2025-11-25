@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../shared/controllers/student_user.controller.dart';
-import '../sessions/controllers/sessions.controller.dart';
-import 'controllers/home.controller.dart';
 import 'package:sign_language_app/shared/components/dashboard/dashboard_section.component.dart';
 import 'package:sign_language_app/shared/components/dashboard/empty_state_box.component.dart';
 import 'package:sign_language_app/shared/components/session_card_detailed.component.dart';
+
+import '../sessions/controllers/sessions.controller.dart';
+import 'controllers/home.controller.dart';
 
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final studentUserController = Get.find<StudentUserController>();
+    final homeController = Get.find<HomeController>();
     final sessionsController = Get.put(SessionsController());
 
     return SingleChildScrollView(
@@ -23,29 +22,29 @@ class HomeDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Obx(() {
-              final user = studentUserController.current.value;
-              final userName = user?.fullName.isNotEmpty == true
-                  ? user!.fullName
-                  : user?.displayName ?? "User";
-
-              return Text(
-                'Welcome $userName',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              );
-            }),
+            Obx(() => Text(
+                  'Welcome ${homeController.userFirstName}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                )),
+            Text(
+              'Here\'s what\'s happening with your interpreter sessions today.',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+                height: 1.3,
+              ),
+            ),
             const SizedBox(height: 24),
             DashboardSection(
               title: 'Upcoming Sessions',
               onViewAll: () {
-                final homeController = Get.find<HomeController>();
-                homeController.changeTab(2); // Navigate to sessions page
+                homeController.changeTab(2);
               },
               child: SizedBox(
-                height: 400,
+                height: 300,
                 child: Obx(() {
                   final upcomingSessions = sessionsController.bookings
                       .where((booking) {
@@ -94,11 +93,10 @@ class HomeDashboard extends StatelessWidget {
             DashboardSection(
               title: 'History',
               onViewAll: () {
-                final homeController = Get.find<HomeController>();
                 homeController.changeTab(3);
               },
               child: SizedBox(
-                height: 320,
+                height: 300,
                 child: Obx(() {
                   final historySessions = sessionsController.bookings
                       .where((booking) {

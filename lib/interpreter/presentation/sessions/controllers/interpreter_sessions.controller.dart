@@ -1,8 +1,11 @@
 import 'dart:async';
-import 'package:get/get.dart';
-import 'package:flutter/material.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:sign_language_app/shared/call/webrtc_call.screen.dart';
+import 'package:sign_language_app/shared/components/app_dialog.component.dart';
+
 import '../../../../infrastructure/dal/services/booking.firestore.service.dart';
 import '../../shared/controllers/interpreter_profile.controller.dart';
 
@@ -11,42 +14,45 @@ class InterpreterSessionsController extends GetxController {
   final searchQuery = ''.obs;
   final _service = Get.find<BookingFirestoreService>();
   StreamSubscription<List<Map<String, dynamic>>>? _sub;
-  late final String _interpreterId;
+  Worker? _interpreterIdWorker;
 
   @override
   void onInit() {
     super.onInit();
-    _interpreterId = _resolveInterpreterId();
-    // Do not start listening if we only have a fallback id (no real interpreter doc).
-    // Starting a query with a non-existent/fallback interpreter doc id causes
-    // Firestore rules to deny the request (see security rules which validate
-    // access based on the referenced interpreter document). Only listen when
-    // we have a valid interpreter id.
-    if (!_interpreterId.startsWith('interpreter_fallback_')) {
-      _listen();
-    } else {
-      Get.log(
-          'InterpreterSessionsController: not listening because no interpreter id is available');
-    }
+    _initializeWithProfileController();
   }
 
-  String _resolveInterpreterId() {
-    // Get interpreter ID from InterpreterProfileController if available
+  void _initializeWithProfileController() {
     if (Get.isRegistered<InterpreterProfileController>()) {
-      final interpreterController = Get.find<InterpreterProfileController>();
-      final interpreterId = interpreterController.interpreterId.value;
-      if (interpreterId.isNotEmpty) {
-        return interpreterId; // This is the Firestore document ID
-      }
-    }
+      final profileController = Get.find<InterpreterProfileController>();
 
-    // Fallback: generate a UUID if no proper interpreter ID found
-    Get.log('Warning: No proper interpreter ID found, using fallback');
-    return 'interpreter_fallback_${DateTime.now().millisecondsSinceEpoch}';
+      // Check if interpreter ID is already available
+      if (profileController.interpreterId.value.isNotEmpty) {
+        _listen(profileController.interpreterId.value);
+      } else {
+        // Wait for the interpreter ID to be loaded
+        _interpreterIdWorker =
+            ever(profileController.interpreterId, (String id) {
+          if (id.isNotEmpty) {
+            Get.log(
+                'InterpreterSessionsController: Interpreter ID loaded: $id');
+            _listen(id);
+            _interpreterIdWorker?.dispose();
+          }
+        });
+      }
+    } else {
+      Get.log('Warning: InterpreterProfileController not registered');
+    }
   }
 
-  void _listen() {
-    _sub = _service.bookingsForInterpreter(_interpreterId).listen((list) {
+  void _listen(String interpreterId) {
+    // Cancel existing subscription if any
+    _sub?.cancel();
+
+    Get.log(
+        'InterpreterSessionsController: Starting to listen for interpreter: $interpreterId');
+    _sub = _service.bookingsForInterpreter(interpreterId).listen((list) {
       bookings.assignAll(list);
     });
   }
@@ -108,6 +114,10 @@ class InterpreterSessionsController extends GetxController {
     final status = booking['status'] as String?;
     if (status == 'cancelled') return;
 
+    // Show confirmation dialog
+    final confirmed = await AppDialog.showCancelSessionConfirmation();
+    if (confirmed != true) return;
+
     try {
       final bookingId = booking['id'] as String;
       await _service.cancelBooking(bookingId);
@@ -157,6 +167,7 @@ class InterpreterSessionsController extends GetxController {
   @override
   void onClose() {
     _sub?.cancel();
+    _interpreterIdWorker?.dispose();
     super.onClose();
   }
 }

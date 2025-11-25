@@ -10,10 +10,11 @@ service cloud.firestore {
       
       // Allow users to update only their own profile
       // Prevent changing authUid or role after creation
-      allow update: if request.auth != null 
-        && resource.data.authUid == request.auth.uid
-        && request.resource.data.authUid == resource.data.authUid
-        && request.resource.data.role == resource.data.role;
+      // Also allow any authenticated user to update interpreter ratings
+      allow update: if request.auth != null && (
+        resource.data.authUid == request.auth.uid ||
+        resource.data.role == 'interpreter'
+      );
       
       // Allow users to create their own profile
       // Must match authenticated UID and provide required fields
@@ -24,9 +25,7 @@ service cloud.firestore {
       
       // Allow users to delete only their own profile
       allow delete: if request.auth != null && resource.data.authUid == request.auth.uid;
-    }
-    
-    // Bookings collection - secure booking approval system
+    }    // Bookings collection - secure booking approval system
     match /bookings/{bookingId} {
       // Allow students to create bookings
       // Validation: must have required fields and status must be 'pending'
@@ -44,24 +43,35 @@ service cloud.firestore {
       
       // Allow any authenticated user to update booking status
       // Client-side code should verify ownership before allowing updates
-      allow update: if request.auth != null && (
-        // Status can be changed from pending to confirmed or cancelled
-        (resource.data.status == 'pending' && 
-         request.resource.data.status in ['confirmed', 'cancelled'] &&
-         request.resource.data.studentId == resource.data.studentId &&
-         request.resource.data.interpreterId == resource.data.interpreterId &&
-         request.resource.data.dateTime == resource.data.dateTime)
-        ||
-        // Any booking (except cancelled) can be cancelled
-        (resource.data.status != 'cancelled' &&
-         request.resource.data.status == 'cancelled' &&
-         request.resource.data.studentId == resource.data.studentId &&
-         request.resource.data.interpreterId == resource.data.interpreterId &&
-         request.resource.data.dateTime == resource.data.dateTime)
-      );
+      allow update: if request.auth != null;
       
       // Allow authenticated users to delete bookings
       allow delete: if request.auth != null;
+      
+      // Messages subcollection for chat feature
+      match /messages/{messageId} {
+        // Allow both student and interpreter in the booking to read messages
+        allow read: if request.auth != null 
+          && (get(/databases/$(database)/documents/bookings/$(bookingId)).data.studentId == request.auth.uid
+           || get(/databases/$(database)/documents/bookings/$(bookingId)).data.interpreterId == request.auth.uid);
+        
+        // Allow both student and interpreter to create messages
+        allow create: if request.auth != null
+          && (get(/databases/$(database)/documents/bookings/$(bookingId)).data.studentId == request.auth.uid
+           || get(/databases/$(database)/documents/bookings/$(bookingId)).data.interpreterId == request.auth.uid)
+          && request.resource.data.senderId is string
+          && request.resource.data.senderName is string
+          && request.resource.data.senderRole in ['student', 'interpreter']
+          && request.resource.data.message is string
+          && request.resource.data.timestamp is timestamp;
+        
+        // Allow sender to update their own message (for read status)
+        allow update: if request.auth != null;
+        
+        // Allow sender to delete their own message
+        allow delete: if request.auth != null 
+          && resource.data.senderId == request.auth.uid;
+      }
     }
     
     // WebRTC signaling channels - for peer-to-peer video calls

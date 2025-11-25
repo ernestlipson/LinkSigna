@@ -117,8 +117,11 @@ class AppDialog {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Container(
-          color: Colors.white,
           padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.white,
+          ),
           constraints: const BoxConstraints(maxWidth: 400),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -191,50 +194,12 @@ class AppDialog {
     );
   }
 
-  static Future<T?> showConfirmation<T>({
-    required String title,
-    required String message,
-    String confirmLabel = 'Confirm',
-    String cancelLabel = 'Cancel',
-    VoidCallback? onConfirm,
-    VoidCallback? onCancel,
-    Color? confirmColor,
-    bool barrierDismissible = true,
-  }) {
-    return Get.dialog<T>(
-      AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Get.back();
-              onCancel?.call();
-            },
-            child: Text(cancelLabel),
-          ),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              onConfirm?.call();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: confirmColor,
-            ),
-            child: Text(confirmLabel),
-          ),
-        ],
-      ),
-      barrierDismissible: barrierDismissible,
-    );
-  }
-
   static Future<bool?> showLogoutConfirmation({
     VoidCallback? onConfirm,
     VoidCallback? onCancel,
     bool barrierDismissible = true,
-  }) {
-    return showCompactConfirmation(
+  }) async {
+    final result = await showCompactConfirmation(
       title: 'Logout',
       message:
           'Are you sure you want to log out?\nBy logging out, you will be securely logged out of the system and your session will be ended.',
@@ -243,6 +208,14 @@ class AppDialog {
       confirmColor: const Color(0xFFE53935),
       barrierDismissible: barrierDismissible,
     );
+
+    if (result == true && onConfirm != null) {
+      onConfirm();
+    } else if (result == false && onCancel != null) {
+      onCancel();
+    }
+
+    return result;
   }
 
   static Future<bool?> showCancelSessionConfirmation({
