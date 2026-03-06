@@ -23,6 +23,44 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1065635988121:android:5634bd87b8a48c5623ae08",
+        "android_client_info": {
+          "package_name": "com.linkSigna.sign_language_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9HjHwC-1LqoN_1Lxit4Fd10VGiMpsgv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1065635988121:android:b08c16a0604709d523ae08",
+        "android_client_info": {
+          "package_name": "com.linksigna.sign_language_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9HjHwC-1LqoN_1Lxit4Fd10VGiMpsgv8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"

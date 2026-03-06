@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sign_language_app/shared/components/history_session_card.component.dart';
+
 import 'controllers/deaf_history.controller.dart';
 
 class DeafHistoryScreen extends GetView<DeafHistoryController> {
@@ -72,14 +73,13 @@ class DeafHistoryScreen extends GetView<DeafHistoryController> {
     final interpreterName = booking['interpreterName'] ?? 'Unknown Interpreter';
     final date = controller.getFormattedDate(booking);
     final time = controller.getFormattedTime(booking);
-    final rating = booking['rating'] as int?;
 
     return HistorySessionCard(
       booking: booking,
       otherPartyName: interpreterName,
       date: date,
       time: time,
-      rating: rating,
+      rating: null,
       isChatActive: isChatActive,
       showChatButton: true,
       onMessagePressed: () => controller.messageInterpreter(booking),

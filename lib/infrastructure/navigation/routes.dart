@@ -1,6 +1,7 @@
 class Routes {
+  static const INITIAL = '/init';
+
   // Student Routes
-  static get initialRoute => STUDENT_SIGNUP;
 
   static const STUDENT_DEAF_HISTORY = '/student/deaf-history';
   static const STUDENT_FORGOT_PASSWORD =

@@ -39,7 +39,7 @@ Future<String> initializeUserSession() async {
     return Routes.STUDENT_LOGIN;
   }
 
-  return Routes.initialRoute;
+  return Routes.STUDENT_SIGNUP;
 }
 
 Future<void> initializeFirebase() async {

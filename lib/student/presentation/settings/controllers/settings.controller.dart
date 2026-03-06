@@ -18,6 +18,8 @@ class SettingsController extends GetxController with SettingsMixin {
   final RxString universityLevel = 'TTU - Level 300'.obs;
   final List<int> availableLevels = [100, 200, 300, 400, 500];
 
+  String get userEmail => FirebaseAuth.instance.currentUser?.email ?? '';
+
   @override
   void onInit() {
     super.onInit();

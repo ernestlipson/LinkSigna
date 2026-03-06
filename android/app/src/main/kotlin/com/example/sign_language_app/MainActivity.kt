@@ -1,4 +1,4 @@
-package com.example.sign_language_app
+package com.linksigna.sign_language_app
 
 import io.flutter.embedding.android.FlutterActivity
 

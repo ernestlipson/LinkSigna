@@ -6,12 +6,12 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sign_language_app/main.dart';
+import 'package:sign_language_app/main_app.dart';
 
 void main() {
   testWidgets('Main app displays correctly', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const Main(initialRoute: '/signup'));
+    await tester.pumpWidget(const LinkSigna());
 
     // Verify that the signup screen displays correctly.
     expect(find.text('Sign Up'), findsOneWidget);

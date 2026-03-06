@@ -60,7 +60,7 @@ class InterpreterSettingsScreen extends GetView<InterpreterSettingsController> {
 
           // Email
           Obx(() => _buildFormField(
-                'Email',
+                'University email',
                 controller.emailController,
                 controller.displayEmail.value.isEmpty ? 'Enter your email' : '',
                 placeholder: AppStrings.emailHint,

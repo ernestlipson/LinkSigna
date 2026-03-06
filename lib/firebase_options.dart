@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'sign-language-app-dbac1.firebasestorage.app',
     iosBundleId: 'com.example.signLanguageApp',
   );
+
 }

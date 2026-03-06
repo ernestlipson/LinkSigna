@@ -241,8 +241,8 @@ class InterpreterHomeController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
 
-      // 7. Navigate back to signup screen
-      Get.offAllNamed(Routes.initialRoute);
+      // 7. Navigate back to initial route
+      Get.offAllNamed(Routes.INITIAL);
     } catch (e) {
       Get.snackbar(
         'Error',

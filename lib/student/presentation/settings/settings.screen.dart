@@ -47,6 +47,8 @@ class SettingsScreen extends GetView<SettingsController> {
                     : controller.displayName.value,
               )),
           SizedBox(height: 16),
+          _buildReadOnlyField('University email', controller.userEmail),
+          SizedBox(height: 16),
           _buildUniversityLevelField(),
           SizedBox(height: 16),
           _buildFormField(
@@ -76,6 +78,40 @@ class SettingsScreen extends GetView<SettingsController> {
       label: label,
       controller: controller,
       placeholder: placeholder,
+    );
+  }
+
+  Widget _buildReadOnlyField(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value.isNotEmpty ? value : 'N/A',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -73,6 +73,11 @@ class SessionCardDetailed extends StatelessWidget {
             child: Column(
               children: [
                 _buildDetailRow(
+                  'Class',
+                  booking['subject'] ?? 'N/A',
+                ),
+                const SizedBox(height: 8),
+                _buildDetailRow(
                   'Date',
                   '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}',
                 ),

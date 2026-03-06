@@ -21,11 +21,18 @@ import '../../student/infrastructure/navigation/bindings/controllers/signup.cont
 import '../../student/presentation/screens.dart';
 import '../../shared/chat/presentation/chat.screen.dart';
 import '../../shared/chat/presentation/controllers/chat.controller.dart';
+import '../../shared/components/init.screen.dart';
 import 'bindings/forgot_password.controller.binding.dart';
+import 'bindings/init.controller.binding.dart';
 import 'routes.dart';
 
 class Nav {
   static List<GetPage> routes = [
+    GetPage(
+      name: Routes.INITIAL,
+      page: () => const InitScreen(),
+      binding: InitControllerBinding(),
+    ),
     GetPage(
       name: Routes.STUDENT_HOME,
       page: () => const HomeScreen(),

@@ -8,8 +8,14 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+def keystoreProperties = new java.util.Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new java.io.FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.example.sign_language_app"
+    namespace = "com.linksigna.sign_language_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -24,13 +30,31 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.sign_language_app"
+        applicationId = "com.linksigna.sign_language_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdkVersion flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    signingConfigs {
+        release {
+            def storeFilePath = keystoreProperties['storeFile']
+            def resolvedStoreFile = storeFilePath ? file(storeFilePath) : null
+            if (storeFilePath && resolvedStoreFile != null && !resolvedStoreFile.exists()) {
+                resolvedStoreFile = rootProject.file(storeFilePath)
+            }
+            if (storeFilePath && resolvedStoreFile != null && !resolvedStoreFile.exists()) {
+                resolvedStoreFile = new File(rootProject.projectDir.parentFile, storeFilePath)
+            }
+
+            keyAlias = keystoreProperties['keyAlias']
+            keyPassword = keystoreProperties['keyPassword']
+            storeFile = resolvedStoreFile
+            storePassword = keystoreProperties['storePassword']
+        }
     }
 
     buildTypes {
@@ -43,10 +67,7 @@ android {
             
             // ProGuard rules
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.release
         }
     }
 }
